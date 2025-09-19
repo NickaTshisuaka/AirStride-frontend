@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AirStride</title>
+    <link rel="shortcut icon" href="./logo.jpg" type="image/x-icon">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Montserrat:wght@600;700&display=swap"
+      rel="stylesheet"
+    >
+
+    <!-- ✅ Updated Content Security Policy to allow Google Maps -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src 'self' https://maps.googleapis.com;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' http://localhost:3001 data:;
+        connect-src 'self' http://localhost:3001 ws://localhost:3000;
+        frame-src 'self' https://www.google.com https://maps.google.com;
+      "
+    >
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
