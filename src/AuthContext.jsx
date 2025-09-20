@@ -3,10 +3,13 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
 
+// 👉 Update this with your Elastic IP + backend port
+const API_BASE = "http://98.89.166.198:3001";
+
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState(null);
-  const [user, setUser] = useState(null); // store user info
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,9 +23,10 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  // LOGIN
   const login = async (email, password) => {
     try {
-      const res = await fetch("http://localhost:3001/users/login", {
+      const res = await fetch(`${API_BASE}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -48,9 +52,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // SIGNUP
   const signup = async ({ email, password, firstName, lastName }) => {
     try {
-      const res = await fetch("http://localhost:3001/users/signup", {
+      const res = await fetch(`${API_BASE}/users/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, firstName, lastName }),
@@ -76,6 +81,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // LOGOUT
   const logout = () => {
     localStorage.removeItem("auth_token");
     localStorage.removeItem("auth_user");
