@@ -3,8 +3,11 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
 
-// 👉 Update this with your Elastic IP + backend port
-const API_BASE = "http://98.89.166.198:3001";
+// ✅ Use your Elastic IP for production, fallback to localhost for dev
+const API_BASE =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3001"
+    : "http://98.89.166.198:3001";
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -31,19 +34,25 @@ export const AuthProvider = ({ children }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+
       const data = await res.json();
+
       if (res.ok && data.token) {
         const userInfo = {
           email: data.user?.email || email,
           firstName: data.user?.firstName || "",
           lastName: data.user?.lastName || "",
-          name: data.user?.name || "",
+          name:
+            data.user?.name ||
+            `${data.user?.firstName || ""} ${data.user?.lastName || ""}`,
         };
+
         localStorage.setItem("auth_token", data.token);
         localStorage.setItem("auth_user", JSON.stringify(userInfo));
         setToken(data.token);
         setUser(userInfo);
         setIsAuthenticated(true);
+
         return { success: true, token: data.token };
       }
       return { success: false, error: data?.error || "Login failed" };
@@ -60,7 +69,9 @@ export const AuthProvider = ({ children }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, firstName, lastName }),
       });
+
       const data = await res.json();
+
       if (res.ok && data.token) {
         const userInfo = {
           email,
@@ -68,11 +79,13 @@ export const AuthProvider = ({ children }) => {
           lastName,
           name: `${firstName} ${lastName}`,
         };
+
         localStorage.setItem("auth_token", data.token);
         localStorage.setItem("auth_user", JSON.stringify(userInfo));
         setToken(data.token);
         setUser(userInfo);
         setIsAuthenticated(true);
+
         return { success: true };
       }
       return { success: false, error: data?.error || "Signup failed" };

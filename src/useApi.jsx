@@ -7,7 +7,7 @@ export const useApi = () => {
     try {
       const authHeaders = getAuthHeaders();
       
-      const response = await fetch(`http://localhost:3001${url}`, {
+      const response = await fetch(`http://98.89.166.198:3001${url}`, {
         ...options,
         headers: {
           'Content-Type': 'application/json',
