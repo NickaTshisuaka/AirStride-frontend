@@ -1,9 +1,8 @@
-// src/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
 
-// ✅ Use your Elastic IP for production, fallback to localhost for dev
+// ✅ Use Elastic IP for production, localhost for dev
 const API_BASE =
   window.location.hostname === "localhost"
     ? "http://localhost:3001"
@@ -15,6 +14,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Check localStorage for saved auth state
   useEffect(() => {
     const savedToken = localStorage.getItem("auth_token");
     const savedUser = localStorage.getItem("auth_user");
@@ -49,15 +49,18 @@ export const AuthProvider = ({ children }) => {
 
         localStorage.setItem("auth_token", data.token);
         localStorage.setItem("auth_user", JSON.stringify(userInfo));
+
         setToken(data.token);
         setUser(userInfo);
         setIsAuthenticated(true);
 
         return { success: true, token: data.token };
       }
+
       return { success: false, error: data?.error || "Login failed" };
     } catch (err) {
-      return { success: false, error: "Login error" };
+      console.error("Login fetch error:", err);
+      return { success: false, error: "Network error during login" };
     }
   };
 
@@ -82,15 +85,18 @@ export const AuthProvider = ({ children }) => {
 
         localStorage.setItem("auth_token", data.token);
         localStorage.setItem("auth_user", JSON.stringify(userInfo));
+
         setToken(data.token);
         setUser(userInfo);
         setIsAuthenticated(true);
 
         return { success: true };
       }
+
       return { success: false, error: data?.error || "Signup failed" };
     } catch (err) {
-      return { success: false, error: "Signup error" };
+      console.error("Signup fetch error:", err);
+      return { success: false, error: "Network error during signup" };
     }
   };
 
@@ -112,6 +118,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// Custom hook
 export const useAuthentication = () => {
   return useContext(AuthContext) || {
     user: null,
