@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import FAQChat from "./FAQChat.jsx"; // AI Chatbot component
-import TopNav from "../../components/TopNav.jsx";
+import Footer from "../../components/Footer/Footer";
 import "./FAQStyles.css";
 
 const FAQ = () => {
@@ -56,64 +56,60 @@ const FAQ = () => {
   }, {});
 
   return (
-    <div className="faq-page">
-      {/* ✅ TopNav Added */}
-      <TopNav />
+    <div className="faq-container">
+      <h1>Frequently Asked Questions</h1>
+      <p className="faq-intro">
+        Have a question about any sports equipment or products? You can ask our AI chatbot below or browse the FAQs.
+      </p>
 
-      <div className="faq-container">
-        <h1>Frequently Asked Questions</h1>
-        <p className="faq-intro">
-          Have a question about any sports equipment or products? You can ask our AI chatbot below or browse the FAQs.
-        </p>
-
-        {/* Search bar */}
-        <div className="faq-search">
-          <input
-            type="text"
-            placeholder="Search by topic..."
-            value={searchTopic}
-            onChange={(e) => setSearchTopic(e.target.value)}
-          />
-        </div>
-
-        {/* FAQ List */}
-        <div className="faq-list">
-          {Object.keys(groupedFaqs).map((topic) => (
-            <div key={topic} className="faq-topic-group">
-              <h2 className="faq-topic">{topic}</h2>
-              {groupedFaqs[topic].map((faq) => (
-                <div
-                  key={faq.q}
-                  className={`faq-item ${openIndex === faq.q ? "open" : ""}`}
-                  onClick={() => toggleFAQ(faq.q)}
-                >
-                  <div className="faq-question">
-                    {faq.q}
-                    <span className={`faq-arrow ${openIndex === faq.q ? "open" : ""}`}>▾</span>
-                  </div>
-                  <div className="faq-answer">{faq.a}</div>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        {/* Submit Question Form */}
-        <div className="faq-submit">
-          <h2>Can't find your question? Why don't you ask a question </h2>
-          <textarea
-            placeholder="Type your question here..."
-            value={newQuestion}
-            onChange={(e) => setNewQuestion(e.target.value)}
-          />
-          <button onClick={handleAddQuestion}>Submit my question</button>
-        </div>
-
-        {/* AI Chatbot */}
-        <FAQChat />
-
-        {/* Footer */}
+      {/* Search bar */}
+      <div className="faq-search">
+        <input
+          type="text"
+          placeholder="Search by topic..."
+          value={searchTopic}
+          onChange={(e) => setSearchTopic(e.target.value)}
+        />
       </div>
+
+      {/* FAQ List */}
+      <div className="faq-list">
+        {Object.keys(groupedFaqs).map((topic) => (
+          <div key={topic} className="faq-topic-group">
+            <h2 className="faq-topic">{topic}</h2>
+            {groupedFaqs[topic].map((faq) => (
+              <div
+                key={faq.q}
+                className={`faq-item ${openIndex === faq.q ? "open" : ""}`}
+                onClick={() => toggleFAQ(faq.q)}
+              >
+                <div className="faq-question">
+                  {faq.q}
+                  <span className={`faq-arrow ${openIndex === faq.q ? "open" : ""}`}>▾</span>
+                </div>
+                <div className="faq-answer">{faq.a}</div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Submit Question Form */}
+      <div className="faq-submit">
+        <h2>Ask a Question</h2>
+        <textarea
+          placeholder="Type your question here..."
+          value={newQuestion}
+          onChange={(e) => setNewQuestion(e.target.value)}
+        />
+        <button onClick={handleAddQuestion}>Submit Question</button>
+      </div>
+
+      {/* AI Chatbot */}
+      <FAQChat />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

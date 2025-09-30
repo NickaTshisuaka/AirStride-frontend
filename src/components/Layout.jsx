@@ -1,5 +1,5 @@
 import React from "react";
-import Sidebar from "./TopNav";
+import Sidebar from "../components/Sidebar";
 function Layout({ children }) {
   return (
     <div style={{ display: "flex" }}>

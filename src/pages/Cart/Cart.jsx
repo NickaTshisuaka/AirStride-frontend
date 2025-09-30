@@ -1,108 +1,93 @@
-// src/pages/Cart/Cart.jsx
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../../context/CartContext";
-import { FaTrash, FaMinus, FaPlus, FaShoppingCart } from "react-icons/fa";
-import TopNav from "../../components/TopNav";
+import { FaPlus, FaMinus, FaTrashAlt, FaShoppingCart } from "react-icons/fa";
 import "./Cart.css";
 
-const Cart = () => {
-  const { cart, setCart, cartCount } = useCart();
-  const [total, setTotal] = useState(0);
+function Cart() {
   const navigate = useNavigate();
+  const [cartItems, setCartItems] = useState([]);
 
-  // Calculate total whenever cart changes
+  // Load cart from localStorage and add quantity if missing
   useEffect(() => {
-    const totalPrice = cart.reduce(
-      (sum, item) => sum + (item.Price || 0) * (item.quantity || 1),
-      0
-    );
-    setTotal(totalPrice);
-  }, [cart]);
+    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    const cartWithQty = storedCart.map(item => ({
+      ...item,
+      quantity: item.quantity || 1
+    }));
+    setCartItems(cartWithQty);
+  }, []);
 
-  // Increase / decrease quantity
-  const updateQuantity = (id, change) => {
-    const updatedCart = cart.map((item) =>
-      item._id === id
-        ? { ...item, quantity: Math.max(1, (item.quantity || 1) + change) }
-        : item
-    );
-    setCart(updatedCart);
+  const updateCart = (newCart) => {
+    setCartItems(newCart);
+    localStorage.setItem("cart", JSON.stringify(newCart));
   };
 
-  // Remove item completely
-  const removeItem = (id) => {
-    const updatedCart = cart.filter((item) => item._id !== id);
-    setCart(updatedCart);
+  const handleRemove = (id) => {
+    const updatedCart = cartItems.filter(item => item._id !== id);
+    updateCart(updatedCart);
   };
+
+  const handleQuantityChange = (id, delta) => {
+    const updatedCart = cartItems.map(item => {
+      if (item._id === id) {
+        const newQty = item.quantity + delta;
+        return { ...item, quantity: newQty > 0 ? newQty : 1 };
+      }
+      return item;
+    });
+    updateCart(updatedCart);
+  };
+
+  const totalPrice = cartItems.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
 
   return (
-    <div className="cart-page">
-      <TopNav />
+    <div className="cart-container">
+      <h1><FaShoppingCart /> Your Cart</h1>
 
-      <div className="cart-container">
-        {/* LEFT SIDE */}
-        <div className="cart-left">
-          <h1 className="cart-title">
-            <FaShoppingCart /> Your Cart
-          </h1>
+      {cartItems.length === 0 ? (
+        <p className="empty-cart">Your cart is empty.</p>
+      ) : (
+        <>
+          <div className="cart-grid">
+            {cartItems.map(item => (
+              <div className="cart-item" key={item._id}>
+                <div className="cart-image">
+                  <img
+                    src={item.img || "/images/default.jpeg"}
+                    alt={item.name}
+                  />
+                </div>
+                <div className="cart-info">
+                  <h2>{item.name}</h2>
+                  <p className="price">R {item.price}</p>
 
-          {cart.length === 0 && <p className="empty-cart">Your cart is empty.</p>}
+                  <div className="quantity-controls">
+                    <button onClick={() => handleQuantityChange(item._id, -1)}><FaMinus /></button>
+                    <span>{item.quantity}</span>
+                    <button onClick={() => handleQuantityChange(item._id, 1)}><FaPlus /></button>
+                  </div>
 
-          {cart.map((item) => (
-            <div key={item._id} className="cart-item animate">
-              <img
-                src={item.image || "/placeholder.png"}
-                alt={item.name}
-                className="cart-item-img"
-              />
-              <div className="cart-item-details">
-                <h3>{item.name}</h3>
-                <p className="cart-item-price">R {(item.Price || 0).toFixed(2)}</p>
-
-                <div className="quantity-controls">
-                  <button onClick={() => updateQuantity(item._id, -1)}>
-                    <FaMinus />
-                  </button>
-                  <span>{item.quantity || 1}</span>
-                  <button onClick={() => updateQuantity(item._id, 1)}>
-                    <FaPlus />
+                  <button className="remove-btn" onClick={() => handleRemove(item._id)}>
+                    <FaTrashAlt /> Remove
                   </button>
                 </div>
-
-                <button
-                  className="remove-btn"
-                  onClick={() => removeItem(item._id)}
-                >
-                  <FaTrash /> Remove
-                </button>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {/* RIGHT SIDE (SUMMARY) */}
-        <div className="cart-right animate">
-          <h3>Order Summary</h3>
-          <div className="summary-line">
-            <span>Items:</span>
-            <span>{cartCount}</span>
+          <div className="cart-summary">
+            <h2>Total: R {totalPrice.toFixed(2)}</h2>
+            <button className="checkout-btn" onClick={() => navigate("/Checkout")}>
+              Proceed to Checkout
+            </button>
           </div>
-          <div className="summary-total">
-            <span>Total:</span>
-            <span>R {total.toFixed(2)}</span>
-          </div>
-          <button
-            className="checkout-btn"
-            onClick={() => navigate("/checkout")}
-            disabled={cart.length === 0}
-          >
-            Proceed to Checkout
-          </button>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
-};
+}
 
 export default Cart;

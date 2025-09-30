@@ -3,8 +3,8 @@
   min-height: 100vh;
   font-family: 'Roboto', sans-serif;
   text-align: center;
-  background: linear-gradient(180deg, #d9ecff 0%, #ffffff 100%);
-  color: #005f8c;
+  background: linear-gradient(180deg, #b5daff 0%, #ffffff 100%); /* LIGHT MODE */
+  color: #007acc;
   padding: 50px 20px;
   transition: all 0.3s ease;
 }
@@ -17,30 +17,30 @@
 /* ---------- Heading ---------- */
 .account-container h1 {
   font-family: 'Montserrat', sans-serif;
-  font-size: 2.5rem;
+  font-size: 3rem;
 }
 
 .account-tagline {
-  font-size: 1.1rem;
-  margin-bottom: 30px;
-  color: #f5a45c;
-  font-weight: 500;
+  font-size: 1.3rem;
+  margin-bottom: 40px;
+  color: #f58220;
+  font-weight: bold;
 }
 
 /* ---------- Tabs ---------- */
 .tab-nav {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 15px;
   margin-bottom: 30px;
   flex-wrap: wrap;
 }
 
 .tab-nav button {
-  background: #5ba7d1;
+  background: #007acc; /* LIGHT MODE */
   color: white;
-  padding: 10px 18px;
-  border-radius: 10px;
+  padding: 10px 20px;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
   font-weight: bold;
@@ -48,21 +48,21 @@
 }
 
 .tab-nav button:hover {
-  background: #3e89b0;
+  background: #005fa3;
 }
 
 .tab-nav button.active {
-  background: #f5a45c;
+  background: #f58220;
   color: white;
 }
 
 /* ---------- Card ---------- */
 .account-card {
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 18px;
-  padding: 30px;
+  background: linear-gradient(145deg, #ffffff, #f0f8ff); /* LIGHT MODE */
+  border-radius: 20px;
+  padding: 40px;
   margin-bottom: 30px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  box-shadow: 0 12px 25px rgba(0,0,0,0.15);
 }
 
 /* DARK MODE OVERRIDES */
@@ -84,7 +84,7 @@
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: #274472;
+  background: #274472; /* LIGHT MODE fallback color */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -100,6 +100,11 @@
   object-fit: cover;
 }
 
+/* DARK MODE */
+.account-container.dark .profile-avatar {
+  background: #274472;
+}
+
 /* ---------- Avatar Buttons ---------- */
 .avatar-buttons {
   display: flex;
@@ -109,7 +114,7 @@
 
 /* ---------- Buttons ---------- */
 .btn {
-  background: #5ba7d1;
+  background: #007acc; /* LIGHT MODE */
   color: white;
   border: none;
   padding: 8px 14px;
@@ -119,15 +124,20 @@
 }
 
 .btn:hover {
-  background: #3e89b0;
+  background: #005fa3;
 }
 
 .btn.delete {
-  background: #888;
+  background: #5c5c5c;
 }
 
 .btn.delete:hover {
-  background: #555;
+  background: #444;
+}
+
+/* DARK MODE */
+.account-container.dark .btn {
+  background: #007acc;
 }
 
 /* ---------- Forms ---------- */
@@ -146,24 +156,13 @@ input[type="text"],
 input[type="email"],
 input[type="tel"],
 input[type="password"] {
-  width: 25vw;
+  width: 100%;
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #ddd; /* LIGHT MODE */
   border-radius: 12px;
   font-size: 1rem;
-  background: #f7f9fc;
+  background: #f7f9fc; /* LIGHT MODE */
   color: #1a1a1a;
-  transition: all 0.3s ease;
-}
-
-/* Hover Effect */
-input[type="text"]:hover,
-input[type="email"]:hover,
-input[type="tel"]:hover,
-input[type="password"]:hover {
-  border-color: #f5a45c;
-  box-shadow: 0 0 8px rgba(245, 164, 92, 0.5);
-  border-radius: 4px;
 }
 
 .account-container.dark input[type="text"],
@@ -177,7 +176,7 @@ input[type="password"]:hover {
 
 /* ---------- Save Button ---------- */
 .save-btn {
-  background: #5ba7d1;
+  background: #007acc;
   color: white;
   padding: 12px 20px;
   border: none;
@@ -189,7 +188,12 @@ input[type="password"]:hover {
 }
 
 .save-btn:hover {
-  background: #f5a45c;
+  background: #f58220;
+}
+
+/* DARK MODE */
+.account-container.dark .save-btn {
+  background: #007acc;
 }
 
 /* ---------- Toggle Switch ---------- */
@@ -208,7 +212,7 @@ input[type="password"]:hover {
   position: absolute;
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #ccc;
+  background-color: #ccc; /* LIGHT MODE */
   transition: 0.4s;
   border-radius: 34px;
 }
@@ -224,22 +228,9 @@ input[type="password"]:hover {
 }
 
 input:checked + .slider {
-  background-color: #5ba7d1;
+  background-color: #007acc;
 }
 
 input:checked + .slider:before {
   transform: translateX(26px);
-}
-
-/* ---------- Responsive ---------- */
-@media (max-width: 768px) {
-  .profile-header {
-    flex-direction: column;
-  }
-  .tab-nav {
-    gap: 8px;
-  }
-  .account-card {
-    padding: 20px;
-  }
 }

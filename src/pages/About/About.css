@@ -1,64 +1,34 @@
-/* ============================
-   ABOUT PAGE STYLING
-   ============================ */
-html {
-  scroll-behavior: smooth;
-}
-
 /* General container */
 .about-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   scroll-behavior: smooth;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Roboto', sans-serif;
   text-align: center;
   background: var(--bg-color);
   color: var(--text-color);
   transition: all 0.3s ease;
-  overflow-x: hidden;
 }
 
 /* Headings */
-.about-container h1,
-.about-content h1 {
+.about-container h1 {
   font-family: 'Montserrat', sans-serif;
   font-size: 3rem;
-  font-weight: 700;
   color: var(--primary-color);
   padding-top: 40px;
-  margin-bottom: 1rem;
-  opacity: 0;
-  transform: translateY(-30px);
-  transition: all 0.8s ease;
-}
-
-.about-container h1.animate,
-.about-content h1.animate {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 .about-tagline {
   font-size: 1.3rem;
-  font-weight: 500;
   margin: 10px 0 40px;
   color: var(--accent-color);
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.8s ease;
-}
-
-.about-tagline.animate {
-  opacity: 1;
-  transform: translateY(0);
+  font-weight: bold;
 }
 
 /* Content wrapper */
 .about-content {
   flex: 1;
-  max-width: 1500px; /* increased overall content max-width */
-  margin: 0 auto;
 }
 
 /* Full-page sections */
@@ -69,49 +39,34 @@ html {
   justify-content: center;
   align-items: center;
   padding: 60px 30px;
-  margin-bottom: 5rem;
   position: relative;
+  transition: background 0.5s ease;
   background: var(--section-bg);
-  opacity: 0;
-  transform: translateY(40px);
-  transition: all 0.8s ease;
-}
-
-.about-section.animate {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 .about-section:nth-child(odd) {
   background-color: var(--section-bg-alt);
 }
 
-/* Section cards */
+/* Section cards with gradient and shadow */
 .about-card {
   background: var(--card-bg);
-  border-radius: 1rem;
-  padding: 2rem 3rem; /* increased horizontal padding for width */
-  max-width: 1100px; /* increased max-width */
-  width: 100%;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  opacity: 0;
-  transform: scale(0.95);
-}
-
-.about-card.animate {
-  opacity: 1;
-  transform: scale(1);
+  border-radius: 20px;
+  padding: 50px;
+  max-width: 1000px;
+  box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
 }
 
 .about-card:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+  transform: translateY(-15px) scale(1.02);
+  box-shadow: 0 18px 35px rgba(0,0,0,0.2);
 }
 
 .about-card h2 {
-  font-size: 2rem;
-  margin-bottom: 1rem;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.2rem;
+  margin-bottom: 25px;
   color: var(--primary-color);
   position: relative;
 }
@@ -124,19 +79,13 @@ html {
   display: block;
   margin: 10px auto 0;
   border-radius: 2px;
-  animation: grow-line 1s ease forwards;
 }
 
-.about-card p {
-  margin-bottom: 1rem;
-  color: var(--text-color-secondary, #374151);
-}
-
-/* Mini-blocks and grids */
+/* Mini-blocks / company section */
 .mini-blocks,
 .people-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 25px;
   margin-top: 30px;
 }
@@ -147,155 +96,110 @@ html {
   background: var(--card-bg);
   border-radius: 15px;
   padding: 20px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
   font-size: 1.1rem;
   color: var(--primary-color);
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  opacity: 0;
-  transform: translateY(40px);
-  transition: all 0.8s ease;
-}
-
-.mini-block.animate,
-.person-card.animate,
-.product-card.animate {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.mini-block:hover,
-.person-card:hover,
-.product-card:hover {
-  transform: translateY(-10px) scale(1.05);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .mini-block img,
 .person-card img,
 .product-card img {
   width: 100%;
-  border-radius: 0.5rem;
-  margin-bottom: 0.8rem;
-  transition: transform 0.5s ease;
-}
-
-.mini-block img:hover,
-.person-card img:hover,
-.product-card img:hover {
-  transform: scale(1.08);
-}
-
-/* Force all person images same size */
-.person-card img {
-  width: 200px;
-  height: 220px;
-  object-fit: cover;
-  border-radius: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.person-card h3 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  border-radius: 12px;
+  margin-bottom: 15px;
 }
 
 /* Horizontal scroll wrapper */
 .product-grid-horizontal {
   display: flex;
-  gap: 1rem;
+  gap: 20px;
   overflow-x: auto;
-  margin-top: 2rem;
-  padding-bottom: 1rem;
-  flex-wrap: nowrap;
   scroll-behavior: smooth;
-  max-width: 900px; /* increased width for horizontal grid */
-  margin-left: auto;
-  margin-right: auto;
-  scrollbar-width: none;
+  flex-wrap: nowrap;
+  padding-bottom: 20px;
+  width: 100%;
 }
 
+/* Hide scrollbar */
 .product-grid-horizontal::-webkit-scrollbar {
-  display: none;
+  height: 8px;
+}
+
+.product-grid-horizontal::-webkit-scrollbar-thumb {
+  background-color: var(--primary-color, #007acc);
+  border-radius: 4px;
 }
 
 /* Product card */
 .product-card {
-  flex: 0 0 300px; /* increased width */
-  height: 260px; /* increased height */
+  min-width: 300px;       /* wider cards */
+  flex: 0 0 auto;         /* prevent shrinking */
   background: var(--card-bg);
-  border-radius: 0.75rem;
-  padding: 1rem;
-  text-align: center;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  text-align: left;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
-
 .product-card img {
   width: 100%;
-  height: 140px; /* scaled image inside bigger card */
-  object-fit: cover;
-  border-radius: 0.5rem;
-  margin-bottom: 0.5rem;
+  border-radius: 12px;
+  margin-bottom: 15px;
 }
 
-.product-card h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 0.3rem;
+/* Product grid horizontal */
+.product-grid-horizontal {
+  display: flex;
+  gap: 20px;
+  overflow-x: hidden ;
+  padding-bottom: 10px;
+  flex-wrap: nowrap;
 }
 
-.product-card p {
-  font-size: 0.9rem;
-  color: #4b5563;
+.product-grid-horizontal::-webkit-scrollbar {
+  height: 8px;
+}
+
+.product-grid-horizontal::-webkit-scrollbar-thumb {
+  background-color: var(--primary-color);
+  border-radius: 4px;
 }
 
 /* Explore button */
 .explore-btn {
   display: inline-block;
-  margin-top: 2rem;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #2563eb, #1e40af);
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: var(--primary-color);
   color: #fff;
-  border-radius: 0.5rem;
+  border-radius: 8px;
   font-weight: 600;
   text-decoration: none;
-  transition: transform 0.3s ease, background 0.3s ease;
+  align-self: flex-end;
+  transition: background 0.3s ease;
 }
 
 .explore-btn:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #1e40af, #1e3a8a);
+  background-color: var(--accent-color);
 }
 
-/* ============================
-   KEYFRAMES FOR SCROLL ANIMATIONS
-   ============================ */
-@keyframes grow-line {
-  from { width: 0; }
-  to { width: 60px; }
+/* Footer stays at bottom naturally */
+footer {
+  flex-shrink: 0;
 }
 
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(50px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* ============================
-   THEME VARIABLES
-   ============================ */
+/* CSS Variables for light/dark mode */
 :root {
-  --bg-color: #b5daff;
+  --bg-color: #b5daff;          /* light blue */
   --text-color: #007acc;
-  --text-color-secondary: #374151;
   --card-bg: #ffffff;
   --primary-color: #007acc;
   --accent-color: #f58220;

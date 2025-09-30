@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuthentication } from "./AuthContext";
-import Lottie from "lottie-react";
 import MarathonAnimation from "./assets/animations/Marathon.json";
 import HeartbeatAnimation from "./assets/animation2/Heartbeat.json";
+import Lottie from "lottie-react";
 import "./SigninLogin.css";
-
-// Base backend URL
-const BASE_URL = "http://98.89.166.198:3001";
 
 // Intro animation wrapper
 const IntroAnimation = () => (
@@ -38,10 +35,10 @@ const SigninLogin = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login,  isAuthenticated, loading } = useAuthentication();
+  const { login, signup, isAuthenticated, loading } = useAuthentication();
   const navigate = useNavigate();
 
-  // Animation timers
+  // Handle intro animation fade
   useEffect(() => {
     const fadeTimer = setTimeout(() => setFadeOut(true), 4500);
     const hideTimer = setTimeout(() => {
@@ -54,7 +51,6 @@ const SigninLogin = () => {
     };
   }, []);
 
-  // Redirect logged-in users
   if (!loading && isAuthenticated) {
     return <Navigate to="/home" replace />;
   }
@@ -65,20 +61,6 @@ const SigninLogin = () => {
     if (error) setError("");
   };
 
-  // API helper for POST requests
-  const postAPI = async (endpoint, body) => {
-    const res = await fetch(`${BASE_URL}${endpoint}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(errText || "Network error");
-    }
-    return res.json();
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -86,62 +68,65 @@ const SigninLogin = () => {
 
     try {
       if (isLogin) {
-        // Login
         if (!formData.email || !formData.password) {
           setError("Please fill in all fields");
-          setIsLoading(false);
           return;
         }
 
-        const result = await postAPI("/users/login", {
-          email: formData.email,
-          password: formData.password,
-        });
-
-        // Save token & user in AuthContext
-        login(result.token, result.user);
-        navigate("/home", { replace: true });
+        const result = await login(formData.email, formData.password);
+        if (result?.success) {
+          navigate("/home", { replace: true });
+        } else {
+          setError(result?.error || "Login failed");
+        }
       } else {
-        // Signup
-        if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
+        if (
+          !formData.email ||
+          !formData.password ||
+          !formData.firstName ||
+          !formData.lastName
+        ) {
           setError("Please fill in all fields");
-          setIsLoading(false);
           return;
         }
 
         if (formData.password !== formData.confirmPassword) {
           setError("Passwords do not match");
-          setIsLoading(false);
           return;
         }
 
         if (formData.password.length < 6) {
           setError("Password must be at least 6 characters long");
-          setIsLoading(false);
           return;
         }
 
-        await postAPI("/users/signup", {
+        const result = await signup({
           email: formData.email,
           password: formData.password,
           firstName: formData.firstName,
           lastName: formData.lastName,
         });
 
-        // Switch to login form
-        setIsLogin(true);
-        setFormData({
-          email: formData.email,
-          password: "",
-          confirmPassword: "",
-          firstName: "",
-          lastName: "",
-        });
-        setError("Signup successful! Please log in.");
+        if (result?.success) {
+          setIsLogin(true);
+          setFormData({
+            email: formData.email,
+            password: "",
+            confirmPassword: "",
+            firstName: "",
+            lastName: "",
+          });
+          setError("");
+          setTimeout(() => {
+            setError("Signup successful! Please log in.");
+          }, 100);
+        } else {
+          setError(result?.error || "Signup failed");
+        }
       }
     } catch (err) {
       console.error("Auth Error:", err);
-      setError(err.message || "An unexpected error occurred");
+      setError("An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -179,7 +164,11 @@ const SigninLogin = () => {
             <div className="auth-form-wrapper">
               <div className="auth-header">
                 <h2>{isLogin ? "Welcome Back 👋" : "Create Account 🚀"}</h2>
-                <p>{isLogin ? "Sign in to your account" : "Sign up for a new account"}</p>
+                <p>
+                  {isLogin
+                    ? "Sign in to your account"
+                    : "Sign up for a new account"}
+                </p>
               </div>
 
               {error && <div className="error-message">{error}</div>}
@@ -257,34 +246,98 @@ const SigninLogin = () => {
 
                 {isLogin && (
                   <div className="forgot-password">
-                    <a href="#" className="forgot-link">Forgot your password?</a>
+                    <a href="#" className="forgot-link">
+                      Forgot your password?
+                    </a>
                   </div>
                 )}
 
-                <button type="submit" className="auth-button" disabled={isLoading}>
-                  {isLoading ? (isLogin ? "Signing In..." : "Signing Up...") : isLogin ? "Sign In" : "Sign Up"}
+                <button
+                  type="submit"
+                  className="auth-button"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <span className="loading-text">
+                      <span className="loading-spinner-small"></span>
+                      {isLogin ? "Signing In..." : "Signing Up..."}
+                    </span>
+                  ) : isLogin ? (
+                    "Sign In"
+                  ) : (
+                    "Sign Up"
+                  )}
                 </button>
               </form>
 
-              <div className="auth-divider"><span>or continue with</span></div>
+              <div className="auth-divider">
+                <span>or continue with</span>
+              </div>
 
+              {/* Social icons */}
               <div className="social-login">
-                {["Google","GitHub","Facebook","Twitter","LinkedIn","Instagram","TikTok"].map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    className={`social-button ${p.toLowerCase()}`}
-                    onClick={() => handleSocialLogin(p)}
-                  >
-                    <i className={`fab fa-${p.toLowerCase()}`}></i>
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  className="social-button google"
+                  onClick={() => handleSocialLogin("Google")}
+                >
+                  <i className="fab fa-google"></i>
+                </button>
+                <button
+                  type="button"
+                  className="social-button github"
+                  onClick={() => handleSocialLogin("GitHub")}
+                >
+                  <i className="fab fa-github"></i>
+                </button>
+                <button
+                  type="button"
+                  className="social-button facebook"
+                  onClick={() => handleSocialLogin("Facebook")}
+                >
+                  <i className="fab fa-facebook-f"></i>
+                </button>
+                <button
+                  type="button"
+                  className="social-button twitter"
+                  onClick={() => handleSocialLogin("Twitter")}
+                >
+                  <i className="fab fa-twitter"></i>
+                </button>
+                <button
+                  type="button"
+                  className="social-button linkedin"
+                  onClick={() => handleSocialLogin("LinkedIn")}
+                >
+                  <i className="fab fa-linkedin-in"></i>
+                </button>
+                <button
+                  type="button"
+                  className="social-button instagram"
+                  onClick={() => handleSocialLogin("Instagram")}
+                >
+                  <i className="fab fa-instagram"></i>
+                </button>
+                <button
+                  type="button"
+                  className="social-button tiktok"
+                  onClick={() => handleSocialLogin("TikTok")}
+                >
+                  <i className="fab fa-tiktok"></i>
+                </button>
               </div>
 
               <div className="auth-footer">
                 <p>
-                  {isLogin ? "Don't have an account? " : "Already have an account? "}
-                  <button type="button" onClick={toggleForm} disabled={isLoading}>
+                  {isLogin
+                    ? "Don't have an account? "
+                    : "Already have an account? "}
+                  <button
+                    type="button"
+                    onClick={toggleForm}
+                    className="toggle-button"
+                    disabled={isLoading}
+                  >
                     {isLogin ? "Sign up" : "Sign in"}
                   </button>
                 </p>

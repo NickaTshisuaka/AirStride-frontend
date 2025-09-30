@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "./AccountSettings.css";
-import TopNav from "../../components/TopNav";
 
 const AccountSettings = () => {
   const [activeTab, setActiveTab] = useState("profile");
@@ -8,8 +7,8 @@ const AccountSettings = () => {
     localStorage.getItem("darkMode") === "true"
   );
   const [profileImage, setProfileImage] = useState(null);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [firstName, setFirstName] = useState("Nicka");
+  const [lastName, setLastName] = useState("Tshisuaka");
 
   // Persist theme globally
   useEffect(() => {
@@ -35,7 +34,6 @@ const AccountSettings = () => {
 
   return (
     <div className="account-container">
-      <TopNav />
       <h1>Account Settings</h1>
       <p className="account-tagline">
         Manage your profile, preferences, and appearance
@@ -103,15 +101,18 @@ const AccountSettings = () => {
               </div>
               <div className="form-group">
                 <label>Email</label>
-                <input type="email" />
+                <input type="email"  />
               </div>
               <div className="form-group">
                 <label>Phone</label>
-                <input type="tel" />
+                <input type="tel"  />
               </div>
               <div className="form-group">
                 <label>Address</label>
-                <input type="text" />
+                <input
+                  type="text"
+                  
+                />
               </div>
               <button className="save-btn">Save Changes</button>
             </form>
@@ -150,15 +151,6 @@ const AccountSettings = () => {
             </label>
             <label>
               <input type="checkbox" defaultChecked /> Product Updates
-            </label>
-            <label>
-              <input type="checkbox" /> Order & Delivery Updates
-            </label>
-            <label>
-              <input type="checkbox" /> Promotional Offers & Discounts
-            </label>
-            <label>
-              <input type="checkbox" /> Security Alerts & Login Notifications
             </label>
           </div>
         )}

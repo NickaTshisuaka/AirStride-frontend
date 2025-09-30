@@ -1,37 +1,15 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AirStride</title>
+    <link rel="shortcut icon" href="./public/logo.jpg" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
 
-    <!-- Favicon -->
-    <link rel="shortcut icon" href="./logo.jpg" type="image/x-icon" />
-
-    <!-- Google Fonts -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Montserrat:wght@600;700&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- Content Security Policy (CSP) -->
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="
-        default-src 'self';
-        script-src 'self' https://maps.googleapis.com;
-        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        font-src 'self' https://fonts.gstatic.com;
-        img-src 'self' http://localhost:3001 http://98.89.166.198:3001 data:;
-        connect-src 'self' http://localhost:3001 http://98.89.166.198:3001 ws://localhost:3000;
-        frame-src 'self' https://www.google.com https://maps.google.com;
-      "
-    />
   </head>
   <body>
     <div id="root"></div>
-
-    <!-- ⚡ Vite entry point — DO NOT change this -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

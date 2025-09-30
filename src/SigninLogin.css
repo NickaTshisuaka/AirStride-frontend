@@ -1,9 +1,7 @@
 * {
   box-sizing: border-box;
 }
-.animation-wrapper{
-  width: fit-content;
-}
+
 .auth-container {
   min-height: 100vh;
   display: flex;

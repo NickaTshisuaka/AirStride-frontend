@@ -1,73 +1,74 @@
-// src/pages/About/About.jsx
 import React, { useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
 import "./About.css";
-import TopNav from "../../components/TopNav";
+import Footer from "../../components/Footer/Footer";
 
 const About = () => {
   const productGridRef = useRef();
-  const location = useLocation();
 
-  // Auto-scroll horizontally
+  // Auto-scroll horizontally using requestAnimationFrame
   useEffect(() => {
     const grid = productGridRef.current;
     let scrollPos = 0;
+
     const step = () => {
-      scrollPos += 1;
+      scrollPos += 1; // pixels per frame, adjust for speed
       if (scrollPos >= grid.scrollWidth - grid.clientWidth) scrollPos = 0;
       grid.scrollLeft = scrollPos;
       requestAnimationFrame(step);
     };
+
     requestAnimationFrame(step);
   }, []);
 
-  // Scroll-triggered animations
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) entry.target.classList.add("animate");
-        });
-      },
-      { threshold: 0.2 }
-    );
-
-    const elements = document.querySelectorAll(
-      ".about-section, .about-card, .mini-block, .person-card, .product-card, h1, .about-tagline"
-    );
-
-    elements.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
-
-  // ✅ Smooth scroll when hash is present
-  useEffect(() => {
-    if (location.hash) {
-      const el = document.querySelector(location.hash);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  }, [location]);
-
   const products = [
-    { id: 1, image: "/prod1.jpeg", name: "Breathing Trainer Pro", description: "Enhances lung capacity and endurance for runners and athletes." },
-    { id: 2, image: "/prod2.jpeg", name: "AirStride Jogging Shoes", description: "Lightweight, cushioned, and performance-optimized." },
-    { id: 3, image: "/prod3.jpeg", name: "Performance Tracker", description: "Tracks heart rate, VO2 max, and stamina with real-time insights." },
-    { id: 4, image: "/prod4.jpeg", name: "Resistance Training Bands", description: "Durable bands for strength and flexibility training." },
-    { id: 5, image: "/prod5.jpeg", name: "Smart Hydration Bottle", description: "Monitors water intake and syncs with the app for tracking." },
-    { id: 6, image: "/prod6.jpeg", name: "Performance Apparel", description: "Lightweight, breathable clothing for running and training." },
+    {
+      id: 1,
+      image: "/prod1.jpeg",
+      name: "Breathing Trainer Pro",
+      description:
+        "Enhances lung capacity and endurance for runners and athletes.",
+    },
+    {
+      id: 2,
+      image: "/prod2.jpeg",
+      name: "AirStride Jogging Shoes",
+      description: "Lightweight, cushioned, and performance-optimized.",
+    },
+    {
+      id: 3,
+      image: "/prod3.jpeg",
+      name: "Performance Tracker",
+      description:
+        "Tracks heart rate, VO2 max, and stamina with real-time insights.",
+    },
+    {
+      id: 4,
+      image: "/prod4.jpeg",
+      name: "Resistance Training Bands",
+      description: "Durable bands for strength and flexibility training.",
+    },
+    {
+      id: 5,
+      image: "/prod5.jpeg",
+      name: "Smart Hydration Bottle",
+      description: "Monitors water intake and syncs with the app for tracking.",
+    },
+    {
+      id: 6,
+      image: "/prod6.jpeg",
+      name: "Performance Apparel",
+      description: "Lightweight, breathable clothing for running and training.",
+    },
   ];
 
   return (
     <div className="about-container">
-      <TopNav />
       <div className="about-content">
         <h1>About AirStride</h1>
         <p className="about-tagline">Breathe. Stride. Achieve.</p>
 
         {/* Our Company */}
-        <section className="about-section" id="company">
+        <section className="about-section">
           <div className="about-card">
             <h2>Our Company</h2>
             <p>
@@ -93,7 +94,7 @@ const About = () => {
         </section>
 
         {/* Our People */}
-        <section className="about-section" id="mission">
+        <section className="about-section">
           <div className="about-card">
             <h2>Our People</h2>
             <p>
@@ -127,7 +128,7 @@ const About = () => {
         </section>
 
         {/* Our Products */}
-        <section className="about-section" id="team">
+        <section className="about-section">
           <div className="about-card">
             <h2>Our Products</h2>
             <p>AirStride products are designed to elevate your training experience:</p>
@@ -140,10 +141,14 @@ const About = () => {
                 </div>
               ))}
             </div>
-            <a href="#" className="explore-btn">Explore More</a>
+            <a href="#" className="explore-btn">
+              Explore More
+            </a>
           </div>
         </section>
       </div>
+
+      <Footer />
     </div>
   );
 };

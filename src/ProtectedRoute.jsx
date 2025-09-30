@@ -1,14 +1,22 @@
 // src/ProtectedRoute.jsx
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuthentication } from "./AuthContext";
+import Layout from "./components/Layout.jsx";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuthentication();
+  const location = useLocation();
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return <div className="loading-container">Loading...</div>;
+  }
 
-  return isAuthenticated ? children : <Navigate to="/signinlogin" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/signinlogin" state={{ from: location }} replace />;
+  }
+
+  return <Layout>{children}</Layout>;
 };
 
 export default ProtectedRoute;

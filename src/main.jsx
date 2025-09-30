@@ -4,18 +4,14 @@ import App from './App.jsx'
 import './index.css'
 // import { ThemeProvider } from "./ThemeContext.jsx";
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import { AuthProvider } from "./AuthContext"; 
-import { CartProvider } from './context/CartContext.jsx';
+import { AuthProvider } from "./AuthContext"; // ✅ Make sure the path is correct
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <AuthProvider>
-    <CartProvider> 
+    
       <React.StrictMode>
         <App />
       </React.StrictMode>
-    </CartProvider>
+    
   </AuthProvider>
 )
-
-    
-  

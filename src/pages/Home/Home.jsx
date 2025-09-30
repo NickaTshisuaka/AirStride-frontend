@@ -1,112 +1,121 @@
-import React, { useEffect, useRef, useState } from "react";
-import TopNav from "../../components/TopNav";
+import React from "react";
+import Sidebar from "../../components/Sidebar";
 import "./Home.css";
 
-export default function Home() {
-  const videoRef = useRef(null);
-  const [fadeOutHeroText, setFadeOutHeroText] = useState(false);
+// Pull a friendly name without touching your auth logic
+const getUserName = () => {
+  const fromLocal =
+    localStorage.getItem("user_name") ||
+    [localStorage.getItem("firstName"), localStorage.getItem("lastName")]
+      .filter(Boolean)
+      .join(" ");
+  return fromLocal && fromLocal.trim().length > 0 ? fromLocal : "Athlete";
+};
 
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const handleTimeUpdate = () => {
-      const remaining = video.duration - video.currentTime;
-      if (remaining <= 10) {
-        setFadeOutHeroText(true); // start fade out
-      } else {
-        setFadeOutHeroText(false); // show text
-      }
-    };
-
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    return () => video.removeEventListener("timeupdate", handleTimeUpdate);
-  }, []);
+const Home = () => {
+  const userName = getUserName();
 
   return (
-    <div className="page-wrapper">
-      {/* Navbar */}
-      <TopNav />
+    <div className="home-container">
+      <Sidebar />
+
+      {/* Top-right welcome chip */}
+      <header className="topbar">
+        <div className="welcome-chip">
+          <span className="wave">👋</span> Welcome, <strong>{userName}</strong>
+        </div>
+      </header>
 
       {/* HERO */}
       <section className="hero">
+        {/* Background video */}
         <video
-          ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
           className="hero-video"
-        >
-          <source src="/videos/sports.mp4" type="video/mp4" />
-        </video>
+          src="/videos/airstride-hero.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster="/home-dashboard-picture.jpg"
+        />
+        {/* soft brand overlay */}
+        <div className="hero-overlay" />
 
-        <div className="hero-overlay"></div>
+        <div className="hero-inner">
+          <h1 className="hero-title">Elevate Your Fitness Journey</h1>
+          <p className="hero-sub">
+            AirStride helps runners breathe smarter and stride further. Track
+            your sessions, optimize breathing cadence, and unlock performance
+            insights—beautifully visualized and tuned to your goals.
+          </p>
 
-        {/* Floating spheres */}
+          <a className="cta" href="/products">Start Your Free Trial →</a>
+        </div>
+
+        {/* floating accents */}
         <div className="floaters">
-          <span className="floater floater-1"></span>
-          <span className="floater floater-2"></span>
-          <span className="floater floater-3"></span>
-          <span className="floater floater-4"></span>
-          <span className="floater floater-5"></span>
-        </div>
-
-        {/* Hero Text (fades out last 10s) */}
-        <div className={`hero-inner ${fadeOutHeroText ? "fade-out" : ""}`}>
-          <h1 className="hero-title">
-            You don’t need to be an Olympian to work out like a winner
-          </h1>
-          <a className="cta" href="/products">Start your journey →</a>
+          <span className="orb orb-a" />
+          <span className="orb orb-b" />
+          <span className="orb orb-c" />
         </div>
       </section>
 
-      {/* ===== Rest of Home Page Sections ===== */}
+      {/* FEATURES (below video area) */}
+      <section className="features">
+        <article className="feature-card">
+          <div className="feature-icon"><i className="fas fa-shoe-prints" /></div>
+          <h3>Track Your Activity</h3>
+          <p>Precision logs for pace, distance, cadence, and calories—synced to your AirStride profile.</p>
+        </article>
 
-      {/* Mission */}
-      <section className="mission">
-        <h2>Our Mission</h2>
-        <p>
-          At <strong>AirStride</strong>, we believe fitness should be accessible,
-          inspiring, and fun. Our products are designed to help you breathe
-          better, move smarter, and live stronger.
-        </p>
+        <article className="feature-card">
+          <div className="feature-icon"><i className="fas fa-wind" /></div>
+          <h3>Master Your Breathing</h3>
+          <p>Guided breath rhythms and recovery timers to reduce fatigue and sharpen focus.</p>
+        </article>
+
+        <article className="feature-card">
+          <div className="feature-icon"><i className="fas fa-chart-line" /></div>
+          <h3>Insights That Matter</h3>
+          <p>Smart recommendations turn your data into clear next steps for stronger runs.</p>
+        </article>
       </section>
 
-      {/* Stats */}
-      <section className="stats">
-        <div className="stat-card">
-          <h3>50k+</h3>
-          <p>Happy Customers</p>
+      {/* STATS RIBBON */}
+      <section className="ribbon">
+        <div className="ribbon-item">
+          <div className="num">+120k</div>
+          <div className="label">Sessions Tracked</div>
         </div>
-        <div className="stat-card">
-          <h3>120+</h3>
-          <p>Stores Worldwide</p>
+        <div className="ribbon-item">
+          <div className="num">98%</div>
+          <div className="label">User Satisfaction</div>
         </div>
-        <div className="stat-card">
-          <h3>15</h3>
-          <p>Years of Innovation</p>
+        <div className="ribbon-item">
+          <div className="num">15%</div>
+          <div className="label">Avg. Pace Improvement</div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="testimonials">
-        <h2>What Our Customers Say</h2>
-        <div className="testimonial-cards">
-          <div className="testimonial">
-            <p>"AirStride changed the way I train — I feel unstoppable!"</p>
-            <span>- Alex M.</span>
-          </div>
-          <div className="testimonial">
-            <p>"The best investment I’ve made for my fitness journey."</p>
-            <span>- Sarah L.</span>
-          </div>
-          <div className="testimonial">
-            <p>"Breathing trainers are a game changer. Highly recommend."</p>
-            <span>- James K.</span>
-          </div>
+      {/* STORY / MISSION */}
+      <section className="story">
+        <div className="story-card">
+          <h2>Our Mission</h2>
+          <p>Empower athletes with tools that make every breath and every stride count.</p>
+        </div>
+        <div className="story-card">
+          <h2>Our Promise</h2>
+          <p>Design-first experiences, reliable data, and performance features that stay out of your way.</p>
+        </div>
+        <div className="story-card">
+          <h2>Join the Crew</h2>
+          <p>Connect with runners worldwide, share progress, and celebrate personal bests.</p>
         </div>
       </section>
+
+      <footer className="footer">© 2025 AirStride</footer>
     </div>
   );
-}
+};
+
+export default Home;

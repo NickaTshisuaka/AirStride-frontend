@@ -1,4 +1,3 @@
-// src/PublicRoute.jsx
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuthentication } from "./AuthContext";
@@ -8,7 +7,9 @@ const PublicRoute = ({ children }) => {
 
   if (loading) return <div>Loading...</div>;
 
-  return !isAuthenticated ? children : <Navigate to="/home" replace />;
+  if (isAuthenticated) return <Navigate to="/home" replace />;
+
+  return children;
 };
 
 export default PublicRoute;
