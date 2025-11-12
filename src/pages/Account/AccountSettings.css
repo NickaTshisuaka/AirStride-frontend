@@ -1,0 +1,313 @@
+/* =======================================
+   THEME COLORS
+========================================= */
+:root {
+  --accent: #ff8a34;        /* orange accent */
+  --navy: #0f172a;          /* dark/navy base */
+  --card-light: #ffffff;     /* light card bg */
+  --bg-light: #f7f9fc;       /* light page bg */
+  --text-light: #0f172a;     /* light text */
+  --radius: 14px;
+}
+
+[data-theme="dark"] {
+  --bg-light: #0f172a;       /* page bg */
+  --card-light: #1e293b;     /* card bg */
+  --text-light: #cbd5e1;     /* text */
+  --accent: #ff8a34;         /* keep accent same */
+}
+
+/* =======================================
+   MAIN WRAPPER
+========================================= */
+.settings {
+  min-height: 100vh;
+  font-family: Poppins, sans-serif;
+  background: var(--bg-light);
+  color: var(--text-light);
+  transition: all 0.3s ease;
+  padding: 20px;
+}
+
+/* =======================================
+   LAYOUT - SIDEBAR + CONTENT
+========================================= */
+.layout {
+  /* display: flex;              sidebar + content side by side */
+  /* flex-direction:;        ensure horizontal */
+  /* gap: 25px;
+  max-width: 1250px; */
+  margin: auto;
+  align-items: flex-end;
+}
+
+/* =======================================
+   SIDEBAR
+========================================= */
+.side {
+  width: 230px;
+  background: var(--card-light);
+  border-radius: var(--radius);
+  padding: 20px;
+  /* display: flex; */
+  /* flex-direction: column;
+  gap: 10px; */
+  box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+  transition: 0.3s;
+}
+
+.side-btn {
+  width: 100%;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 10px;
+  border: none;
+  background: none;
+  transition: all 0.25s ease;
+  opacity: 0.8;
+}
+
+.side-btn:hover {
+  background: rgba(255,138,52,0.15);
+}
+
+.side-btn.active {
+  background: var(--accent);
+  color: white;
+  opacity: 1;
+}
+
+/* =======================================
+   CONTENT AREA
+========================================= */
+.content {
+  /* flex: 1;                    take remaining space */
+  /* display: flex;
+  flex-direction: column;
+  gap: 20px; */
+  animation: fadeSlide 0.4s ease;
+}
+
+/* =======================================
+   CARD
+========================================= */
+.card {
+  background: var(--card-light);
+  border-radius: var(--radius);
+  padding: 35px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+  transition: background 0.3s, color 0.3s;
+}
+
+/* =======================================
+   PROFILE BOX
+========================================= */
+.profile-box {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin-bottom: 25px;
+}
+
+.profile-pic {
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 28px;
+  color: #000;
+}
+
+.profile-pic img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.pic-btns {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  border: none;
+  transition: 0.25s;
+}
+
+.btn.blue {
+  background: var(--navy);
+  color: white;
+}
+
+.btn.gray {
+  background: #cbd5e1;
+}
+
+/* =======================================
+   FORM
+========================================= */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 10px;
+}
+
+.row {
+  display: flex;
+  gap: 20px;
+}
+
+.field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: var(--bg-light);
+  color: var(--text-light);
+  width: 100%;
+  transition: 0.25s;
+}
+
+/* =======================================
+   SAVE BUTTON
+========================================= */
+.save-btn {
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.save-btn:hover {
+  opacity: 0.85;
+}
+
+/* =======================================
+   THEME TOGGLE BUTTON
+========================================= */
+.theme-btn {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--navy);
+  color: var(--accent);
+  transition: 0.25s;
+  align-self: flex-start;
+}
+
+.theme-btn:hover {
+  background: var(--accent);
+  color: var(--navy);
+}
+
+/* =======================================
+   TOGGLE SWITCH
+========================================= */
+.switch {
+  position: relative;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+}
+
+.slider {
+  position: absolute;
+  inset: -17%;
+  width: 3.5vw;
+  height: 100%;
+  background: #ccc;
+  border-radius: 40px;
+  transition: 0.3s;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: 2px;
+  left: 2px;
+  border-radius: 50%;
+  background: white;
+  transition: 0.25s;
+}
+
+.switch input:checked + .slider {
+  background: var(--accent);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(26px);
+}
+
+/* =======================================
+   ANIMATIONS
+========================================= */
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  opacity: 0;
+  animation: fadeSlide 0.45s ease forwards;
+}
+
+/* =======================================
+   DARK MODE OVERRIDES
+========================================= */
+.settings[data-theme="dark"] {
+  background: var(--navy);
+  color: var(--text-light);
+}
+
+.settings[data-theme="dark"] .card {
+  background: var(--card-light);
+  color: var(--text-light);
+}
+
+.settings[data-theme="dark"] input {
+  background: #1e293b;
+  color: var(--text-light);
+  border: 1px solid #334155;
+}
+
+.settings[data-theme="dark"] .side-btn:hover {
+  background: rgba(255,138,52,0.2);
+}
+
+.settings[data-theme="dark"] .side-btn.active {
+  background: var(--accent);
+  color: #111;
+}

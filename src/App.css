@@ -1,0 +1,44 @@
+/* Intro animation overlay */
+.intro-screen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, #9fcfee, #538fb9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  transition: opacity 1s ease;
+  /* overflow-y: hidden; */
+}
+
+.intro-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Light mode (default) */
+:root {
+  --bg: #ffffff;
+  --text: #111111;
+  --card: #f8f8f8;
+  --accent: #f7931e;
+}
+
+/* Dark mode */
+[data-theme="dark"] {
+  --bg: #111111;
+  --text: #f8f8f8;
+  --card: #1e1e1e;
+  --accent: #f7931e;
+}
+
+/* Now everywhere in your site */
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.card {
+  background: var(--card);
+}
+

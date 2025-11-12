@@ -1,0 +1,269 @@
+/* --- Brand Color Variables --- */
+:root {
+  --primary-navy: #001f3f;       /* Dark Navy Blue */
+  --accent-orange: #ff8c00;      /* Your Brand Orange */
+  --baby-blue: #89cff0;          /* Your Brand Baby Blue */
+  --text-dark: #333;
+  --bg-light: #ffffff;
+  --bg-section: #f7f9fc;         /* Light background for the page */
+  --border-light: #eee;
+  --shadow-primary: 0 8px 20px rgba(0, 31, 63, 0.08); /* Lighter, more realistic shadow */
+}
+
+/* --- Page Structure --- */
+.checkout-page {
+  min-height: 100vh;
+  padding: 40px 20px;
+  background-color: var(--bg-section);
+}
+
+.checkout-page h1 {
+  font-size: 3rem;
+  color: var(--primary-navy);
+  margin-bottom: 30px;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* --- Main Layout Grid --- */
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr; 
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+/* --- Form Styling --- */
+.checkout-form {
+  background: var(--bg-light);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: var(--shadow-primary);
+}
+
+.form-section-group {
+    margin-bottom: 35px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid var(--border-light); /* Solid line looks cleaner */
+}
+.form-section-group:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.checkout-form h2 {
+  color: var(--primary-navy);
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--accent-orange);
+  padding-left: 15px;
+  line-height: 1;
+}
+
+/* --- Input Fields (REALISM & USABILITY) --- */
+.form-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
+  position: relative; /* Essential for icon positioning */
+}
+
+.form-group input, 
+.form-group textarea, 
+.form-group select {
+  flex: 1;
+  /* Key change: Increase left padding to prevent icon overlap */
+  padding: 12px 15px 12px 45px; 
+  border-radius: 8px; /* Slightly less rounded */
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  background-color: #fcfcfc; /* Slight off-white background */
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus, 
+.form-group textarea:focus, 
+.form-group select:focus {
+  border-color: var(--baby-blue);
+  box-shadow: 0 0 0 2px rgba(137, 207, 240, 0.4);
+  outline: none;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+  padding-top: 12px;
+}
+
+/* Icon Positioning: Now sits in the padding space */
+.form-group .icon {
+  color: var(--primary-navy);
+  min-width: 20px;
+  font-size: 1.1rem;
+  position: absolute;
+  left: 15px; /* Aligns icon neatly */
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none; 
+  z-index: 2; /* Ensure icon is above input */
+}
+
+/* Adjust icon position for multiline textarea */
+.form-group textarea + .icon {
+    top: 15px;
+    transform: none;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+}
+.form-row .form-group {
+  flex: 1;
+}
+.form-row .form-group input {
+    /* Padding is consistent for consistency */
+    padding-left: 45px; 
+}
+
+
+/* --- Security Info Block --- */
+.security-info {
+    display: flex;
+    align-items: center;
+    background-color: #e6f7ff; /* Very light baby blue background */
+    color: var(--primary-navy);
+    border: 1px solid var(--baby-blue);
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+}
+.security-info .security-icon {
+    color: var(--primary-navy);
+    font-size: 1.1rem;
+    margin-right: 10px;
+}
+.secure-message-small {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 10px;
+}
+.secure-message-small .fa-lock {
+    margin-right: 5px;
+    color: var(--accent-orange); /* Lock icon in Orange for emphasis */
+}
+
+
+/* --- Order Summary Box Styling (Focusing on the fix) --- */
+
+.order-summary-box h2 {
+    color: var(--accent-orange);
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.cart-item-list {
+    list-style: none; /* REMOVES BULLET POINTS (Fixes image issue) */
+    padding: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.summary-item {
+    display: flex; /* Enables alignment */
+    justify-content: space-between; /* Pushes name and total to opposite sides */
+    align-items: flex-end; /* Aligns text baseline */
+    padding: 8px 0;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+}
+
+.item-name {
+    /* Ensures the name takes up most of the space but can wrap cleanly */
+    flex-grow: 1;
+    padding-right: 15px; /* Adds space between name and price */
+    line-height: 1.3;
+}
+
+.item-total {
+    /* Ensures the price is strictly aligned on the right and doesn't wrap */
+    flex-shrink: 0; 
+    font-weight: 600;
+    color: var(--primary-navy); /* Making the item total stand out slightly */
+    font-size: 1.0rem;
+}
+
+/* ---------------------------------------------------------------- */
+/* Remainder of the Summary Details section for context and clean alignment */
+
+.summary-details {
+    padding-top: 15px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 1rem;
+}
+
+.summary-row.vat-row {
+    color: #555;
+    font-style: italic;
+    font-size: 0.95rem;
+}
+
+.summary-row.final-total {
+    border-top: 2px solid var(--primary-navy);
+    padding-top: 15px;
+    margin-top: 15px;
+    font-size: 1.3rem;
+}
+
+.summary-row strong {
+    color: var(--accent-orange);
+}
+
+.confirm-btn {
+  width: 100%;
+  padding: 0.9rem; /* Slightly less padded */
+  border: none;
+  border-radius: 12px; /* Less rounded corners */
+  background: #1e3799; /* Navy Blue (from the initial generic CSS) */
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem; /* Less margin */
+  transition: background 0.2s ease;
+}
+
+.confirm-btn:hover {
+  background: #0a3d62; /* Slightly darker Navy on hover */
+}
+/* --- Responsive Adjustments --- */
+@media (max-width: 992px) {
+  .checkout-grid {
+    grid-template-columns: 1fr; 
+  }
+  .order-summary-box {
+    order: -1; 
+    position: static;
+  }
+}
+
+@media (max-width: 576px) {
+  .checkout-page h1 {
+    font-size: 2rem;
+  }
+  .form-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
