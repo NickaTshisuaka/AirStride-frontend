@@ -23,12 +23,11 @@
 .settings {
   min-height: 100vh;
   font-family: Poppins, sans-serif;
-  /* background: var(--bg-light); */
-  background: red;
+  background: var(--bg-light);
   color: var(--text-light);
   transition: all 0.3s ease;
   padding: 20px;
-
+  
 }
 
 /* =======================================
@@ -48,7 +47,7 @@
 ========================================= */
 .side {
   width: 230px;
-  background: black;
+  background: var(--card-light);
   border-radius: var(--radius);
   padding: 20px;
   /* display: flex; */
