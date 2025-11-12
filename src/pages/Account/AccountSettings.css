@@ -48,7 +48,7 @@
 ========================================= */
 .side {
   width: 230px;
-  background: var(--card-light);
+  background: black;
   border-radius: var(--radius);
   padding: 20px;
   /* display: flex; */
