@@ -23,10 +23,12 @@
 .settings {
   min-height: 100vh;
   font-family: Poppins, sans-serif;
-  background: var(--bg-light);
+  /* background: var(--bg-light); */
+  background: red;
   color: var(--text-light);
   transition: all 0.3s ease;
   padding: 20px;
+
 }
 
 /* =======================================
