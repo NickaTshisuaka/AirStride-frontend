@@ -18,12 +18,9 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { Moon, Sun } from "lucide-react";
 
 const AccountSettings = () => {
-  // ✅ We only read the global theme
   const { theme, toggleTheme } = useTheme();
 
-  // ===============================
-  // Local State (Profile Data)
-  // ===============================
+  
   const [profileImg, setProfileImg] = useState(null);
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
