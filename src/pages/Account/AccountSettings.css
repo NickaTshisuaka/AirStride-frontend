@@ -27,19 +27,19 @@
   color: var(--text-light);
   transition: all 0.3s ease;
   padding: 20px;
-  
 }
 
 /* =======================================
-   LAYOUT - SIDEBAR + CONTENT
+   SETTINGS PAGE LAYOUT (SIDEBAR RIGHT)
 ========================================= */
-.layout {
-  display: flex;              
-  /* flex-direction:;         */
-  gap: 25px;
-  max-width: 1250px;
+.settings-page {
+  display: flex;
+  flex-direction: row; /* sidebar on right side */
+  gap: 4%;
+  max-width: 1390px;
   margin: auto;
-  align-items: flex-end;
+  padding: 20px;
+  align-items: flex-start;
 }
 
 /* =======================================
@@ -102,7 +102,7 @@
   padding: 35px;
   box-shadow: 0 6px 16px rgba(0,0,0,0.06);
   transition: background 0.3s, color 0.3s;
-  width: 50%;
+  width: 100%;
 }
 
 /* =======================================

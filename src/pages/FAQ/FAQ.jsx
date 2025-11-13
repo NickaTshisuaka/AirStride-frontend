@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import Footer from "../../components/Footer/Footer";
-import { Plus, Minus, ArrowRight, Lightbulb, MessageCircle } from "lucide-react"; // Added Lightbulb, MessageCircle for potential icons
+import { Plus, Minus, ArrowRight, Lightbulb } from "lucide-react";
 import "./FAQ.css";
 
 const initialFaqs = [
@@ -15,77 +14,104 @@ const initialFaqs = [
 
 const FAQ = () => {
   const [openIndex, setOpenIndex] = useState(null);
-  const [showAll, setShowAll] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTopic, setSelectedTopic] = useState("All");
+  const [expandAll, setExpandAll] = useState(false);
 
-  const faqsToShow = showAll ? initialFaqs : initialFaqs.slice(0, 5);
-  
   const toggleFAQ = (index) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
+  const topics = ["All", ...new Set(initialFaqs.map(faq => faq.topic))];
+
+  const filteredFaqs = initialFaqs.filter(faq => {
+    const matchesTopic = selectedTopic === "All" || faq.topic === selectedTopic;
+    const matchesSearch = faq.q.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesTopic && matchesSearch;
+  });
+
+  const handleExpandAll = () => {
+    setExpandAll(!expandAll);
+    setOpenIndex(expandAll ? null : -1); // -1 means all open
+  };
+
   return (
     <div className="faq-page">
-      <section className="dynamic-header">
-        <div className="dynamic-header-bg">
-          <div className="header-content-wrapper-exciting">
-            
-            {/* LEFT SECTION: Exciting Illustration / Title Area */}
-            <div className="illustration-zone">
-                <div className="decorative-shape-1"></div>
-                <div className="decorative-shape-2"></div>
-                <h1 className="main-faq-title-exciting">
-                    <Lightbulb className="title-icon" size={60} />
-                    <span>Frequently</span> <br/> <span>Asked</span> <span className="highlight-orange">Questions</span>
-                </h1>
-                <p className="faq-subtitle-exciting">Your answers are just a click away!</p>
-            </div>
+      <section className="dynamic-header-bg">
+        <div className="header-content-wrapper-exciting">
 
-            {/* RIGHT SECTION: FAQ List Container */}
-            <div className="faq-list-container-exciting">
-              <h2 className="faq-list-sub-title">Top Questions</h2>
-              <div className="faq-accordion-list">
-                {faqsToShow.map((faq, index) => (
-                  <div
-                    key={index}
-                    className={`faq-item-design-exciting ${openIndex === index ? "open" : ""}`}
-                    onClick={() => toggleFAQ(index)}
+          {/* LEFT: Title & Icon */}
+          <div className="illustration-zone">
+            <h1 className="main-faq-title-exciting">
+              <Lightbulb className="title-icon" size={60} />
+              <span>Frequently</span> <br/> <span>Asked</span> <span className="highlight-orange">Questions</span>
+            </h1>
+            <p className="faq-subtitle-exciting">Your answers are just a click away!</p>
+          </div>
+
+          {/* RIGHT: FAQ List */}
+          <div className="faq-list-container-exciting">
+            <div className="faq-controls">
+              {/* Category Tabs */}
+              <div className="faq-tabs">
+                {topics.map((topic, i) => (
+                  <button
+                    key={i}
+                    className={`faq-tab ${selectedTopic === topic ? "active" : ""}`}
+                    onClick={() => setSelectedTopic(topic)}
                   >
-                    <div className="faq-question-design-exciting">
-                      <span>{faq.q}</span>
-                      <span className="faq-icon-exciting">
-                        {openIndex === index ? <Minus size={22} /> : <Plus size={22} />}
-                      </span>
-                    </div>
-                    <div className="faq-answer-design-exciting">
-                      <p>{faq.a}</p>
-                    </div>
-                  </div>
+                    {topic}
+                  </button>
                 ))}
-
-                {/* 'Show others' navigation */}
-                {!showAll && initialFaqs.length > 5 && (
-                  <div className="show-others-nav-exciting">
-                    <span onClick={() => setShowAll(true)}>See All FAQs</span>
-                    <span className="nav-page-info">1/2</span>
-                    <button className="nav-arrow-exciting" onClick={() => setShowAll(true)}>
-                        <ArrowRight size={20} />
-                    </button>
-                  </div>
-                )}
               </div>
+
+              {/* Search Input */}
+              <input
+                type="text"
+                className="faq-search"
+                placeholder="Search questions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+
+              {/* Expand/Collapse All */}
+              <button className="faq-expand-btn" onClick={handleExpandAll}>
+                {expandAll ? "Collapse All" : "Expand All"}
+              </button>
+            </div>
+
+            <div className="faq-accordion-list">
+              {filteredFaqs.length === 0 && (
+                <p>No FAQs found for your search.</p>
+              )}
+
+              {filteredFaqs.map((faq, index) => (
+                <div
+                  key={index}
+                  className={`faq-item-design-exciting ${openIndex === index || openIndex === -1 ? "open" : ""}`}
+                  onClick={() => toggleFAQ(index)}
+                >
+                  <div className="faq-question-design-exciting">
+                    <span>{faq.q}</span>
+                    <span className="faq-icon-exciting">
+                      {openIndex === index || openIndex === -1 ? <Minus size={22} /> : <Plus size={22} />}
+                    </span>
+                  </div>
+                  <div className="faq-answer-design-exciting">
+                    <p>{faq.a}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          
-          {/* BOTTOM WAVE SECTION - More pronounced and abstract */}
-          <div className="bottom-wave-section">
-             <span className="floating-element-1"><MessageCircle size={40} /></span> 
-             <span className="floating-element-2">?</span> 
-             <span className="copyright-exciting">© AirStride.com</span>
-          </div>
+
         </div>
       </section>
 
-     
+      {/* Footer Block */}
+      {/* <div className="faq-footer">
+        Need more help? Contact us at support@airstride.com
+      </div> */}
     </div>
   );
 };

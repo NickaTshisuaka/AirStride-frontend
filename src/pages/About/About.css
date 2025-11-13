@@ -1,6 +1,6 @@
 :root {
-  --light-blue: #ade5f8c8;
-  --soft-blue: #ade5f88e;
+  --light-blue: #ade5f881;
+  --soft-blue: #ade5f840;
   --accent-orange: #f97316;
   --dark: #1f2937;
   --light-bg: #f9fafb;
@@ -15,7 +15,7 @@
 }
 
 section {
-  padding: 8px 10%;
+  padding: 8px 1%;
 }
 
 /* OUR STORY */

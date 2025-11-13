@@ -85,7 +85,14 @@ const Navbar = () => {
           {showSearch && (
             <div className="search-bar">
               <i className="fas fa-search"></i>
-              <input type="text" placeholder="Search products..." />
+              <input
+  type="text"
+  placeholder="Search products..."
+  onChange={(e) =>
+    window.dispatchEvent(new CustomEvent("productSearch", { detail: e.target.value }))
+  }
+/>
+
             </div>
           )}
 

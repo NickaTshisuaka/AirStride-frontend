@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../../AuthContext";
 import {
@@ -43,28 +43,21 @@ const SigninLogin = () => {
     e.preventDefault();
     setError("");
 
-    // ✅ VALIDATION FIRST — block submission before loading or redirect
+    // Validation
     if (isLogin) {
       if (!formData.email || !formData.password) {
         setError("Please fill in all fields");
-        return; // stop here, don’t set loading or navigate
+        return;
       }
     } else {
-      if (
-        !formData.email ||
-        !formData.password ||
-        !formData.firstName ||
-        !formData.lastName
-      ) {
+      if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
         setError("Please fill in all fields");
         return;
       }
-
       if (formData.password !== formData.confirmPassword) {
         setError("Passwords do not match");
         return;
       }
-
       if (formData.password.length < 6) {
         setError("Password must be at least 6 characters long");
         return;
@@ -74,17 +67,23 @@ const SigninLogin = () => {
     setIsLoading(true);
     try {
       if (isLogin) {
-  const userCredential = await login(formData.email, formData.password);
+        const userCredential = await login(formData.email, formData.password);
+        const displayName = userCredential?.user?.displayName || formData.email.split("@")[0];
 
-  // store firstname locally if available
-  const displayName = userCredential?.user?.displayName || formData.email.split("@")[0];
-  localStorage.setItem("firstName", displayName);
+        // Save to localStorage
+        localStorage.setItem("email", formData.email);
+        localStorage.setItem("firstName", displayName);
 
-  toast.success(`🎉 Welcome back, ${displayName}!`);
-  setTimeout(() => navigate("/home", { replace: true }), 800);
-} else {
+        toast.success(`🎉 Welcome back, ${displayName}!`);
+        setTimeout(() => navigate("/home", { replace: true }), 800);
+      } else {
         await signup(formData.email, formData.password);
+
+        // Save to localStorage
+        localStorage.setItem("email", formData.email);
         localStorage.setItem("firstName", formData.firstName);
+        localStorage.setItem("lastName", formData.lastName);
+
         toast.success(`🎊 Welcome aboard, ${formData.firstName}!`);
         setTimeout(() => navigate("/home", { replace: true }), 800);
       }
@@ -156,7 +155,15 @@ const SigninLogin = () => {
       }
 
       const result = await signInWithPopup(auth, authProvider);
-      if (result.user) navigate("/home", { replace: true });
+      if (result.user) {
+        // Save user info to localStorage for AccountSettings
+        localStorage.setItem("email", result.user.email);
+        localStorage.setItem(
+          "firstName",
+          result.user.displayName || result.user.email.split("@")[0]
+        );
+        navigate("/home", { replace: true });
+      }
     } catch (err) {
       console.error(`${provider} login error:`, err);
       let errorMessage = `${provider} login failed`;
@@ -187,7 +194,7 @@ const SigninLogin = () => {
         <div className="auth-wrapper glass-card">
           <div className="auth-form-wrapper">
             <div className="auth-header">
-              <h2 data-testid="auth-header">{isLogin ? "Welcome Back 👋" : "Create Account 🚀"}</h2>
+              <h2>{isLogin ? "Welcome Back 👋" : "Create Account 🚀"}</h2>
               <p>{isLogin ? "Sign in to your account" : "Sign up for a new account"}</p>
             </div>
 
@@ -196,94 +203,71 @@ const SigninLogin = () => {
             <form onSubmit={handleSubmit} className="auth-form">
               {!isLogin && (
                 <div className="name-row">
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      placeholder="First Name"
-                      className="auth-input"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      placeholder="Last Name"
-                      className="auth-input"
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="input-group">
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="Email Address"
-                  className="auth-input"
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="input-group">
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="Password"
-                  className="auth-input"
-                  disabled={isLoading}
-                />
-              </div>
-
-              {!isLogin && (
-                <div className="input-group">
                   <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
                     onChange={handleInputChange}
-                    placeholder="Confirm Password"
+                    placeholder="First Name"
+                    className="auth-input"
+                    disabled={isLoading}
+                  />
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    placeholder="Last Name"
                     className="auth-input"
                     disabled={isLoading}
                   />
                 </div>
               )}
 
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="Email Address"
+                className="auth-input"
+                disabled={isLoading}
+              />
+
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder="Password"
+                className="auth-input"
+                disabled={isLoading}
+              />
+
+              {!isLogin && (
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  placeholder="Confirm Password"
+                  className="auth-input"
+                  disabled={isLoading}
+                />
+              )}
+
               {isLogin && (
                 <div className="forgot-password">
-                  <a href="#" className="forgot-link">
-                    Forgot your password?
-                  </a>
+                  <a href="#" className="forgot-link">Forgot your password?</a>
                 </div>
               )}
 
               <button type="submit" className="auth-button" disabled={isLoading}>
-                {isLoading ? (
-                  <span className="loading-text">
-                    <span className="loading-spinner-small"></span>
-                    {isLogin ? "Signing In..." : "Signing Up..."}
-                  </span>
-                ) : isLogin ? (
-                  "Sign In"
-                ) : (
-                  "Sign Up"
-                )}
+                {isLoading ? (isLogin ? "Signing In..." : "Signing Up...") : (isLogin ? "Sign In" : "Sign Up")}
               </button>
             </form>
 
-            <div className="auth-divider">
-              <span>or continue with</span>
-            </div>
+            <div className="auth-divider"><span>or continue with</span></div>
 
             <div className="social-login">
               {["Google", "GitHub", "Facebook", "Twitter"].map((provider) => (
@@ -302,12 +286,7 @@ const SigninLogin = () => {
             <div className="auth-footer">
               <p>
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
-                <button
-                  type="button"
-                  onClick={toggleForm}
-                  className="toggle-button"
-                  disabled={isLoading}
-                >
+                <button type="button" onClick={toggleForm} className="toggle-button" disabled={isLoading}>
                   {isLogin ? "Sign up" : "Sign in"}
                 </button>
               </p>
