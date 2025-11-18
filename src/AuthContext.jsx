@@ -4,12 +4,12 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged,
+  onIdTokenChanged,
   GoogleAuthProvider,
   signInWithPopup,
-  updateProfile, // ✅ added to store firstName
+  updateProfile,
 } from "firebase/auth";
-import { auth } from "./firebase";
+import { auth } from "./firebase"; // make sure this exports the initialized firebase auth instance
 
 const AuthContext = createContext();
 
@@ -17,7 +17,6 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-// Backwards-compatible alias used across the codebase
 export const useAuthentication = useAuth;
 
 export function AuthProvider({ children }) {
@@ -25,69 +24,49 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [idToken, setIdToken] = useState(null);
 
-  // ✅ Signup with email, password, and first name
+  // Signup
   async function signup(email, password, firstName) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-
-    // ✅ Save firstName to Firebase user profile
-    await updateProfile(user, {
-      displayName: firstName,
-    });
-
-    // ✅ Store locally for easy access
+    await updateProfile(user, { displayName: firstName });
     localStorage.setItem("firstName", firstName);
-
-    // ✅ Return updated user
-    setCurrentUser({ ...user, displayName: firstName });
     return user;
   }
 
-  // ✅ Login with email and password
+  // Login
   function login(email, password) {
     return signInWithEmailAndPassword(auth, email, password);
   }
 
-  // ✅ Logout
+  // Logout
   function logout() {
     localStorage.removeItem("firstName");
     return signOut(auth);
   }
 
-  // ✅ Google Sign-in
+  // Google sign-in
   async function signInWithGoogle() {
     const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-
-    // If the Google account has a name, store it locally too
-    if (user.displayName) {
-      localStorage.setItem("firstName", user.displayName.split(" ")[0]);
-    }
-
-    return user;
+    const res = await signInWithPopup(auth, provider);
+    if (res.user?.displayName) localStorage.setItem("firstName", res.user.displayName.split(" ")[0]);
+    return res.user;
   }
 
-  // ✅ Get ID token for secure API requests
-  async function getIdToken() {
-    if (currentUser) {
-      return await currentUser.getIdToken();
-    }
-    return null;
+  // Get current token (fresh)
+  async function getIdToken(forceRefresh = false) {
+    if (!auth.currentUser) return null;
+    return await auth.currentUser.getIdToken(forceRefresh);
   }
 
-  // ✅ Listen for auth changes
+  // --- Use onIdTokenChanged to avoid flicker during token refresh ---
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onIdTokenChanged(auth, async (user) => {
       if (user) {
         const token = await user.getIdToken();
-        setCurrentUser(user);
+        // Keep previous user if already set to avoid flicker
+        setCurrentUser((prev) => prev || user);
         setIdToken(token);
-
-        // Persist firstName if available
-        if (user.displayName) {
-          localStorage.setItem("firstName", user.displayName);
-        }
+        if (user.displayName) localStorage.setItem("firstName", user.displayName);
       } else {
         setCurrentUser(null);
         setIdToken(null);
@@ -99,13 +78,12 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  // ✅ Shared context value
   const value = {
     currentUser,
-    idToken,
-    loading,
-    isAuthenticated: !!currentUser,
     user: currentUser,
+    loading,
+    idToken,
+    isAuthenticated: !!currentUser,
     token: idToken,
     getAuthHeaders: () => (idToken ? { Authorization: `Bearer ${idToken}` } : {}),
     signup,
@@ -115,9 +93,5 @@ export function AuthProvider({ children }) {
     getIdToken,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 }

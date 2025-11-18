@@ -1,266 +1,386 @@
-// Checkout.jsx (Minimal changes here, mainly structure and adding Province)
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import Confetti from "react-confetti";
+import { toast, ToastContainer } from "react-toastify";
 import {
-  FaUser,
-  FaEnvelope,
-  FaMapMarkerAlt,
-  FaCreditCard,
-  FaCalendarAlt,
-  FaLock,
-  FaPhone,
-  FaGift,
-  FaClock,
+  FaUser, FaEnvelope, FaMapMarkerAlt, FaCreditCard,
+  FaCalendarAlt, FaLock, FaPhone, FaCopy
 } from "react-icons/fa";
+import "react-toastify/dist/ReactToastify.css";
 import "./Checkout.css";
 
-// Helper function to format currency as ZAR
-const formatZAR = (amount) => {
-  return new Intl.NumberFormat('en-ZA', {
-    style: 'currency',
-    currency: 'ZAR',
-    minimumFractionDigits: 2,
-  }).format(amount);
-};
+const formatZAR = (amount) =>
+  new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(amount);
 
-// Mock data (Assume this comes from your product page state)
-const initialCartItems = [
-  { id: 2, name: "AirStride Jogging Shoes", price: 2500.00, quantity: 1 },
-  { id: 5, name: "Smart Hydration Bottle", price: 750.00, quantity: 2 },
-  { id: 1, name: "Breathing Trainer Pro", price: 1200.00, quantity: 1 },
-];
-
-const SHIPPING_COST = 85.00; 
-const VAT_RATE = 0.15; // 15% VAT for South Africa
+const SHIPPING_COST = 85;
+const VAT_RATE = 0.15;
 
 const provinces = [
-    "Eastern Cape", "Free State", "Gauteng", "KwaZulu-Natal", 
-    "Limpopo", "Mpumalanga", "North West", "Northern Cape", "Western Cape"
+  "Eastern Cape", "Free State", "Gauteng", "KwaZulu-Natal",
+  "Limpopo", "Mpumalanga", "North West", "Northern Cape", "Western Cape"
 ];
 
 const Checkout = () => {
-  const [cart, setCart] = useState([]);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    province: "", // NEW FIELD
-    promoCode: "",
-    cardNumber: "",
-    expiry: "",
-    cvv: "",
-    deliveryTime: "Morning (8am - 12pm)",
-  });
-  const [showPopup, setShowPopup] = useState(false);
-  const [orderTotal, setOrderTotal] = useState(0);
-  const navigate = useNavigate();
+  const [step, setStep] = useState(0);
 
+  /** SUCCESS MODAL STATE */
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  /** ORDER ID */
+  const [orderId] = useState(
+    "AS-" + Math.random().toString(36).substring(2, 10).toUpperCase()
+  );
+
+  /** CART */
+  const [cart, setCart] = useState([]);
   useEffect(() => {
-    // Mock cart data if localStorage is empty for testing, or use real data
-    const storedCart = JSON.parse(localStorage.getItem("cart")) || initialCartItems;
-    setCart(storedCart);
+    setCart(JSON.parse(localStorage.getItem("cart")) || []);
   }, []);
 
-  const subtotal = cart.reduce(
-    (sum, item) => sum + item.price * (item.quantity || 1),
-    0
-  );
-  
+  const subtotal = cart.reduce((s, it) => s + (it.price || 0) * (it.quantity || 1), 0);
   const vat = subtotal * VAT_RATE;
-  const totalPrice = subtotal + SHIPPING_COST + vat;
+  const total = subtotal + SHIPPING_COST + vat;
 
+  /** FORM STATE */
+  const [form, setForm] = useState({
+    name: "", email: "", phone: "",
+    address: "", suburb: "", city: "",
+    postalCode: "", province: "",
+    cardNumber: "", expiry: "", cvv: ""
+  });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const update = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
+
+  /** INPUT FORMATTERS */
+  const autoFormatPhone = (v) =>
+    v.replace(/\D/g, "").slice(0, 10).replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3");
+
+  const autoFormatPostal = (v) => v.replace(/\D/g, "").slice(0, 4);
+
+  const autoFormatCard = (v) =>
+    v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
+
+  const autoFormatExpiry = (v) => {
+    const s = v.replace(/\D/g, "").slice(0, 4);
+    if (s.length <= 2) return s;
+    return s.slice(0, 2) + "/" + s.slice(2);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    for (let key in formData) {
-        // Skip promoCode for simplified validation
-        if (key !== 'promoCode' && !formData[key]) {
-            alert("Please fill in all required fields.");
-            return;
-        }
+  /** PAYMENT PROCESS → SHOW SUCCESS POPUP + TOAST */
+  useEffect(() => {
+    if (step === 3) {
+      const timer = setTimeout(() => {
+        setShowConfetti(true);
+        setShowSuccessModal(true);
+        toast.success("Payment Successful! 🎉");
+        setTimeout(() => setShowConfetti(false), 5000);
+      }, 1500);
+      return () => clearTimeout(timer);
     }
+  }, [step]);
 
-    const order = {
-      items: cart,
-      total: totalPrice,
-      address: formData.address,
-      province: formData.province,
-      deliveryTime: formData.deliveryTime,
-      date: new Date().toLocaleString(),
-      shippingTime: "3-5 business days",
-    };
-
-    localStorage.setItem("latestOrder", JSON.stringify(order));
-    setOrderTotal(totalPrice); 
-
-    // Show popup before redirect
-    setShowPopup(true);
-
-    // Clear cart (or use API calls here)
-    // localStorage.removeItem("cart"); 
-    // setCart([]);
+  /** COPY ORDER ID */
+  const copyOrderId = () => {
+    navigator.clipboard.writeText(orderId);
+    toast.info("Order ID copied!");
   };
 
-  const closePopup = () => {
-    setShowPopup(false);
-    navigate("/order-summary"); 
+  /** DOWNLOAD RECEIPT */
+  const downloadReceipt = () => {
+    const receipt =
+      `Order Receipt\n\nCustomer: ${form.name}\nEmail: ${form.email}\nOrder ID: ${orderId}\nTotal: ${formatZAR(total)}`;
+    const blob = new Blob([receipt], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "receipt.txt";
+    link.click();
+    toast.success("Receipt downloaded!");
   };
 
-  if (cart.length === 0 && !showPopup) {
-    return (
-        <div className="checkout-page-empty">
-            <h1 className="empty-cart-title">Your Cart is Empty!</h1>
-            <button className="btn back-to-shop-btn" onClick={() => navigate('/products')}>
-                ← Back to Products
-            </button>
-        </div>
-    );
-  }
+  /** EMAIL RECEIPT MOCK */
+  const emailReceipt = () => {
+    toast.success(`📧 Receipt sent to ${form.email}`);
+  };
 
-  return (
-    <div className="checkout-page">
-      <h1>Secure Checkout</h1>
+  /** STEPS */
+  const steps = [
+    /* STEP 0 — SHIPPING */
+    <div className="step-page" key="shipping">
+      <h2>Shipping Information</h2>
 
-      <div className="checkout-grid">
-        {/* FORM SECTION */}
-        <form id="checkout-form" className="checkout-form" onSubmit={handleSubmit}>
-          
-          <div className="form-section-group">
-            <h2>1. Shipping Details</h2>
-            
-            <div className="form-group">
-              <FaUser className="icon" />
-              <input type="text" name="name" placeholder="Full Name" value={formData.name} onChange={handleChange} required />
-            </div>
+      <label className="field">
+        <FaUser />
+        <input
+          placeholder="Full Name"
+          value={form.name}
+          onChange={(e) => update("name", e.target.value)}
+        />
+      </label>
 
-            <div className="form-group">
-              <FaEnvelope className="icon" />
-              <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} required />
-            </div>
+      <label className="field">
+        <FaEnvelope />
+        <input
+          placeholder="Email"
+          value={form.email}
+          onChange={(e) => update("email", e.target.value)}
+        />
+      </label>
 
-            <div className="form-group">
-              <FaPhone className="icon" />
-              <input type="tel" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} required />
-            </div>
+      <label className="field">
+        <FaPhone />
+        <input
+          placeholder="Phone"
+          value={form.phone}
+          onChange={(e) => update("phone", autoFormatPhone(e.target.value))}
+        />
+      </label>
 
-            <div className="form-group">
-              <FaMapMarkerAlt className="icon" />
-              <textarea name="address" placeholder="Street Address & Suburb (e.g. 15 Main Rd, Sea Point)" value={formData.address} onChange={handleChange} required />
-            </div>
-            
-            {/* NEW PROVINCE/STATE FIELD */}
-            <div className="form-group">
-              <FaMapMarkerAlt className="icon" />
-              <select name="province" value={formData.province} onChange={handleChange} required>
-                <option value="" disabled>Select Province</option>
-                {provinces.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-            
-            <div className="form-group">
-              <FaClock className="icon" />
-              <select name="deliveryTime" value={formData.deliveryTime} onChange={handleChange} required >
-                <option value="Morning (8am - 12pm)">Morning (8am - 12pm)</option>
-                <option value="Afternoon (12pm - 4pm)">Afternoon (12pm - 4pm)</option>
-                <option value="Evening (4pm - 8pm)">Evening (4pm - 8pm)</option>
-              </select>
-            </div>
-          </div>
-          
-          <div className="form-section-group">
-            <h2>2. Payment & Promo</h2>
-            
-            {/* SECURITY MESSAGE */}
-            <p className="security-info"><FaLock className="security-icon" /> All payments are processed securely via SSL. We do not store card details.</p>
+      <label className="field">
+        <FaMapMarkerAlt />
+        <select
+          value={form.province}
+          onChange={(e) => update("province", e.target.value)}
+        >
+          <option value="">Select Province</option>
+          {provinces.map((p) => (
+            <option key={p}>{p}</option>
+          ))}
+        </select>
+      </label>
 
-            <div className="form-group">
-              <FaCreditCard className="icon" />
-              <input type="text" name="cardNumber" placeholder="Credit/Debit Card Number (16 Digits)" value={formData.cardNumber} onChange={handleChange} required maxLength={16} />
-            </div>
+      <label className="field">
+        <FaMapMarkerAlt />
+        <input
+          placeholder="Street Address"
+          value={form.address}
+          onChange={(e) => update("address", e.target.value)}
+        />
+      </label>
 
-            <div className="form-row">
-              <div className="form-group small">
-                <FaCalendarAlt className="icon" />
-                <input type="text" name="expiry" placeholder="Expiry Date (MM/YY)" value={formData.expiry} onChange={handleChange} required maxLength={5} />
-              </div>
-              <div className="form-group small">
-                <FaLock className="icon" />
-                <input type="text" name="cvv" placeholder="CVV" value={formData.cvv} onChange={handleChange} required maxLength={3} />
-              </div>
-            </div>
-            
-            <div className="form-group">
-              <FaGift className="icon" />
-              <input type="text" name="promoCode" placeholder="Promo Code (Optional)" value={formData.promoCode} onChange={handleChange} />
-            </div>
-          </div>
-
-        </form>
-        
-        {/* ORDER SUMMARY SECTION (Mostly unchanged) */}
-        <div className="order-summary-box">
-            <h2>Order Summary</h2>
-            
-            <ul className="cart-item-list">
-                {cart.map(item => (
-                    <li key={item.id} className="summary-item">
-                        <span className="item-name">{item.name} ({item.quantity || 1}x)</span>
-                        <span className="item-total">{formatZAR(item.price * (item.quantity || 1))}</span>
-                    </li>
-                ))}
-            </ul>
-
-            <div className="summary-details">
-                <div className="summary-row">
-                    <span>Subtotal</span>
-                    <span>{formatZAR(subtotal)}</span>
-                </div>
-                <div className="summary-row">
-                    <span>Shipping Fee</span>
-                    <span>{formatZAR(SHIPPING_COST)}</span>
-                </div>
-                <div className="summary-row vat-row">
-                    <span>VAT ({VAT_RATE * 100}%)</span>
-                    <span>{formatZAR(vat)}</span>
-                </div>
-                
-                <div className="summary-row final-total">
-                    <strong>Total Due</strong>
-                    <strong>{formatZAR(totalPrice)}</strong>
-                </div>
-            </div>
-            
-            <button type="submit" form="checkout-form" className="confirm-btn">
-                Pay Now: {formatZAR(totalPrice)}
-            </button>
-            <p className="secure-message-small">
-                <FaLock /> Secured by AirStride Payment Gateway
-            </p>
-        </div>
+      <div className="row-3">
+        <input
+          placeholder="Suburb"
+          value={form.suburb}
+          onChange={(e) => update("suburb", e.target.value)}
+        />
+        <input
+          placeholder="City"
+          value={form.city}
+          onChange={(e) => update("city", e.target.value)}
+        />
+        <input
+          placeholder="Postal Code"
+          value={form.postalCode}
+          onChange={(e) => update("postalCode", autoFormatPostal(e.target.value))}
+        />
       </div>
 
-      {/* Popup (Unchanged) */}
-      {showPopup && (
-        <div className="checkout-popup-overlay">
-          <div className="checkout-popup">
-            <h2>Order Confirmed! 🎉</h2>
-            <p>Your order has been placed successfully.</p>
-            <p>
-              <strong>Total Paid:</strong> {formatZAR(orderTotal)}
-            </p>
-            <button className="close-popup-btn" onClick={closePopup}>
-              View Order Summary
-            </button>
+      <button className="btn primary" onClick={() => setStep(1)}>
+        Next
+      </button>
+    </div>,
+
+    /* STEP 1 — PAYMENT */
+    <div className="step-page" key="payment">
+      <h2>Payment Details</h2>
+
+      <label className="field">
+        <FaCreditCard />
+        <input
+          placeholder="Card Number"
+          value={form.cardNumber}
+          onChange={(e) => update("cardNumber", autoFormatCard(e.target.value))}
+        />
+      </label>
+
+      <div className="row-2">
+        <label className="field">
+          <FaCalendarAlt />
+          <input
+            placeholder="MM/YY"
+            value={form.expiry}
+            onChange={(e) => update("expiry", autoFormatExpiry(e.target.value))}
+          />
+        </label>
+
+        <label className="field">
+          <FaLock />
+          <input
+            placeholder="CVV"
+            value={form.cvv}
+            onChange={(e) =>
+              update("cvv", e.target.value.replace(/\D/g, "").slice(0, 3))
+            }
+          />
+        </label>
+      </div>
+
+      <div className="step-buttons">
+        <button className="btn ghost" onClick={() => setStep(0)}>
+          Back
+        </button>
+        <button className="btn primary" onClick={() => setStep(2)}>
+          Next
+        </button>
+      </div>
+    </div>,
+
+    /* STEP 2 — REVIEW */
+    <div className="step-page" key="review">
+      <h2>Review & Confirm</h2>
+
+      <p>
+        <strong>{form.name}</strong> – {form.phone}
+      </p>
+      <p>
+        {form.address}, {form.suburb}, {form.city}, {form.postalCode}
+      </p>
+      <p>{form.province}</p>
+
+      <ul className="review-list">
+        {cart.map((i, x) => (
+          <li key={x}>
+            <span>
+              {i.name} × {i.quantity}
+            </span>
+            <span>{formatZAR(i.price * i.quantity)}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="totals">
+        <p>
+          <span>Subtotal</span>
+          <span>{formatZAR(subtotal)}</span>
+        </p>
+        <p>
+          <span>Shipping</span>
+          <span>{formatZAR(SHIPPING_COST)}</span>
+        </p>
+        <p>
+          <span>VAT</span>
+          <span>{formatZAR(vat)}</span>
+        </p>
+        <p className="total">
+          <strong>Total</strong>
+          <strong>{formatZAR(total)}</strong>
+        </p>
+      </div>
+
+      <div className="step-buttons">
+        <button className="btn ghost" onClick={() => setStep(1)}>
+          Back
+        </button>
+        <button className="btn primary" onClick={() => setStep(3)}>
+          Pay {formatZAR(total)}
+        </button>
+      </div>
+    </div>,
+
+    /* STEP 3 — PROCESSING */
+    <div className="step-page center" key="processing">
+      <div className="spinner"></div>
+      <p>Processing your payment...</p>
+    </div>,
+  ];
+
+  return (
+    <>
+      <ToastContainer position="top-center" autoClose={3000} />
+      {showConfetti && <Confetti recycle={false} numberOfPieces={250} />}
+
+      {/* SUCCESS POPUP */}
+      {showSuccessModal && (
+        <div className="success-modal">
+          <div className="success-box">
+            <div className="checkmark">
+              <div className="checkmark-circle" />
+              <div className="checkmark-stem" />
+              <div className="checkmark-kick" />
+            </div>
+
+            <h2>Order Successful 🎉</h2>
+            <p>Thank you, <strong>{form.name}</strong>! Your payment has been processed.</p>
+
+            <div className="order-id-box">
+              <span>Order ID:</span>
+              <strong>{orderId}</strong>
+              <FaCopy className="copy-icon" onClick={copyOrderId} />
+            </div>
+
+            <div className="summary-mini">
+              <p><span>Total Paid:</span> {formatZAR(total)}</p>
+              <p><span>Items:</span> {cart.length}</p>
+            </div>
+
+            <div className="modal-buttons">
+              <button className="btn primary" onClick={downloadReceipt}>
+                Download Receipt
+              </button>
+
+              <button className="btn orange" onClick={emailReceipt}>
+                Email Receipt
+              </button>
+
+              <button className="btn ghost track">
+                Track Order
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </div>
+
+      {/* MAIN CHECKOUT LAYOUT */}
+      <div className="checkout-root">
+        <div className="progress-wrap">
+          <div className="progress" style={{ width: `${(step + 1) * 33.33}%` }} />
+        </div>
+
+        <div className="checkout-container">
+          <div className="checkout-left">
+            <div
+              className="steps-wrapper"
+              style={{ transform: `translateX(-${step * 25}%)` }}
+            >
+              {steps}
+            </div>
+          </div>
+
+          <aside className="checkout-summary">
+            <div className="summary-card">
+              <h3>Order Summary</h3>
+
+              {cart.map((item, i) => (
+                <div key={i} className="summary-item">
+                  <span>{item.name}</span>
+                  <span>{formatZAR(item.price * item.quantity)}</span>
+                </div>
+              ))}
+
+              <hr />
+
+              <p>
+                <span>Subtotal</span>
+                <span>{formatZAR(subtotal)}</span>
+              </p>
+              <p>
+                <span>Shipping</span>
+                <span>{formatZAR(SHIPPING_COST)}</span>
+              </p>
+              <p>
+                <span>VAT</span>
+                <span>{formatZAR(vat)}</span>
+              </p>
+
+              <p className="total">
+                <strong>Total</strong>
+                <strong>{formatZAR(total)}</strong>
+              </p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </>
   );
 };
 

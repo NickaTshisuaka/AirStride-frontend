@@ -1,224 +1,160 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { ShoppingCart, Eye, Heart, Filter, ArrowDownWideNarrow } from "lucide-react";
-import { getAuth, onIdTokenChanged } from "firebase/auth";
+import { ShoppingCart, Heart } from "lucide-react";
+import { useCartContext } from "../../contexts/CartContext";
+import { useFavoritesContext } from "../../contexts/FavoritesContext";
+import { useAuth } from "../../AuthContext";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import "./Products.css";
 
 const BASE_API_URL = "http://localhost:5000/api/products";
 
-const useAuth = () => {
-  const [authHeader, setAuthHeader] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
-
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onIdTokenChanged(auth, async (user) => {
-      try {
-        if (user) {
-          const token = await user.getIdToken(false);
-          setAuthHeader(`Bearer ${token}`);
-        } else {
-          setAuthHeader(null);
-        }
-      } catch (err) {
-        console.error("Failed to get ID token:", err);
-      } finally {
-        setAuthLoading(false);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  return { authHeader, authLoading };
-};
-
-function Products() {
-  const { authHeader, authLoading } = useAuth();
-  const [products, setProducts] = useState([]);
-  const [cart, setCart] = useState([]);
-  const [favourites, setFavourites] = useState([]);
-  const [toastMsg, setToastMsg] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [sortOrder, setSortOrder] = useState("default");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+const Products = () => {
+  const { cart, addToCart } = useCartContext();
+  const { favorites, addFavorite, removeFavorite } = useFavoritesContext();
+  const { idToken, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Listen for search input from navbar
-  useEffect(() => {
-    const handleSearch = (e) => setSearchTerm(e.detail.toLowerCase());
-    window.addEventListener("productSearch", handleSearch);
-    return () => window.removeEventListener("productSearch", handleSearch);
-  }, []);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState("");
 
-  // Load from localStorage
-  useEffect(() => {
-    setCart(JSON.parse(localStorage.getItem("cart") || "[]"));
-    setFavourites(JSON.parse(localStorage.getItem("favourites") || "[]"));
-  }, []);
+  const normalize = (str) =>
+    str?.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
 
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
+    if (authLoading) return;
 
-  useEffect(() => {
-    localStorage.setItem("favourites", JSON.stringify(favourites));
-  }, [favourites]);
-
-  // Fetch products
-  useEffect(() => {
-    if (authLoading || !authHeader) return;
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(BASE_API_URL, {
-          headers: { Authorization: authHeader },
-        });
-        setProducts(res.data.products || res.data);
+        const headers = {};
+        if (idToken) headers.Authorization = `Bearer ${idToken}`;
+
+        const res = await axios.get(BASE_API_URL, { headers });
+        const prods = res.data.products || [];
+        setProducts(prods);
+        setFilteredProducts(prods);
+        console.log("Fetched products:", prods);
       } catch (err) {
         console.error("Error fetching products:", err);
+        setProducts([]);
+        setFilteredProducts([]);
       } finally {
         setLoading(false);
       }
     };
+
     fetchProducts();
-  }, [authHeader, authLoading]);
+  }, [idToken, authLoading]);
 
-  const addToCart = (product) => {
-    if (cart.some((item) => item._id === product._id)) return showToast("Already in cart!");
-    setCart([...cart, { ...product, quantity: 1 }]);
-    window.dispatchEvent(new Event("cartUpdated"));
-    showToast("Added to cart!");
-  };
+  // === LIVE SEARCH FILTER WITH LOGS & HIGHLIGHT ===
+  useEffect(() => {
+    const term = normalize(searchTerm);
+    console.log("Search term changed:", term);
 
-  const addToFavourites = (product) => {
-    if (favourites.some((item) => item._id === product._id)) return showToast("Already in favourites!");
-    setFavourites([...favourites, product]);
-    showToast("Added to favourites!");
-  };
+    if (!term) {
+      setFilteredProducts(products);
+      console.log("No search term, showing all products");
+      return;
+    }
 
-  const showToast = (message) => {
-    setToastMsg(message);
-    setTimeout(() => setToastMsg(""), 2500);
-  };
-
-  const goToDetail = (id) => navigate(`/product/${id}`);
-
-  // Filter + Sort
-  const filteredProducts = products
-    .filter((p) =>
-      p.name.toLowerCase().includes(searchTerm) &&
-      (selectedCategory === "all" || p.category === selectedCategory)
-    )
-    .sort((a, b) => {
-      if (sortOrder === "low-high") return a.price - b.price;
-      if (sortOrder === "high-low") return b.price - a.price;
-      return 0;
+    const filtered = products.filter((p) => {
+      const name = normalize(p.name);
+      const category = normalize(p.category);
+      return name.includes(term) || category.includes(term);
     });
+
+    console.log("Filtered products:", filtered);
+    setFilteredProducts(filtered);
+  }, [searchTerm, products]);
+
+  const highlightMatch = (text) => {
+    const term = normalize(searchTerm);
+    if (!term) return text;
+    const regex = new RegExp(`(${term})`, "gi");
+    return text.replace(regex, "<mark>$1</mark>");
+  };
+
+  const isInCart = (id) => cart.some((item) => item.product_id === id);
+  const isFavorite = (id) => favorites.some((item) => item.product_id === id);
+
+  const handleAddToCart = (product) => {
+    if (!isInCart(product.product_id)) {
+      addToCart(product);
+      setToastMessage(`${product.name} added to cart 🛒`);
+    } else {
+      setToastMessage(`${product.name} is already in your cart`);
+    }
+  };
+
+  const handleToggleFavorite = (product) => {
+    if (isFavorite(product.product_id)) {
+      removeFavorite(product.product_id);
+      setToastMessage(`${product.name} removed from favorites ❤️`);
+    } else {
+      addFavorite(product);
+      setToastMessage(`${product.name} added to favorites ❤️`);
+    }
+  };
 
   return (
     <div className="products-page">
-      {toastMsg && <div className="toast">{toastMsg}</div>}
-
-      <div className="products-header">
-        <div className="filters">
-          <label>
-            <Filter className="icon" /> Category:
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              <option value="all">All</option>
-              <option value="shoes">Shoes</option>
-              <option value="clothing">Clothing</option>
-              <option value="accessories">Accessories</option>
-            </select>
-          </label>
-
-          <label>
-            <ArrowDownWideNarrow className="icon" /> Sort:
-            <select
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-            >
-              <option value="default">Default</option>
-              <option value="low-high">Price: Low → High</option>
-              <option value="high-low">Price: High → Low</option>
-            </select>
-          </label>
-        </div>
+      {/* Search */}
+      <div className="search-bar">
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
       {loading ? (
-        <div className="skeleton-grid">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="skeleton-card"></div>
-          ))}
-        </div>
+        <p>Loading products...</p>
       ) : filteredProducts.length === 0 ? (
-        <div className="no-results">No products found.</div>
+        <p>No products found 😢</p>
       ) : (
         <section className="products-grid">
-          {filteredProducts.map((product, i) => (
-            <motion.div
-              key={product._id}
-              className="product-card"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-            >
-              <div className="image-wrap" onClick={() => goToDetail(product._id)}>
-                <img
-                  src={product.image || "https://placehold.co/400x400?text=No+Image"}
-                  alt={product.name}
+          {filteredProducts.map((product) => (
+            <div key={product.product_id} className="product-card">
+              <img
+                src={product.image || "https://placehold.co/400x400?text=No+Image"}
+                alt={product.name}
+                className="product-img"
+              />
+              <div className="info">
+                <h3
+                  dangerouslySetInnerHTML={{ __html: highlightMatch(product.name) }}
                 />
-                {product.inventory_count < 1 && (
-                  <span className="badge">Out of Stock</span>
-                )}
-
-                <div className="overlay">
+                <p>R{Number(product.price).toFixed(2)}</p>
+                {product.inventory_count < 1 && <p className="out-of-stock">Out of Stock</p>}
+                <div className="buttons">
                   <button
-                    className="overlay-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addToCart(product);
-                    }}
+                    onClick={() => handleAddToCart(product)}
+                    disabled={product.inventory_count < 1 || isInCart(product.product_id)}
                   >
-                    <ShoppingCart className="icon" /> Add
+                    <ShoppingCart /> {isInCart(product.product_id) ? "In Cart" : "Add to Cart"}
                   </button>
-                  <button
-                    className="overlay-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      goToDetail(product._id);
-                    }}
-                  >
-                    <Eye className="icon" /> View
+                  <button onClick={() => handleToggleFavorite(product)}>
+                    <Heart fill={isFavorite(product.product_id) ? "currentColor" : "none"} />
+                    {isFavorite(product.product_id) ? "Unfav" : "Fav"}
                   </button>
-                  <button
-                    className="overlay-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addToFavourites(product);
-                    }}
-                  >
-                    <Heart className="icon" /> Fav
+                  <button onClick={() => navigate(`/product/${product.product_id}`)}>
+                    View Details
                   </button>
                 </div>
               </div>
-
-              <div className="info">
-                <h3>{product.name}</h3>
-                <p className="price">R{product.price.toFixed(2)}</p>
-              </div>
-            </motion.div>
+            </div>
           ))}
         </section>
       )}
+
+      {toastMessage && <div className="toast">{toastMessage}</div>}
     </div>
   );
-}
+};
 
 export default Products;

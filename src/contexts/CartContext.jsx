@@ -1,98 +1,70 @@
-// src/contexts/CartContext.jsx
-import React, { createContext, useContext, useEffect, useState } from "react";
-
-/**
- * CartContext
- * - Single source of truth for the cart across the app.
- * - Persists to localStorage automatically.
- * - Exposes helper functions (addToCart, removeFromCart, updateQty, clearCart).
- *
- * Use:
- *   const { cart, addToCart, removeFromCart, cartCount } = useCart();
- */
+import { createContext, useContext, useReducer, useEffect } from "react";
 
 const CartContext = createContext();
 
-export const useCart = () => useContext(CartContext);
+const initialState = JSON.parse(localStorage.getItem("cart")) || [];
+
+// Normalize ID so everything uses "id"
+const normalizeId = (item) => item.product_id || item._id || item.id;
+
+function cartReducer(state, action) {
+  switch (action.type) {
+    case "ADD": {
+      const id = normalizeId(action.item);
+      const exists = state.find((i) => normalizeId(i) === id);
+
+      if (exists) {
+        return state.map((i) =>
+          normalizeId(i) === id
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
+        );
+      }
+
+      return [...state, { ...action.item, product_id: id, quantity: 1 }];
+    }
+
+    case "REMOVE":
+      return state.filter((i) => normalizeId(i) !== action.id);
+
+    case "UPDATE_QTY":
+      return state.map((i) =>
+        normalizeId(i) === action.id
+          ? { ...i, quantity: Math.max(1, Number(action.qty)) }
+          : i
+      );
+
+    case "CLEAR":
+      return [];
+
+    default:
+      return state;
+  }
+}
 
 export function CartProvider({ children }) {
-  // initialize from localStorage (safely)
-  const [cart, setCart] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("cart")) || [];
-    } catch (e) {
-      console.error("Cart parse error", e);
-      return [];
-    }
-  });
+  const [cart, dispatch] = useReducer(cartReducer, initialState);
 
-  // Keep a separate state for a small "justAdded" id to show quick UI feedback if desired
-  const [justAddedId, setJustAddedId] = useState(null);
-
-  // Persist cart to localStorage whenever it changes
   useEffect(() => {
-    try {
-      localStorage.setItem("cart", JSON.stringify(cart));
-    } catch (e) {
-      console.error("Failed to write cart to localStorage", e);
-    }
-    // Also emit a global event for any legacy listeners (backwards compatibility)
+    localStorage.setItem("cart", JSON.stringify(cart));
+    // Triggers Navbar/cart updates instantly
     window.dispatchEvent(new Event("cartUpdated"));
   }, [cart]);
 
-  // helper: returns number of items (sum of quantities)
-  const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-
-  // addToCart: if product exists increase quantity, else push new item
-  const addToCart = (product, qty = 1) => {
-    setCart((prev) => {
-      const foundIndex = prev.findIndex((p) => p._id === product._id);
-      if (foundIndex > -1) {
-        // clone and update quantity
-        const next = [...prev];
-        next[foundIndex] = {
-          ...next[foundIndex],
-          quantity: (next[foundIndex].quantity || 1) + qty,
-        };
-        return next;
-      } else {
-        return [
-          ...prev,
-          {
-            ...product,
-            quantity: qty,
-          },
-        ];
-      }
-    });
-
-    // store id for UI feedback (e.g., change button to "Added")
-    setJustAddedId(product._id);
-    // clear justAddedId after short delay
-    setTimeout(() => setJustAddedId(null), 1800);
-  };
-
-  const removeFromCart = (productId) => {
-    setCart((prev) => prev.filter((p) => p._id !== productId));
-  };
-
-  const updateQuantity = (productId, quantity) => {
-    setCart((prev) =>
-      prev.map((p) => (p._id === productId ? { ...p, quantity } : p))
-    );
-  };
-
-  const clearCart = () => setCart([]);
-
-  const value = {
-    cart,
-    cartCount,
-    justAddedId,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-  };
-
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider
+      value={{
+        cart,
+        addToCart: (item) => dispatch({ type: "ADD", item }),
+        removeFromCart: (id) => dispatch({ type: "REMOVE", id }),
+        updateQuantity: (id, qty) => dispatch({ type: "UPDATE_QTY", id, qty }),
+        clearCart: () => dispatch({ type: "CLEAR" }),
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  );
 }
+
+// ✅ Correct hook export
+export const useCartContext = () => useContext(CartContext);

@@ -12,6 +12,7 @@ import "./App.css";
 import { AuthProvider, useAuth } from "./AuthContext.jsx";
 import { ThemeProvider } from "./contexts/ThemeContext.jsx";
 import { CartProvider } from "./contexts/CartContext";
+import GlobalProvider from "../src/contexts/GlobalProvider.jsx";
 
 // Pages
 import Home from "./pages/Home/Home.jsx";
@@ -29,17 +30,25 @@ import Logout from "./pages/Logout/Logout.jsx";
 import Favorites from "./pages/Favorites/Favorites.jsx";
 
 // ========================
-// Inline Route Guards
+// Inline Route Guards (fixed)
 // ========================
 const ProtectedRoute = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
+
+  // Wait while Firebase loads the user (prevents instant redirect)
+  if (loading) return <div />;
+
   return currentUser ? <Outlet /> : <Navigate to="/signinlogin" replace />;
 };
 
 const PublicRoute = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
+
+  if (loading) return <div />;
+
   return currentUser ? <Navigate to="/home" replace /> : <Outlet />;
 };
+
 
 // ========================
 // Main AppContent Component
@@ -89,7 +98,8 @@ const AppContent = () => {
               />
             }
           />
-          <Route path="*" element={<Navigate to="/home" replace />} />
+          <Route path="*" element={<div></div>} />
+
         </Routes>
       </div>
     </>
@@ -105,9 +115,11 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <ThemeProvider>
+                <GlobalProvider>
             <div className="App">
               <AppContent />
             </div>
+                </GlobalProvider>
           </ThemeProvider>
         </CartProvider>
       </AuthProvider>

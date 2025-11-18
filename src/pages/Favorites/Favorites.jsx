@@ -1,59 +1,81 @@
-// src/pages/Favorites/Favorites.jsx
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useFavoritesContext } from "../../contexts/FavoritesContext";
+import { useCartContext } from "../../contexts/CartContext";
+import { ShoppingCart, Heart } from "lucide-react";
 import "./Favorites.css";
 
 const Favorites = () => {
-  const [favorites, setFavorites] = useState([]);
+  const navigate = useNavigate();
+  const { favorites, removeFavorite } = useFavoritesContext();
+  const { addToCart, cart } = useCartContext();
+  const [toastMessage, setToastMessage] = useState("");
 
-  useEffect(() => {
-    // Load saved favorites from localStorage
-    const savedFavorites = JSON.parse(localStorage.getItem("favorites")) || [];
-    setFavorites(savedFavorites);
-  }, []);
+  const isInCart = (id) => cart.some((item) => item.product_id === id);
 
-  const removeFavorite = (id) => {
-    const updated = favorites.filter((item) => item._id !== id);
-    setFavorites(updated);
-    localStorage.setItem("favorites", JSON.stringify(updated));
+  const handleAddToCart = (item) => {
+    if (!isInCart(item.product_id)) {
+      addToCart(item);
+      setToastMessage(`${item.name} added to cart 🛒`);
+    } else {
+      setToastMessage(`${item.name} is already in cart`);
+    }
   };
+
+  const handleRemoveFavorite = (id, name) => {
+    removeFavorite(id);
+    setToastMessage(`${name} removed from favorites ❤️`);
+  };
+
+  // Toast auto-hide
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = setTimeout(() => setToastMessage(""), 2000);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
 
   return (
     <div className="favorites-page">
-      <h2 className="favorites-title">❤️ Your Favorites</h2>
+      <h2>❤️ Your Favorites</h2>
 
       {favorites.length === 0 ? (
-        <p className="no-favorites">You haven’t added any favorites yet.</p>
+        <p className="no-favorites">
+          No favorites yet. Browse products to add some!
+        </p>
       ) : (
         <div className="favorites-grid">
-          {favorites.map((product) => (
-            <div key={product._id} className="favorite-card">
+          {favorites.map((item) => (
+            <div key={item.product_id} className="favorite-card">
               <img
-                src={product.thumbnailUrl || product.img}
-                alt={product.Product_name}
+                src={item.image || item.imageUrl || "https://placehold.co/300x300?text=No+Image"}
+                alt={item.name}
                 className="favorite-img"
               />
-              <div className="favorite-info">
-                <h3>{product.Product_name}</h3>
-                <p className="favorite-price">R{product.Price}</p>
-                <div className="favorite-buttons">
-                  <button
-                    className="remove-btn"
-                    onClick={() => removeFavorite(product._id)}
-                  >
-                    Remove
-                  </button>
-                  <button
-                    className="view-btn"
-                    onClick={() => (window.location.href = `/products/${product._id}`)}
-                  >
-                    View
-                  </button>
-                </div>
+              <h3 className="favorite-name">{item.name}</h3>
+              <p className="favorite-price">R{(item.price || 0).toFixed(2)}</p>
+
+              <div className="favorite-buttons">
+                <button
+                  className="btn remove-fav-btn"
+                  onClick={() => handleRemoveFavorite(item.product_id, item.name)}
+                >
+                  <Heart fill="red" /> Remove
+                </button>
+
+                <button
+                  className={`btn add-cart-btn ${isInCart(item.product_id) ? "in-cart" : ""}`}
+                  onClick={() => handleAddToCart(item)}
+                  disabled={isInCart(item.product_id)}
+                >
+                  <ShoppingCart /> {isInCart(item.product_id) ? "In Cart" : "Add to Cart"}
+                </button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {toastMessage && <div className="toast">{toastMessage}</div>}
     </div>
   );
 };

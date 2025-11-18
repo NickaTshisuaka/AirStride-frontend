@@ -1,197 +1,153 @@
+/* === PAGE BACKGROUND === */
 .products-page {
-  background: var(--bg);
-  color: var(--text);
   min-height: 100vh;
-  padding: 2rem 3%;
-  transition: background 0.3s ease, color 0.3s ease;
-}
-
-/* Header Controls */
-.products-header {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1.5rem;
-}
-
-.filters {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.filters label {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.9rem;
-}
-
-.filters select {
-  background: var(--card);
-  border: 1px solid #ddd;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  color: var(--text);
-}
-
-.icon {
-  width: 16px;
-  height: 16px;
-}
-
-/* Grid Layout */
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 2rem;
-}
-
-/* Product Card */
-.product-card {
-  background: var(--card);
-  border-radius: 1.2rem;
-  overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  position: relative;
-}
-
-.product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.12);
-}
-
-.image-wrap {
-  position: relative;
-  height: 260px;
-  overflow: hidden;
-}
-
-.image-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-
-.image-wrap:hover img {
-  transform: scale(1.05);
-}
-
-.badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: crimson;
-  color: #fff;
-  font-size: 0.8rem;
-  padding: 5px 10px;
-  border-radius: 6px;
-}
-
-/* Overlay Buttons */
-.overlay {
-  position: absolute;
-  bottom: -100%;
-  left: 0;
-  right: 0;
-  background: rgba(0,0,0,0.5);
+  padding: 20px;
+  background: linear-gradient(135deg, #b8e6ff 0%, #dff3ff 40%, #ffffff 90%);
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  transition: all 0.3s ease;
+  animation: fadeIn 0.6s ease;
 }
 
-.image-wrap:hover .overlay {
-  bottom: 0;
+/* === GRID LAYOUT === */
+.products-grid {
+  width: 100%;
+  max-width: 1600px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+  padding: 0px;
 }
 
-.overlay-btn {
-  background: var(--accent);
-  border: none;
-  padding: 0.5rem 0.8rem;
-  border-radius: 6px;
-  color: white;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  cursor: pointer;
-  transition: background 0.3s ease;
+/* === PRODUCT CARD === */
+.product-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  overflow: hidden;
+  transform: translateY(0px);
+  transition: all 0.25s ease;
+  border: 1px solid rgba(255,255,255,0.4);
 }
 
-.overlay-btn:hover {
-  background: #ff9f43;
+/* Hover lift & glow */
+.product-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12),
+              0 0 12px rgba(0, 137, 255, 0.25);
 }
 
+/* === PRODUCT IMAGE === */
+.product-img {
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+  border-bottom: 1px solid rgba(255,255,255,0.4);
+}
+
+/* === INFO SECTION === */
 .info {
-  padding: 1rem;
-  text-align: center;
+  padding: 18px;
+  text-align: left;
 }
 
 .info h3 {
-  font-size: 1.1rem;
-  margin-bottom: 0.3rem;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #084c72;
 }
 
-.price {
-  color: var(--accent);
+.info p {
+  margin-top: 8px;
   font-weight: 600;
+  color: #ff7b00; /* orange accent */
+  font-size: 1rem;
 }
 
-/* Toast */
+/* === OUT OF STOCK TEXT === */
+.out-of-stock {
+  color: #d9534f;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+/* === BUTTONS ROW === */
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+/* === BUTTONS BASE STYLE === */
+.buttons button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+/* === ADD TO CART BUTTON === */
+.buttons button:first-child {
+  background: #008cff;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 140, 255, 0.3);
+}
+
+.buttons button:first-child:hover {
+  background: #0075d1;
+  transform: translateY(-2px);
+}
+
+/* === FAVORITE BUTTON === */
+.buttons button:last-child {
+  background: white;
+  border: 2px solid rgba(255, 123, 0, 0.4);
+  color: #ff7b00;
+}
+
+.buttons button:last-child:hover {
+  background: rgba(255, 123, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* === TOAST === */
 .toast {
   position: fixed;
-  top: 30px;
+  top: 20px;
   right: 20px;
-  background: var(--accent);
+  background: #ff7b00;
   color: white;
-  padding: 12px 22px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  animation: slideInOut 2.5s ease;
+  padding: 12px 18px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  font-weight: 600;
+  animation: slideIn 0.4s ease, fadeOut 0.4s ease 1.8s forwards;
+  z-index: 999;
 }
 
-@keyframes slideInOut {
-  0% { transform: translateX(120%); opacity: 0; }
-  10%, 90% { transform: translateX(0); opacity: 1; }
-  100% { transform: translateX(120%); opacity: 0; }
-}
-
-/* Skeleton Loaders */
-.skeleton-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 2rem;
-}
-
-.skeleton-card {
-  height: 350px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e7e7e7 37%, #f0f0f0 63%);
-  background-size: 400% 100%;
-  border-radius: 1rem;
-  animation: shimmer 1.4s infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* No Results */
-.no-results {
-  text-align: center;
-  font-size: 1.1rem;
-  color: #888;
-  margin-top: 4rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .filters {
-    flex-direction: column;
-    align-items: flex-start;
+/* === ANIMATIONS === */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateY(-10px); }
 }

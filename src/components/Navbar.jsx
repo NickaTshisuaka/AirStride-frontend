@@ -1,20 +1,18 @@
-// src/components/Navbar.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../AuthContext";
-import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../AuthContext"; 
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./Navbar.css";
 
 const Navbar = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const { cartCount } = useCart();
 
+  const [cartCount, setCartCount] = useState(0);
   const [cartAnimate, setCartAnimate] = useState(false);
   const [firstName, setFirstName] = useState("");
 
-  // Extract firstName from Firebase or localStorage
+  // Set user name
   useEffect(() => {
     if (user?.displayName) {
       setFirstName(user.displayName);
@@ -24,27 +22,35 @@ const Navbar = () => {
         setFirstName(storedName);
       } else if (user?.email) {
         setFirstName(user.email.split("@")[0]);
-      } else {
-        setFirstName("");
       }
     }
   }, [user]);
 
-  // Show search bar only on /products page
-  const showSearch = location.pathname === "/products";
-
-  // Trigger small animation whenever cartCount changes
+  // Listen for cart updates
   useEffect(() => {
-    if (cartCount > 0) {
+    const update = () => {
+      const saved = JSON.parse(localStorage.getItem("cart")) || [];
+      const totalQuantity = saved.reduce(
+        (sum, item) => sum + (item.quantity || 1),
+        0
+      );
+
+      setCartCount(totalQuantity);
+
       setCartAnimate(true);
-      const t = setTimeout(() => setCartAnimate(false), 450);
-      return () => clearTimeout(t);
-    }
-  }, [cartCount]);
+      setTimeout(() => setCartAnimate(false), 450);
+    };
+
+    update(); // Initial load
+    window.addEventListener("cartUpdated", update);
+
+    return () => window.removeEventListener("cartUpdated", update);
+  }, []);
+
+  const showSearch = location.pathname === "/products";
 
   return (
     <header className="navbar-container">
-      {/* Top Bar */}
       <div className="navbar-top">
         <div className="top-left">
           <Link to="/find-store" className="nav-link">Find a Store</Link>
@@ -53,18 +59,14 @@ const Navbar = () => {
         </div>
 
         <div className="top-right">
-          {firstName ? (
-            <span className="nav-link">Hi, {firstName}</span>
-          ) : (
-            <Link to="/signinlogin" className="nav-link">Sign In</Link>
-          )}
+          {firstName ? <span className="nav-link">Hi, {firstName}</span> :
+            <Link to="/signinlogin" className="nav-link">Sign In</Link>}
           <Link to="/account" className="nav-icon">
             <i className="fas fa-user"></i>
           </Link>
         </div>
       </div>
 
-      {/* Main Navbar */}
       <div className="navbar-main">
         <Link to="/home" className="logo">
           <img src="/logo.ico" alt="AirStride Logo" />
@@ -86,13 +88,14 @@ const Navbar = () => {
             <div className="search-bar">
               <i className="fas fa-search"></i>
               <input
-  type="text"
-  placeholder="Search products..."
-  onChange={(e) =>
-    window.dispatchEvent(new CustomEvent("productSearch", { detail: e.target.value }))
-  }
-/>
-
+                type="text"
+                placeholder="Search products..."
+                onChange={(e) =>
+                  window.dispatchEvent(
+                    new CustomEvent("productSearch", { detail: e.target.value })
+                  )
+                }
+              />
             </div>
           )}
 
@@ -100,7 +103,6 @@ const Navbar = () => {
             <i className="far fa-heart"></i>
           </Link>
 
-          {/* Cart Icon */}
           <div className="cart-container">
             <Link to="/cart" className={`nav-icon ${cartAnimate ? "cart-bounce" : ""}`}>
               <i className="fas fa-shopping-cart"></i>

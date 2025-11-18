@@ -1,203 +1,161 @@
+// src/pages/AboutPage.jsx
 import React from "react";
+import { motion } from "framer-motion";
 import "./About.css";
 
-const AboutPage = () => {
+const fadeUp = { initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 }, transition: { duration: 0.7 } };
+const fadeIn = { initial: { opacity: 0 }, whileInView: { opacity: 1 }, transition: { duration: 0.8 } };
+
+export default function AboutPage() {
   return (
-    <div className="about">
-      {/* OUR STORY */}
-      <section className="story fade-in">
-        <div className="story-img">
+    <main className="about-page">
+      {/* HERO */}
+      <header className="hero">
+        <motion.div {...fadeUp} className="hero-inner" viewport={{ once: true }}>
+          <h1>About AirStride</h1>
+          <p className="subtitle">Helping joggers breathe better, run further, and live healthier.</p>
+        </motion.div>
+      </header>
+
+      {/* STORY */}
+      <section className="story-section">
+        <motion.div className="story-media" {...fadeIn} viewport={{ once: true }}>
           <img
-            src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80"
-            alt="Our Story"
+            src="https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?auto=format&fit=crop&w=950&q=80"
+            alt="Runner breathing during a run"
           />
-        </div>
-        <div className="story-text">
+        </motion.div>
+
+        <motion.article className="story-text" {...fadeUp} viewport={{ once: true }}>
           <h2>Our Story</h2>
           <p>
-            It all began with a small team and a bold idea — to reimagine how
-            technology could serve humanity, not just efficiency. What started
-            as a late-night project in a cramped apartment soon grew into a
-            vibrant company built on innovation and purpose.
+            AirStride began from a simple observation: many joggers struggle to find efficient,
+            controlled breathing while running. We studied breathing patterns, airflow resistance,
+            and endurance mechanics — then turned those insights into practical, wearable solutions.
           </p>
           <p>
-            From our first prototype to the thriving ecosystem we have today,
-            we’ve been guided by a single principle: progress with heart. Each
-            challenge we faced became fuel for creativity, and every success
-            reminded us that growth is most powerful when shared.
+            What started as a small research project evolved into a mission: to create breathing
+            technology that helps athletes and everyday joggers breathe easier, run further, and
+            feel stronger.
           </p>
-          <p>
-            Today, our mission continues — not just to make great products, but
-            to build tools that empower people to live fuller, freer, and more
-            connected lives.
-          </p>
+          <a className="cta" href="/products">Explore our products</a>
+        </motion.article>
+      </section>
+
+      {/* MISSION / VISION */}
+      <section className="mission-vision">
+        <motion.div className="card" {...fadeUp} viewport={{ once: true }}>
+          <h3>Mission</h3>
+          <p>Design breathing-enhancement technology that improves performance, boosts endurance, and supports healthy living.</p>
+        </motion.div>
+
+        <motion.div className="card" {...fadeUp} transition={{ duration: 0.8, delay: 0.15 }} viewport={{ once: true }}>
+          <h3>Vision</h3>
+          <p>A world where every jogger can breathe freely and perform at their best.</p>
+        </motion.div>
+      </section>
+
+      {/* VALUES */}
+      <section className="values-section">
+        <h2 className="section-title">Our Values</h2>
+        <div className="values-grid">
+          <motion.div {...fadeUp} className="value-card" viewport={{ once: true }}>
+            <h4>Innovation</h4>
+            <p>Research-driven design and continuous iteration.</p>
+          </motion.div>
+
+          <motion.div {...fadeUp} className="value-card" transition={{ delay: 0.12 }} viewport={{ once: true }}>
+            <h4>Health</h4>
+            <p>Prioritizing long-term breathing efficiency and wellbeing.</p>
+          </motion.div>
+
+          <motion.div {...fadeUp} className="value-card" transition={{ delay: 0.24 }} viewport={{ once: true }}>
+            <h4>Performance</h4>
+            <p>Empowering runners to go further and feel confident doing it.</p>
+          </motion.div>
+
+          <motion.div {...fadeUp} className="value-card" transition={{ delay: 0.36 }} viewport={{ once: true }}>
+            <h4>Community</h4>
+            <p>Supporting runners of all levels through education and product access.</p>
+          </motion.div>
         </div>
       </section>
 
-      {/* EXPANDING HUMAN POTENTIAL */}
-      <section className="potential fade-in">
-        <h2>Expanding Human Potential</h2>
-        <p>
-          At the heart of everything we do lies a belief — that people are
-          limitless when given the right tools. Our journey is not about
-          replacing human effort, but amplifying it through compassion-driven
-          innovation.
-        </p>
+      {/* POTENTIAL / FEATURE HIGHLIGHTS */}
+      <section className="potential-section">
+        <h2 className="section-title">Expanding Human Potential</h2>
+        <p className="lead">We build tools that amplify human effort — combining empathy with technology to make every run feel a little easier.</p>
 
         <div className="potential-grid">
-          <div className="potential-item">
-            <img
-              src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=600&q=80"
-              alt="Innovation"
-            />
-            <h3>Innovation</h3>
-            <p>
-              We push boundaries fearlessly, experimenting boldly to unlock new
-              frontiers in design and experience.
-            </p>
-          </div>
-          <div className="potential-item">
-            <img
-              src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=600&q=80"
-              alt="Community"
-            />
-            <h3>Community</h3>
-            <p>
-              Our strength lies in togetherness — collaborating, supporting, and
-              growing as one global family.
-            </p>
-          </div>
-          <div className="potential-item">
-            <img
-              src="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=600&q=80"
-              alt="Purpose"
-            />
-            <h3>Purpose</h3>
-            <p>
-              Beyond profit, we exist to create meaning — shaping a future where
-              technology uplifts rather than replaces humanity.
-            </p>
-          </div>
-          <div className="potential-item">
-            <img
-              src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80"
-              alt="Compassion"
-            />
-            <h3>Compassion</h3>
-            <p>
-              Compassion guides every innovation. We build with empathy to
-              ensure every solution uplifts real people, not just metrics.
-            </p>
-          </div>
+          <motion.div className="potential-item" {...fadeIn} viewport={{ once: true }}>
+            <img src="/pic1.jpeg" alt="Innovation" />
+            <h4>Research-backed</h4>
+            <p>Devices and training aids built on peer-reviewed breathing and endurance science.</p>
+          </motion.div>
+
+          <motion.div className="potential-item" {...fadeIn} transition={{ delay: 0.12 }} viewport={{ once: true }}>
+            <img src="./public/group.jpeg" alt="Community" />
+            <h4>Community-driven</h4>
+            <p>Programs and content that help runners practice breathing techniques safely.</p>
+          </motion.div>
+
+          <motion.div className="potential-item" {...fadeIn} transition={{ delay: 0.24 }} viewport={{ once: true }}>
+            <img src="/pic2.jpeg" alt="Purpose" />
+            <h4>Purpose-led</h4>
+            <p>We measure success by real improvements in endurance and comfort.</p>
+          </motion.div>
         </div>
       </section>
 
-      {/* OUR TEAM */}
-      <section className="team fade-in">
-        <h2>Meet the Team</h2>
+      {/* TEAM */}
+      <section className="team-section">
+        <h2 className="section-title">Meet the Team</h2>
         <div className="team-grid">
-          <div className="team-card">
-            <img
-              src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=500&q=80"
-              alt="Alex Johnson"
-            />
-            <h3>Alex Johnson</h3>
-            <p className="role">Creative Director</p>
-            <p>
-              Alex transforms ideas into visual stories, blending emotion with
-              design to create unforgettable experiences.
-            </p>
-          </div>
+          <motion.div className="team-card" {...fadeUp} viewport={{ once: true }}>
+            <img src="/pic3.jpeg" alt="Jordan Miles" />
+            <h4>Jordan Miles</h4>
+            <p className="role">Breathing Science Researcher</p>
+          </motion.div>
 
-          <div className="team-card">
-            <img
-              src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=500&q=80"
-              alt="Taylor Smith"
-            />
-            <h3>Taylor Smith</h3>
+          <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.08 }} viewport={{ once: true }}>
+            <img src="/pic4.jpeg" alt="Casey Morgan" />
+            <h4>Casey Morgan</h4>
+            <p className="role">Fitness & Endurance Specialist</p>
+          </motion.div>
+
+          <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.16 }} viewport={{ once: true }}>
+            <img src="https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=500&q=80" alt="Sam Taylor" />
+            <h4>Sam Taylor</h4>
             <p className="role">Lead Developer</p>
-            <p>
-              Taylor turns imagination into code, building the solid digital
-              foundations that power everything we create.
-            </p>
-          </div>
+          </motion.div>
 
-          <div className="team-card">
-            <img
-              src="https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=500&q=80"
-              alt="Jordan Lee"
-            />
-            <h3>Jordan Lee</h3>
-            <p className="role">Marketing Strategist</p>
-            <p>
-              Jordan ensures our message speaks to the right hearts — turning
-              connection into momentum.
-            </p>
-          </div>
-
-          <div className="team-card">
-            <img
-              src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=500&q=80"
-              alt="Sophia Brown"
-            />
-            <h3>Sophia Brown</h3>
-            <p className="role">UI/UX Designer</p>
-            <p>
-              Sophia crafts seamless user journeys with elegance, ensuring every
-              pixel has a purpose and every click feels intuitive.
-            </p>
-          </div>
-
-          {/* <div className="team-card">
-            <img
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=500&q=80"
-              alt="Ethan White"
-            />
-            <h3>Ethan White</h3>
-            <p className="role">Operations Manager</p>
-            <p>
-              Ethan ensures everything runs like clockwork, aligning people,
-              projects, and performance toward excellence.
-            </p>
-          </div> */}
-{/* 
-          <div className="team-card">
-            <img
-              src="https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?auto=format&fit=crop&w=500&q=80"
-              alt="Isabella Green"
-            />
-            <h3>Isabella Green</h3>
-            <p className="role">Product Analyst</p>
-            <p>
-              Isabella bridges the gap between insight and innovation — ensuring
-              our products solve real human problems.
-            </p>
-          </div> */}
+          <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.24 }} viewport={{ once: true }}>
+            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=500&q=80" alt="Alex Reed" />
+            <h4>Alex Reed</h4>
+            <p className="role">Product Designer</p>
+          </motion.div>
         </div>
       </section>
 
-      {/* CEO SECTION */}
-      <section className="ceo fade-in">
-        <div className="ceo-content">
-          <div className="ceo-text">
-            <h2>Meet Our CEO</h2>
-            <h3>Jamie Parker</h3>
-            <p>
-              Jamie founded this company on one simple truth: innovation means
-              nothing without empathy. With a decade of leadership experience,
-              Jamie continues to guide our mission with vision, humility, and
-              fierce creativity — ensuring that technology always serves people,
-              never the other way around.
-            </p>
-          </div>
+      {/* CEO */}
+      <section className="ceo-section">
+        <motion.div className="ceo-inner" {...fadeUp} viewport={{ once: true }}>
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUuyBRX-ucL25j-pn8GT9OTTeyHYnhUaV8kA&s"
-            alt="CEO"
+            className="ceo-img"
+            src="https://images.unsplash.com/photo-1546443046-ed1ce6ffd1bf?auto=format&fit=crop&w=800&q=80"
+            alt="Founder - Jamie Parker"
           />
-        </div>
+          <div className="ceo-text">
+            <h3>A Message From Our Founder</h3>
+            <h4>Jamie Parker</h4>
+            <p>
+              "Every runner deserves to breathe freely. AirStride isn't just a product — it's a movement toward healthier,
+              stronger, more confident athletes everywhere."
+            </p>
+            <a className="cta" href="/contact">Contact the founder</a>
+          </div>
+        </motion.div>
       </section>
-    </div>
+    </main>
   );
-};
-
-export default AboutPage;
+}

@@ -1,269 +1,436 @@
-/* --- Brand Color Variables --- */
-:root {
-  --primary-navy: #001f3f;       /* Dark Navy Blue */
-  --accent-orange: #ff8c00;      /* Your Brand Orange */
-  --baby-blue: #89cff0;          /* Your Brand Baby Blue */
-  --text-dark: #333;
-  --bg-light: #ffffff;
-  --bg-section: #f7f9fc;         /* Light background for the page */
-  --border-light: #eee;
-  --shadow-primary: 0 8px 20px rgba(0, 31, 63, 0.08); /* Lighter, more realistic shadow */
+/* ---------- ROOT ---------- */
+.checkout-root {
+  width: 100%;
+  min-height: 65vh;
+  background: linear-gradient(135deg, #dfeffed5, #cee5fcdb);
+  padding: 2rem;
 }
 
-/* --- Page Structure --- */
-.checkout-page {
-  min-height: 100vh;
-  padding: 40px 20px;
-  background-color: var(--bg-section);
+/* ---------- CONTAINER ---------- */
+.checkout-container {
+  display: flex;
+  gap: 2rem;
+  max-width: 1500px;
+  margin: auto;
+  max-height: 400vh;
 }
 
-.checkout-page h1 {
-  font-size: 3rem;
-  color: var(--primary-navy);
-  margin-bottom: 30px;
-  text-align: center;
-  font-weight: 700;
+/* ---------- PROGRESS BAR ---------- */
+.progress-wrap {
+  width: 100%;
+  height: 6px;
+  background: #ffffff50;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
 }
 
-/* --- Main Layout Grid --- */
-.checkout-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr; 
-  gap: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
-  align-items: flex-start;
+.progress {
+  height: 100%;
+  background: #ff8b2c;
+  border-radius: 6px;
+  transition: width 0.4s ease;
 }
 
-/* --- Form Styling --- */
-.checkout-form {
-  background: var(--bg-light);
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: var(--shadow-primary);
+/* ---------- LEFT PANEL ---------- */
+.checkout-left {
+  flex: 2;
+  width: 100%;
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 0.5rem;
+  height: 74.5vh;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  overflow: hidden;
 }
 
-.form-section-group {
-    margin-bottom: 35px;
-    padding-bottom: 25px;
-    border-bottom: 1px solid var(--border-light); /* Solid line looks cleaner */
-}
-.form-section-group:last-of-type {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
+.steps-wrapper {
+  display: flex;
+  width: 70%; /* auto-adjusts */
+  transition: transform 3.9s ease; /* smooth slide */
 }
 
-.checkout-form h2 {
-  color: var(--primary-navy);
-  font-size: 1.6rem;
-  margin-bottom: 20px;
-  border-left: 4px solid var(--accent-orange);
-  padding-left: 15px;
-  line-height: 1;
+/* ---------- STEP PAGE ---------- */
+.step-page {
+  width: 40%;
+  flex: 0 0 25.2%;
+  padding-right: 0.3rem;
+  box-sizing: border-box;
 }
 
-/* --- Input Fields (REALISM & USABILITY) --- */
-.form-group {
+.step-page.center {
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */
+  /* justify-content: center; */
+}
+
+.step-buttons {
+  display: flex;
+  justify-content: space-between; 
+   margin-top: 1rem;
+}
+
+/* ---------- FIELDS ---------- */
+.field {
   display: flex;
   align-items: center;
-  margin-bottom: 18px;
-  position: relative; /* Essential for icon positioning */
+  gap: 0.1rem;
+  background: #f4f8ff;
+  padding: 0.4rem 0.2rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  transition: 0.2s;
 }
 
-.form-group input, 
-.form-group textarea, 
-.form-group select {
-  flex: 1;
-  /* Key change: Increase left padding to prevent icon overlap */
-  padding: 12px 15px 12px 45px; 
-  border-radius: 8px; /* Slightly less rounded */
-  border: 1px solid #ddd;
-  font-size: 1rem;
-  background-color: #fcfcfc; /* Slight off-white background */
-  transition: border-color 0.3s, box-shadow 0.3s;
+.field:focus-within {
+  border-color: #ff8b2c;
+  background: #ffffff;
 }
 
-.form-group input:focus, 
-.form-group textarea:focus, 
-.form-group select:focus {
-  border-color: var(--baby-blue);
-  box-shadow: 0 0 0 2px rgba(137, 207, 240, 0.4);
+.field input,
+.field select {
+  border: none;
+  background: transparent;
+  width: 100%;
   outline: none;
+  font-size: 1rem;
 }
 
-.form-group textarea {
-  resize: vertical;
-  min-height: 100px;
-  padding-top: 12px;
-}
-
-/* Icon Positioning: Now sits in the padding space */
-.form-group .icon {
-  color: var(--primary-navy);
-  min-width: 20px;
-  font-size: 1.1rem;
-  position: absolute;
-  left: 15px; /* Aligns icon neatly */
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none; 
-  z-index: 2; /* Ensure icon is above input */
-}
-
-/* Adjust icon position for multiline textarea */
-.form-group textarea + .icon {
-    top: 15px;
-    transform: none;
-}
-
-.form-row {
+/* ROWS */
+.row-3,
+.row-2 {
   display: flex;
-  gap: 20px;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
-.form-row .form-group {
+
+.row-3 input,
+.row-2 input {
   flex: 1;
-}
-.form-row .form-group input {
-    /* Padding is consistent for consistency */
-    padding-left: 45px; 
-}
-
-
-/* --- Security Info Block --- */
-.security-info {
-    display: flex;
-    align-items: center;
-    background-color: #e6f7ff; /* Very light baby blue background */
-    color: var(--primary-navy);
-    border: 1px solid var(--baby-blue);
-    padding: 10px 15px;
-    border-radius: 8px;
-    margin-bottom: 25px;
-    font-size: 0.95rem;
-}
-.security-info .security-icon {
-    color: var(--primary-navy);
-    font-size: 1.1rem;
-    margin-right: 10px;
-}
-.secure-message-small {
-    text-align: center;
-    font-size: 0.85rem;
-    color: #666;
-    margin-top: 10px;
-}
-.secure-message-small .fa-lock {
-    margin-right: 5px;
-    color: var(--accent-orange); /* Lock icon in Orange for emphasis */
+  padding: 0.9rem;
+  background: #f4f8ff;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  outline: none;
+  transition: 0.2s;
 }
 
-
-/* --- Order Summary Box Styling (Focusing on the fix) --- */
-
-.order-summary-box h2 {
-    color: var(--accent-orange);
-    font-size: 1.8rem;
-    margin-bottom: 25px;
-    text-align: center;
+.row-3 input:focus,
+.row-2 input:focus {
+  border-color: #ff8b2c;
+  background: #ffffff;
 }
 
-.cart-item-list {
-    list-style: none; /* REMOVES BULLET POINTS (Fixes image issue) */
-    padding: 0;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border-light);
+/* ---------- BUTTONS ---------- */
+.btn {
+  padding: 0.9rem 1.4rem;
+  border-radius: 10px;
+  border: none;
+  font-size: 1rem;
+  width: 95%;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.btn.primary {
+  background: #007acc;
+  color: white;
+}
+
+.btn.primary:hover {
+  background: #fe8800;
+    transition: 0.55s;
+
+}
+
+.btn.ghost {
+  background: transparent;
+  border: 2px solid #007acc;
+  color: #007acc;
+}
+
+.btn.ghost:hover {
+  background: #e7f2ff;
+}
+
+/* ---------- RIGHT SUMMARY PANEL ---------- */
+.checkout-summary {
+  flex: 1;
+  position: sticky;
+  top: 2rem;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
 .summary-item {
-    display: flex; /* Enables alignment */
-    justify-content: space-between; /* Pushes name and total to opposite sides */
-    align-items: flex-end; /* Aligns text baseline */
-    padding: 8px 0;
-    font-size: 0.95rem;
-    color: var(--text-dark);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
 }
 
-.item-name {
-    /* Ensures the name takes up most of the space but can wrap cleanly */
-    flex-grow: 1;
-    padding-right: 15px; /* Adds space between name and price */
-    line-height: 1.3;
+.summary-card hr {
+  margin: 1rem 0;
 }
 
-.item-total {
-    /* Ensures the price is strictly aligned on the right and doesn't wrap */
-    flex-shrink: 0; 
-    font-weight: 600;
-    color: var(--primary-navy); /* Making the item total stand out slightly */
-    font-size: 1.0rem;
+.total {
+  margin-top: 1rem;
+  font-size: 1.1rem;
 }
 
-/* ---------------------------------------------------------------- */
-/* Remainder of the Summary Details section for context and clean alignment */
-
-.summary-details {
-    padding-top: 15px;
+/* ---------- SPINNER ---------- */
+.spinner {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  border: 5px solid #b0d9ff;
+  border-top-color: #ff8b2c;
+  animation: spin 0.9s linear infinite;
+  margin-bottom: 1rem;
 }
 
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    font-size: 1rem;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.summary-row.vat-row {
-    color: #555;
-    font-style: italic;
-    font-size: 0.95rem;
+.steps-wrapper {
+  display: flex;
+  width: 400%; /* 4 steps */
+  transition: transform 0.6s ease; /* 👈 THIS makes slides move slowly + only one step */
 }
 
-.summary-row.final-total {
-    border-top: 2px solid var(--primary-navy);
-    padding-top: 15px;
-    margin-top: 15px;
-    font-size: 1.3rem;
-}
-
-.summary-row strong {
-    color: var(--accent-orange);
-}
-
-.confirm-btn {
+.checkout-left {
+  overflow: hidden; /* 👈 prevents instant jump look */
   width: 100%;
-  padding: 0.9rem; /* Slightly less padded */
-  border: none;
-  border-radius: 12px; /* Less rounded corners */
-  background: #1e3799; /* Navy Blue (from the initial generic CSS) */
+  position: relative;
+}
+
+/* SLIDE ANIMATION */
+.steps-wrapper {
+  display: flex;
+  width: 400%;
+  transition: transform 0.6s ease;
+}
+
+.checkout-left {
+  overflow: hidden;
+}
+
+/* SUCCESS MODAL */
+.success-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.success-box {
+  background: white;
+  padding: 25px;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 15px;
+  text-align: center;
+  animation: pop 0.3s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.modal-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* COLORS */
+.btn.orange {
+  background: #ff8c00;
   color: white;
+}
+.btn.orange:hover {
+  background: #007acc;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #ddd;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+/* ===========================
+   SUCCESS POPUP + OVERLAY
+=========================== */
+
+/* Dimmed background when popup is open */
+.success-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 900;
+  opacity: 0;
+  animation: fadeIn 0.25s forwards;
+}
+
+/* Popup container */
+.success-popup {
+  width: 90%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 30px 25px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+  z-index: 999;
+  transform: scale(0.7);
+  animation: popupScale 0.3s forwards;
+  position: relative;
+}
+
+/* Confetti sits above everything */
+#confetti-canvas {
+  position: fixed !important;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* Success Icon Circle */
+.success-icon {
+  width: 75px;
+  height: 75px;
+  background: #4caf50;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40px;
+  margin: 0 auto 15px;
+  animation: bounce 0.5s ease-out;
+}
+
+/* Popup Title */
+.success-popup h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #0b3855;
+  margin-bottom: 10px;
+}
+
+/* Popup Text */
+.success-popup p {
+  color: #444;
   font-size: 1rem;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+/* Action Buttons */
+.success-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.success-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 1rem; /* Less margin */
-  transition: background 0.2s ease;
+  border: none;
+  transition: 0.25s;
 }
 
-.confirm-btn:hover {
-  background: #0a3d62; /* Slightly darker Navy on hover */
+.success-btn.download {
+  background: #007acc;
+  color: white;
 }
-/* --- Responsive Adjustments --- */
-@media (max-width: 992px) {
-  .checkout-grid {
-    grid-template-columns: 1fr; 
-  }
-  .order-summary-box {
-    order: -1; 
-    position: static;
+
+.success-btn.download:hover {
+  background: #005a99;
+}
+
+.success-btn.email {
+  background: #f58220;
+  color: white;
+}
+
+.success-btn.email:hover {
+  background: #d66c15;
+}
+
+/* Close Button (small x icon) */
+.close-success {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #444;
+  transition: 0.3s;
+}
+
+.close-success:hover {
+  color: #000;
+}
+
+/* ===========================
+   ANIMATIONS
+=========================== */
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
   }
 }
 
-@media (max-width: 576px) {
-  .checkout-page h1 {
-    font-size: 2rem;
+@keyframes popupScale {
+  to {
+    transform: scale(1);
   }
-  .form-row {
-    flex-direction: column;
-    gap: 15px;
+}
+
+@keyframes bounce {
+  0% {
+    transform: scale(0.4);
+  }
+  60% {
+    transform: scale(1.20);
+  }
+  100% {
+    transform: scale(1);
   }
 }

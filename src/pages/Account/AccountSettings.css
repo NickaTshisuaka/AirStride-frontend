@@ -313,3 +313,274 @@ input {
   background: var(--accent);
   color: #111;
 }
+
+/* AccountSettings.css
+   Glassmorphism styles for AccountSettings.jsx
+   Paste/replace your existing file content with this (or merge).
+*/
+
+:root{
+  --glass-bg: rgba(255,255,255,0.55);
+  --glass-border: rgba(255,255,255,0.6);
+  --glass-blur: 10px;
+  --accent: #7dc8ff;
+  --accent-2: #f7931e;
+  --muted: #6b7280;
+  --dark: #071026;
+  --success: #28d66e;
+  --danger: #ff4b4b;
+  --shadow: 0 6px 30px rgba(5,10,20,0.08);
+  --radius: 14px;
+  --pad: 22px;
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* Page layout */
+.settings-page{
+  display: flex;
+  gap: 28px;
+  padding: 34px;
+  min-height: calc(100vh - 120px);
+  background: linear-gradient(180deg, rgba(125,200,255,0.03), rgba(247,147,30,0.02));
+}
+
+/* Glass side bar */
+.glass-side{
+  width: 220px;
+  padding: 18px;
+  border-radius: calc(var(--radius) - 4px);
+  background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.42));
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid rgba(255,255,255,0.7);
+  box-shadow: var(--shadow);
+  display:flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+
+/* side buttons */
+.side-btn{
+  display:flex;
+  gap: 12px;
+  align-items:center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  color: var(--dark);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.18s ease;
+  text-align:left;
+}
+.side-btn .side-label{ opacity: 0.95; }
+
+.side-btn:hover{
+  transform: translateX(6px);
+  color: var(--accent);
+}
+.side-btn.active{
+  background: linear-gradient(90deg, rgba(125,200,255,0.12), rgba(247,147,30,0.06));
+  box-shadow: 0 8px 20px rgba(125,200,255,0.08);
+  color: var(--accent);
+}
+
+/* Main content */
+.content{
+  flex:1;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+}
+
+/* Glass card */
+.card.glass{
+  width: 100%;
+  max-width: 900px;
+  padding: var(--pad);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.45));
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow: var(--shadow);
+  color: var(--dark);
+}
+.card-animate{ transform-origin: top center; animation: floatIn .34s cubic-bezier(.2,.9,.2,1) both; }
+@keyframes floatIn { from { transform: translateY(8px) scale(.995); opacity: 0 } to { transform: translateY(0) scale(1); opacity: 1 } }
+
+.card h2{
+  margin: 0 0 12px;
+  font-size: 1.4rem;
+  letter-spacing: -0.2px;
+}
+
+/* profile box */
+.profile-box{
+  display:flex;
+  gap:18px;
+  align-items:center;
+  margin-bottom: 18px;
+}
+.profile-pic{
+  width:92px;
+  height:92px;
+  border-radius: 50%;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color: white;
+  font-weight:700;
+  font-size: 1.6rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 8px 20px rgba(125,200,255,0.12);
+  border: 3px solid rgba(255,255,255,0.25);
+}
+.glass-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+/* small btns */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor:pointer;
+  border: none;
+  font-weight: 600;
+}
+.btn.small{ padding:6px 10px; font-size:0.9rem; }
+.btn.blue{ background: linear-gradient(90deg,var(--accent), #37b2ff); color: white; box-shadow: 0 6px 18px rgba(125,200,255,0.12); }
+.btn.gray{ background: rgba(17,24,39,0.05); color: var(--dark); }
+
+/* Form layout */
+.form{ display:flex; flex-direction:column; gap:14px; margin-top:6px; }
+.row{ display:flex; gap:14px; }
+.field{ display:flex; flex-direction:column; gap:8px; flex:1; }
+.field label{ font-size:0.9rem; color:var(--muted); font-weight:600; }
+.field input{
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(11,20,34,0.06);
+  outline: none;
+  transition: all .18s ease;
+  background: rgba(255,255,255,0.9);
+}
+.field input:focus{
+  border-color: rgba(125,200,255,0.7);
+  box-shadow: 0 6px 20px rgba(125,200,255,0.08);
+}
+
+/* Password input with icon */
+.password-input-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  position:relative;
+}
+.password-input-wrap input{ flex:1; }
+.icon-btn{
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.icon-btn:hover{ background: rgba(0,0,0,0.04); }
+
+/* Password strength */
+.password-strength{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:10px;
+}
+.password-strength .bar{
+  width: 160px;
+  height: 8px;
+  background: rgba(11,20,34,0.06);
+  border-radius: 999px;
+  overflow:hidden;
+}
+.password-strength .bar .fill{
+  height:100%;
+  background: linear-gradient(90deg, #ff7a7a, #ffb86b);
+  transition: width .28s ease;
+}
+.password-strength.weak .fill{ background: linear-gradient(90deg,#ff7a7a,#ffb86b); }
+.password-strength.medium .fill{ background: linear-gradient(90deg,#ffd166,#f7b267); }
+.password-strength.strong .fill{ background: linear-gradient(90deg,#7be495,#34d399); }
+
+.password-strength .strength-label{ font-weight:700; color: var(--muted); font-size:0.9rem; }
+
+/* match indicator */
+.match{ margin-top:8px; font-weight:700; }
+.match.ok{ color: var(--success); }
+.match.wrong{ color: var(--danger); }
+
+/* actions */
+.pw-actions{ display:flex; justify-content:flex-end; margin-top: 12px; }
+.save-btn{
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: linear-gradient(90deg,var(--accent), #37b2ff);
+  color: white;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(125,200,255,0.12);
+}
+.save-btn:disabled{ opacity:0.6; cursor:not-allowed; transform:none; box-shadow:none; }
+
+/* small helpers */
+.loading-txt{ color:var(--muted); font-weight:600; padding: 24px; }
+
+/* responsive */
+@media (max-width: 920px){
+  .settings-page{ flex-direction:column; padding: 18px; }
+  .glass-side{ width:100%; flex-direction:row; gap:8px; overflow:auto; padding:12px; }
+  .side-btn{ white-space:nowrap; padding:8px 10px; }
+  .content{ padding-top: 8px; }
+  .row{ flex-direction:column; }
+  .card.glass{ padding:18px; }
+}
+
+
+
+.alerts-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.alert-card{
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius);
+  padding: 18px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease;
+}
+
+.alert-card:hover{
+  transform: translateY(-3px);
+}
+
+.alert-header{
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: var(--dark);
+}
