@@ -2,8 +2,9 @@
 .products-page {
   min-height: 100vh;
   padding: 20px;
-  background: linear-gradient(135deg, #b8e6ff 0%, #dff3ff 40%, #ffffff 90%);
+  /* background: linear-gradient(135deg, #b8e6ff 0%, #dff3ff 40%, #ffffff 90%); */
   display: flex;
+  background-color: red;
   justify-content: center;
   animation: fadeIn 0.6s ease;
 }
