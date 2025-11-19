@@ -9,7 +9,7 @@ import {
   signInWithPopup,
   updateProfile,
 } from "firebase/auth";
-import { auth } from "./firebase"; // make sure this exports the initialized firebase auth instance
+import { auth } from "../../actual-back-end/airstride-server/config/firebase"; // make sure this exports the initialized firebase auth instance
 
 const AuthContext = createContext();
 

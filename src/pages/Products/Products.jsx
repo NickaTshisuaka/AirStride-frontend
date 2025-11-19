@@ -1,3 +1,4 @@
+// back-end/src/pages/Products/Products.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ShoppingCart, Heart } from "lucide-react";
@@ -35,7 +36,11 @@ const Products = () => {
         const headers = {};
         if (idToken) headers.Authorization = `Bearer ${idToken}`;
 
-        const res = await axios.get(BASE_API_URL, { headers });
+        const res = await axios.get(BASE_API_URL, { 
+  headers, 
+  withCredentials: true 
+});
+
         const prods = res.data.products || [];
         setProducts(prods);
         setFilteredProducts(prods);

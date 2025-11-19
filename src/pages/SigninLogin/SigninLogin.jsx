@@ -8,7 +8,7 @@ import {
   FacebookAuthProvider,
   TwitterAuthProvider,
 } from "firebase/auth";
-import { auth } from "../../firebase";
+import { auth } from "../../../../actual-back-end/airstride-server/config/firebase";
 import "./SigninLogin.css";
 
 import { toast, ToastContainer } from "react-toastify";

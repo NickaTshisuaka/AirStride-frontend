@@ -11,7 +11,7 @@ import {
 import axios from "axios";
 import { useCartContext } from "../../contexts/CartContext";
 import { useAuth } from "../../AuthContext";
-import { API_ENDPOINTS } from "../../config/api"; // ✅ Import centralized config
+import { API_ENDPOINTS } from "../../../../actual-back-end/airstride-server/config/api"; // ✅ Import centralized config
 import "./ProductDetail.css";
 
 const ProductDetail = () => {
