@@ -1,16 +1,14 @@
-// back-end/src/pages/Products/Products.jsx
+// src/pages/Products/Products.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ShoppingCart, Heart } from "lucide-react";
 import { useCartContext } from "../../contexts/CartContext";
 import { useFavoritesContext } from "../../contexts/FavoritesContext";
-import { useAuth } from "../../AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import "./Products.css";
 
-// const BASE_API_URL = "http://localhost:5000/api/products";
 const BASE_API_URL = "http://3.210.9.239:5000/api/products";
-
 
 const Products = () => {
   const { cart, addToCart } = useCartContext();
@@ -33,18 +31,20 @@ const Products = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const headers = {};
-        if (idToken) headers.Authorization = `Bearer ${idToken}`;
-
-        const res = await axios.get(BASE_API_URL, { 
-  headers, 
-  withCredentials: true 
-});
-
+        const headers = idToken ? { Authorization: `Bearer ${idToken}` } : {};
+        const res = await axios.get(BASE_API_URL, { headers });
         const prods = res.data.products || [];
-        setProducts(prods);
-        setFilteredProducts(prods);
-        console.log("Fetched products:", prods);
+        
+        // Map _id to product_id for frontend consistency
+        const mappedProds = prods.map((p) => ({
+          ...p,
+          product_id: p._id,
+          inventory_count: p.stock ?? 0,
+        }));
+
+        setProducts(mappedProds);
+        setFilteredProducts(mappedProds);
+        console.log("Fetched products:", mappedProds);
       } catch (err) {
         console.error("Error fetching products:", err);
         setProducts([]);
@@ -57,24 +57,18 @@ const Products = () => {
     fetchProducts();
   }, [idToken, authLoading]);
 
-  // === LIVE SEARCH FILTER WITH LOGS & HIGHLIGHT ===
+  // Live search filtering
   useEffect(() => {
     const term = normalize(searchTerm);
-    console.log("Search term changed:", term);
-
     if (!term) {
       setFilteredProducts(products);
-      console.log("No search term, showing all products");
       return;
     }
-
     const filtered = products.filter((p) => {
       const name = normalize(p.name);
       const category = normalize(p.category);
       return name.includes(term) || category.includes(term);
     });
-
-    console.log("Filtered products:", filtered);
     setFilteredProducts(filtered);
   }, [searchTerm, products]);
 
@@ -109,7 +103,6 @@ const Products = () => {
 
   return (
     <div className="products-page">
-      {/* Search */}
       <div className="search-bar">
         <input
           type="text"
@@ -133,9 +126,7 @@ const Products = () => {
                 className="product-img"
               />
               <div className="info">
-                <h3
-                  dangerouslySetInnerHTML={{ __html: highlightMatch(product.name) }}
-                />
+                <h3 dangerouslySetInnerHTML={{ __html: highlightMatch(product.name) }} />
                 <p>R{Number(product.price).toFixed(2)}</p>
                 {product.inventory_count < 1 && <p className="out-of-stock">Out of Stock</p>}
                 <div className="buttons">
