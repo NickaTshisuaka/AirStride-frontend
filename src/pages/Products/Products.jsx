@@ -7,7 +7,9 @@ import { useAuth } from "../../AuthContext";
 import { useNavigate } from "react-router-dom";
 import "./Products.css";
 
-const BASE_API_URL = "http://localhost:5000/api/products";
+// const BASE_API_URL = "http://localhost:5000/api/products";
+const BASE_API_URL = "http://3.210.9.239:5000/api/products";
+
 
 const Products = () => {
   const { cart, addToCart } = useCartContext();
