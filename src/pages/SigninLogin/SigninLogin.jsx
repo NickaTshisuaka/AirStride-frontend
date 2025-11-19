@@ -1,6 +1,8 @@
+// src/pages/AuthenticationPages/SigninLogin.jsx
 import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { useAuth } from "../../AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { auth } from "../../firebase.js";
 import {
   signInWithPopup,
   GoogleAuthProvider,
@@ -8,12 +10,10 @@ import {
   FacebookAuthProvider,
   TwitterAuthProvider,
 } from "firebase/auth";
-// import { auth } from "../../../../actual-back-end/airstride-server/config/firebase";
-import { auth } from "../../firebase.js";
-import "./SigninLogin.css";
 
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "./SigninLogin.css";
 
 const SigninLogin = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -29,7 +29,6 @@ const SigninLogin = () => {
 
   const { login, signup, currentUser, loading } = useAuth();
   const navigate = useNavigate();
-
   if (!loading && currentUser) {
     return <Navigate to="/home" replace />;
   }
