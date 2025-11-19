@@ -8,7 +8,8 @@ import { useAuth } from "../../AuthContext";
 import { useNavigate } from "react-router-dom";
 import "./Products.css";
 
-const BASE_API_URL = "http://3.210.9.239:5000/api/products";
+// Use environment variable for API URL
+const BASE_API_URL = import.meta.env.VITE_API_BASE_URL + "/products";
 
 const Products = () => {
   const { cart, addToCart } = useCartContext();
@@ -22,9 +23,11 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState("");
 
+  // Normalize strings for search
   const normalize = (str) =>
     str?.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
 
+  // Fetch products from API
   useEffect(() => {
     if (authLoading) return;
 
@@ -35,6 +38,7 @@ const Products = () => {
         const res = await axios.get(BASE_API_URL, { headers });
         const prods = res.data.products || [];
 
+        // Map products for frontend use
         const mappedProds = prods.map((p) => ({
           ...p,
           product_id: p._id,
@@ -44,10 +48,14 @@ const Products = () => {
         setProducts(mappedProds);
         setFilteredProducts(mappedProds);
       } catch (err) {
-        console.error("Error fetching products:", err);
-        // Fallback: show 8 placeholder cards
-        setProducts(Array.from({ length: 8 }, (_, i) => ({ product_id: `placeholder-${i}` })));
-        setFilteredProducts(Array.from({ length: 8 }, (_, i) => ({ product_id: `placeholder-${i}` })));
+        console.error("Product fetch error:", err);
+
+        // Fallback: show 8 placeholder cards if network/API fails
+        const placeholders = Array.from({ length: 8 }, (_, i) => ({
+          product_id: `placeholder-${i}`,
+        }));
+        setProducts(placeholders);
+        setFilteredProducts(placeholders);
       } finally {
         setLoading(false);
       }
@@ -56,12 +64,14 @@ const Products = () => {
     fetchProducts();
   }, [idToken, authLoading]);
 
+  // Filter products as user types
   useEffect(() => {
     const term = normalize(searchTerm);
     if (!term) {
       setFilteredProducts(products);
       return;
     }
+
     const filtered = products.filter((p) => {
       const name = normalize(p.name);
       const category = normalize(p.category);
@@ -70,6 +80,7 @@ const Products = () => {
     setFilteredProducts(filtered);
   }, [searchTerm, products]);
 
+  // Highlight search matches
   const highlightMatch = (text) => {
     const term = normalize(searchTerm);
     if (!term) return text;
@@ -77,9 +88,11 @@ const Products = () => {
     return text.replace(regex, "<mark>$1</mark>");
   };
 
+  // Cart & favorites helpers
   const isInCart = (id) => cart.some((item) => item.product_id === id);
   const isFavorite = (id) => favorites.some((item) => item.product_id === id);
 
+  // Handle add to cart
   const handleAddToCart = (product) => {
     if (!isInCart(product.product_id)) {
       addToCart(product);
@@ -89,6 +102,7 @@ const Products = () => {
     }
   };
 
+  // Handle favorites toggle
   const handleToggleFavorite = (product) => {
     if (isFavorite(product.product_id)) {
       removeFavorite(product.product_id);
@@ -130,7 +144,11 @@ const Products = () => {
                   className={`product-img ${!product.image ? "no-image" : ""}`}
                 />
                 <div className="info">
-                  <h3 dangerouslySetInnerHTML={{ __html: highlightMatch(product.name || "No Name") }} />
+                  <h3
+                    dangerouslySetInnerHTML={{
+                      __html: highlightMatch(product.name || "No Name"),
+                    }}
+                  />
                   <p>{product.price ? `R${Number(product.price).toFixed(2)}` : "Price N/A"}</p>
                   {product.inventory_count < 1 && <p className="out-of-stock">Out of Stock</p>}
                   <div className="buttons">
