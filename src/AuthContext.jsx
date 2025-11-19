@@ -8,7 +8,7 @@ import {
   signInWithPopup,
   updateProfile,
 } from "firebase/auth";
-import { auth } from "../firebase"; // <-- Use frontend Firebase SDK
+import { auth } from "../src/firebase.js";
 
 const AuthContext = createContext();
 
