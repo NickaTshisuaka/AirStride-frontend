@@ -30,7 +30,8 @@ jobs:
           echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}" >> $GITHUB_ENV
           echo "VITE_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}" >> $GITHUB_ENV
 
-          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> $GITHUB_ENV
+          echo "VITE_API_URL=${{ secrets.API_URL }}" >> $GITHUB_ENV
+
 
       - name: Build the project
         run: npm run build
