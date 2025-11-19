@@ -4,7 +4,7 @@ import axios from "axios";
 import { ShoppingCart, Heart } from "lucide-react";
 import { useCartContext } from "../../contexts/CartContext";
 import { useFavoritesContext } from "../../contexts/FavoritesContext";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../AuthContext";
 import { useNavigate } from "react-router-dom";
 import "./Products.css";
 
