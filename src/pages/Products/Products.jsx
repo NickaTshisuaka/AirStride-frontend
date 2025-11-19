@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import "./Products.css";
 
 // Use environment variable for API URL
-const BASE_API_URL = import.meta.env.VITE_API_BASE_URL + "/products";
+const BASE_API_URL = import.meta.env.VITE_API_URL; // e.g., http://3.210.9.239:5000/api
 
 const Products = () => {
   const { cart, addToCart } = useCartContext();
@@ -35,7 +35,7 @@ const Products = () => {
       setLoading(true);
       try {
         const headers = idToken ? { Authorization: `Bearer ${idToken}` } : {};
-        const res = await axios.get(BASE_API_URL, { headers });
+const res = await axios.get(`${BASE_API_URL}/products`, { headers });
         const prods = res.data.products || [];
 
         // Map products for frontend use
