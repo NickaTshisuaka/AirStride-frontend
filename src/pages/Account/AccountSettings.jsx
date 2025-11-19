@@ -18,7 +18,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./AccountSettings.css";
 
 // Firebase imports
-import { auth } from "../../../../actual-back-end/airstride-server/config/firebase";
+import { auth } from "../../../../config/firebase";
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
