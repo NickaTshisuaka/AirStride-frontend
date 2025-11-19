@@ -1,7 +1,7 @@
 // src/pages/AuthenticationPages/SigninLogin.jsx
 import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../AuthContext.jsx";
 import { auth } from "../../firebase.js";
 import {
   signInWithPopup,
