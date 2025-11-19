@@ -1,44 +1,51 @@
-/* === PAGE BACKGROUND === */
 .products-page {
   min-height: 100vh;
   padding: 20px;
-  /* background: linear-gradient(135deg, #b8e6ff 0%, #dff3ff 40%, #ffffff 90%); */
   display: flex;
-  background-color: red;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   animation: fadeIn 0.6s ease;
+  background-color: #f8f9fa;
 }
 
-/* === GRID LAYOUT === */
+.search-bar {
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  outline: none;
+}
+
 .products-grid {
   width: 100%;
   max-width: 1600px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 30px;
-  padding: 0px;
 }
 
-/* === PRODUCT CARD === */
 .product-card {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
   border-radius: 18px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.08);
   overflow: hidden;
-  transform: translateY(0px);
   transition: all 0.25s ease;
   border: 1px solid rgba(255,255,255,0.4);
 }
 
-/* Hover lift & glow */
 .product-card:hover {
   transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.12),
-              0 0 12px rgba(0, 137, 255, 0.25);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12), 0 0 12px rgba(0, 137, 255, 0.25);
 }
 
-/* === PRODUCT IMAGE === */
 .product-img {
   width: 100%;
   height: 230px;
@@ -46,10 +53,12 @@
   border-bottom: 1px solid rgba(255,255,255,0.4);
 }
 
-/* === INFO SECTION === */
+.product-img.no-image {
+  background: #e0e0e0;
+}
+
 .info {
   padding: 18px;
-  text-align: left;
 }
 
 .info h3 {
@@ -62,25 +71,22 @@
 .info p {
   margin-top: 8px;
   font-weight: 600;
-  color: #ff7b00; /* orange accent */
+  color: #ff7b00;
   font-size: 1rem;
 }
 
-/* === OUT OF STOCK TEXT === */
 .out-of-stock {
   color: #d9534f;
   font-weight: bold;
   margin-top: 5px;
 }
 
-/* === BUTTONS ROW === */
 .buttons {
   display: flex;
   justify-content: space-between;
   margin-top: 15px;
 }
 
-/* === BUTTONS BASE STYLE === */
 .buttons button {
   display: flex;
   align-items: center;
@@ -93,7 +99,6 @@
   transition: all 0.25s ease;
 }
 
-/* === ADD TO CART BUTTON === */
 .buttons button:first-child {
   background: #008cff;
   color: white;
@@ -105,7 +110,6 @@
   transform: translateY(-2px);
 }
 
-/* === FAVORITE BUTTON === */
 .buttons button:last-child {
   background: white;
   border: 2px solid rgba(255, 123, 0, 0.4);
@@ -132,21 +136,58 @@
   z-index: 999;
 }
 
-/* === ANIMATIONS === */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0px);
-  }
+/* === SHIMMER PLACEHOLDER === */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+  background: #e0e0e0;
 }
 
+.product-img-placeholder {
+  width: 100%;
+  height: 230px;
+  background: #ccc;
+}
+
+.info-placeholder {
+  padding: 12px;
+}
+
+.info-placeholder .line {
+  height: 16px;
+  margin: 8px 0;
+  border-radius: 8px;
+  background: #ccc;
+}
+
+.info-placeholder .line.short { width: 40%; }
+.info-placeholder .line.medium { width: 60%; }
+.info-placeholder .line.long { width: 80%; }
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -150px;
+  width: 150px;
+  height: 100%;
+  background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+  animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(300%); }
+}
+
+/* === ANIMATIONS === */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fadeOut {

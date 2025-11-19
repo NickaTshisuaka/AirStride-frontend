@@ -34,8 +34,7 @@ const Products = () => {
         const headers = idToken ? { Authorization: `Bearer ${idToken}` } : {};
         const res = await axios.get(BASE_API_URL, { headers });
         const prods = res.data.products || [];
-        
-        // Map _id to product_id for frontend consistency
+
         const mappedProds = prods.map((p) => ({
           ...p,
           product_id: p._id,
@@ -44,11 +43,11 @@ const Products = () => {
 
         setProducts(mappedProds);
         setFilteredProducts(mappedProds);
-        console.log("Fetched products:", mappedProds);
       } catch (err) {
         console.error("Error fetching products:", err);
-        setProducts([]);
-        setFilteredProducts([]);
+        // Fallback: show 8 placeholder cards
+        setProducts(Array.from({ length: 8 }, (_, i) => ({ product_id: `placeholder-${i}` })));
+        setFilteredProducts(Array.from({ length: 8 }, (_, i) => ({ product_id: `placeholder-${i}` })));
       } finally {
         setLoading(false);
       }
@@ -57,7 +56,6 @@ const Products = () => {
     fetchProducts();
   }, [idToken, authLoading]);
 
-  // Live search filtering
   useEffect(() => {
     const term = normalize(searchTerm);
     if (!term) {
@@ -85,19 +83,19 @@ const Products = () => {
   const handleAddToCart = (product) => {
     if (!isInCart(product.product_id)) {
       addToCart(product);
-      setToastMessage(`${product.name} added to cart 🛒`);
+      setToastMessage(`${product.name || "Item"} added to cart 🛒`);
     } else {
-      setToastMessage(`${product.name} is already in your cart`);
+      setToastMessage(`${product.name || "Item"} is already in your cart`);
     }
   };
 
   const handleToggleFavorite = (product) => {
     if (isFavorite(product.product_id)) {
       removeFavorite(product.product_id);
-      setToastMessage(`${product.name} removed from favorites ❤️`);
+      setToastMessage(`${product.name || "Item"} removed from favorites ❤️`);
     } else {
       addFavorite(product);
-      setToastMessage(`${product.name} added to favorites ❤️`);
+      setToastMessage(`${product.name || "Item"} added to favorites ❤️`);
     }
   };
 
@@ -112,43 +110,48 @@ const Products = () => {
         />
       </div>
 
-      {loading ? (
-        <p>Loading products...</p>
-      ) : filteredProducts.length === 0 ? (
-        <p>No products found 😢</p>
-      ) : (
-        <section className="products-grid">
-          {filteredProducts.map((product) => (
-            <div key={product.product_id} className="product-card">
-              <img
-                src={product.image || "https://placehold.co/400x400?text=No+Image"}
-                alt={product.name}
-                className="product-img"
-              />
-              <div className="info">
-                <h3 dangerouslySetInnerHTML={{ __html: highlightMatch(product.name) }} />
-                <p>R{Number(product.price).toFixed(2)}</p>
-                {product.inventory_count < 1 && <p className="out-of-stock">Out of Stock</p>}
-                <div className="buttons">
-                  <button
-                    onClick={() => handleAddToCart(product)}
-                    disabled={product.inventory_count < 1 || isInCart(product.product_id)}
-                  >
-                    <ShoppingCart /> {isInCart(product.product_id) ? "In Cart" : "Add to Cart"}
-                  </button>
-                  <button onClick={() => handleToggleFavorite(product)}>
-                    <Heart fill={isFavorite(product.product_id) ? "currentColor" : "none"} />
-                    {isFavorite(product.product_id) ? "Unfav" : "Fav"}
-                  </button>
-                  <button onClick={() => navigate(`/product/${product.product_id}`)}>
-                    View Details
-                  </button>
+      <section className="products-grid">
+        {loading
+          ? Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="product-card shimmer">
+                <div className="product-img-placeholder" />
+                <div className="info-placeholder">
+                  <div className="line short"></div>
+                  <div className="line medium"></div>
+                  <div className="line long"></div>
                 </div>
               </div>
-            </div>
-          ))}
-        </section>
-      )}
+            ))
+          : filteredProducts.map((product) => (
+              <div key={product.product_id} className="product-card">
+                <img
+                  src={product.image || ""}
+                  alt={product.name || "Product"}
+                  className={`product-img ${!product.image ? "no-image" : ""}`}
+                />
+                <div className="info">
+                  <h3 dangerouslySetInnerHTML={{ __html: highlightMatch(product.name || "No Name") }} />
+                  <p>{product.price ? `R${Number(product.price).toFixed(2)}` : "Price N/A"}</p>
+                  {product.inventory_count < 1 && <p className="out-of-stock">Out of Stock</p>}
+                  <div className="buttons">
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      disabled={product.inventory_count < 1 || isInCart(product.product_id)}
+                    >
+                      <ShoppingCart /> {isInCart(product.product_id) ? "In Cart" : "Add to Cart"}
+                    </button>
+                    <button onClick={() => handleToggleFavorite(product)}>
+                      <Heart fill={isFavorite(product.product_id) ? "currentColor" : "none"} />
+                      {isFavorite(product.product_id) ? "Unfav" : "Fav"}
+                    </button>
+                    <button onClick={() => navigate(`/product/${product.product_id}`)}>
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+      </section>
 
       {toastMessage && <div className="toast">{toastMessage}</div>}
     </div>
