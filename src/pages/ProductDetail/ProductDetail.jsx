@@ -11,12 +11,12 @@ import {
 import axios from "axios";
 import { useCartContext } from "../../contexts/CartContext";
 import { useAuth } from "../../AuthContext";
-import { API_ENDPOINTS } from "../../config/api.js"; 
-// import { API_ENDPOINTS } from "../../../../config/
 import "./ProductDetail.css";
 
+const BASE_URL = "http://3.210.9.239:5000/api/products";
+
 const ProductDetail = () => {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const { cart, addToCart } = useCartContext();
@@ -25,9 +25,9 @@ const ProductDetail = () => {
   const [product, setProduct] = useState(null);
   const [similarProducts, setSimilarProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // ✅ Track errors
+  const [error, setError] = useState(null);
 
-  // Convert backend product into consistent shape
+  // Normalize product format
   const normalizeProduct = (p) => ({
     ...p,
     _id: p._id || p.product_id,
@@ -37,33 +37,36 @@ const ProductDetail = () => {
     inventory_count: p.inventory_count ?? 0,
   });
 
-  // Fetch the product
+  // Fetch single product
   useEffect(() => {
     if (authLoading) return;
-    
-    // ✅ Allow fetching without token for testing
+
     const fetchProduct = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         const headers = {};
         if (idToken) {
           headers.Authorization = `Bearer ${idToken}`;
         }
 
-        console.log('Fetching product:', `${API_ENDPOINTS.products}/${id}`); // ✅ Debug log
+        console.log("Fetching product:", `${BASE_URL}/${id}`);
 
-        const res = await axios.get(`${API_ENDPOINTS.products}/${id}`, {
+        const res = await axios.get(`${BASE_URL}/${id}`, {
           headers,
-          timeout: 10000, // ✅ 10 second timeout
+          timeout: 10000,
         });
 
         const data = res.data.product || res.data;
         setProduct(normalizeProduct(data));
       } catch (err) {
         console.error("Product fetch error:", err);
-        setError(err.response?.data?.error || err.message || "Failed to load product");
+        setError(
+          err.response?.data?.error ||
+            err.message ||
+            "Failed to load product"
+        );
         setProduct(null);
       } finally {
         setLoading(false);
@@ -84,7 +87,7 @@ const ProductDetail = () => {
           headers.Authorization = `Bearer ${idToken}`;
         }
 
-        const res = await axios.get(API_ENDPOINTS.products, { headers });
+        const res = await axios.get(BASE_URL, { headers });
         const data = res.data.products || res.data;
         const normalized = data.map(normalizeProduct);
 
@@ -92,7 +95,7 @@ const ProductDetail = () => {
           normalized
             .filter(
               (p) =>
-                p.category === product.category && 
+                p.category === product.category &&
                 p.product_id !== product.product_id
             )
             .slice(0, 3)
@@ -105,7 +108,7 @@ const ProductDetail = () => {
     fetchSimilar();
   }, [product, idToken, authLoading]);
 
-  // Fake reviews
+  // Mock Reviews
   const mockReviews = [
     {
       name: "Thandi M.",
@@ -127,6 +130,7 @@ const ProductDetail = () => {
     },
   ];
 
+  // Loading / Error UI
   if (loading) {
     return <div className="loading-screen">Loading product details...</div>;
   }
@@ -153,6 +157,7 @@ const ProductDetail = () => {
     );
   }
 
+  // Main UI
   return (
     <div className="product-page">
       <button onClick={() => navigate("/products")} className="back-btn">
@@ -173,14 +178,13 @@ const ProductDetail = () => {
             )}
           </div>
 
-          {/* MAIN INFO */}
+          {/* INFO */}
           <div className="product-info">
             <span className="product-category">
               {product.category || "General"}
             </span>
 
             <h1 className="product-name">{product.name}</h1>
-
             <p className="product-price">R {product.price.toFixed(2)}</p>
 
             <p className="product-description">
@@ -188,7 +192,7 @@ const ProductDetail = () => {
                 "Premium quality product designed for your needs."}
             </p>
 
-            {/* DETAILS GRID */}
+            {/* DETAILS */}
             <div className="product-details-grid">
               <div className="product-detail-card">
                 <Award className="detail-icon" />
