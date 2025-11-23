@@ -246,7 +246,7 @@ const Checkout = () => {
       {/* Main Checkout Layout */}
       <div className="checkout-root">
         <div className="progress-wrap">
-          <div className="progress" style={{ width: `${(step + 1) * 33.33}%` }} />
+          <div className="progress" style={{ width: `${(step + 1) * 20.33}%` }} />
         </div>
         <div className="checkout-container">
           <div className="checkout-left">
