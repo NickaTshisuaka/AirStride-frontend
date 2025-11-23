@@ -44,7 +44,7 @@ const Checkout = () => {
     cardNumber: "", expiry: "", cvv: ""
   });
 
-  const update = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
+  const update = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
 
   // Input formatters
   const autoFormatPhone = (v) => v.replace(/\D/g, "").slice(0, 10).replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3");
@@ -76,8 +76,8 @@ const Checkout = () => {
         const newOrder = {
           id: orderId,
           date: new Date().toLocaleString(),
-          total: total,
-          items: cart.map((i) => ({
+          total,
+          items: cart.map(i => ({
             name: i.name,
             price: i.price,
             quantity: i.quantity,
@@ -87,6 +87,10 @@ const Checkout = () => {
         };
         savedOrders.push(newOrder);
         localStorage.setItem("orders", JSON.stringify(savedOrders));
+
+        // Clear cart after successful payment
+        localStorage.removeItem("cart");
+        window.dispatchEvent(new Event("cartUpdated"));
 
         setTimeout(() => setShowConfetti(false), 5000);
         toast.success("Payment Successful! 🎉");
@@ -128,18 +132,24 @@ const Checkout = () => {
       templateParams,
       import.meta.env.VITE_EMAILJS_PUBLIC_KEY
     )
-    .then(() => toast.success(`Receipt sent to ${form.email} ✅`))
-    .catch((err) => toast.error(`Email failed: ${err.text}`));
+      .then(() => toast.success(`Receipt sent to ${form.email} ✅`))
+      .catch((err) => toast.error(`Email failed: ${err.text}`));
   };
 
   // Steps
   const steps = [
+    // Shipping Step
     <div className="step-page" key="shipping">
       <h2>Shipping Information</h2>
       <label className="field"><FaUser /><input placeholder="Full Name" value={form.name} onChange={e => update("name", e.target.value)} /></label>
       <label className="field"><FaEnvelope /><input placeholder="Email" value={form.email} onChange={e => update("email", e.target.value)} /></label>
       <label className="field"><FaPhone /><input placeholder="Phone" value={form.phone} onChange={e => update("phone", autoFormatPhone(e.target.value))} /></label>
-      <label className="field"><FaMapMarkerAlt /><select value={form.province} onChange={e => update("province", e.target.value)}><option value="">Select Province</option>{provinces.map(p => <option key={p}>{p}</option>)}</select></label>
+      <label className="field"><FaMapMarkerAlt />
+        <select value={form.province} onChange={e => update("province", e.target.value)}>
+          <option value="">Select Province</option>
+          {provinces.map(p => <option key={p}>{p}</option>)}
+        </select>
+      </label>
       <label className="field"><FaMapMarkerAlt /><input placeholder="Street Address" value={form.address} onChange={e => update("address", e.target.value)} /></label>
       <div className="row-3">
         <input placeholder="Suburb" value={form.suburb} onChange={e => update("suburb", e.target.value)} />
@@ -149,6 +159,7 @@ const Checkout = () => {
       <button className="btn primary" disabled={!isShippingValid()} onClick={() => setStep(1)}>Next</button>
     </div>,
 
+    // Payment Step
     <div className="step-page" key="payment">
       <h2>Payment Details</h2>
       <label className="field futuristic-card"><FaCreditCard /><input placeholder="Card Number" value={form.cardNumber} onChange={e => update("cardNumber", autoFormatCard(e.target.value))} /></label>
@@ -162,27 +173,33 @@ const Checkout = () => {
       </div>
     </div>,
 
+    // Review Step
     <div className="step-page" key="review">
       <h2>Review & Confirm</h2>
       <p><strong>{form.name}</strong> – {form.phone}</p>
       <p>{form.address}, {form.suburb}, {form.city}, {form.postalCode}</p>
       <p>{form.province}</p>
-
-      <ul className="review-list">{cart.map((i, x) => <li key={x}><span>{i.name} × {i.quantity}</span><span>{formatZAR(i.price * i.quantity)}</span></li>)}</ul>
-
+      <ul className="review-list">
+        {cart.map((i, x) => (
+          <li key={x}>
+            <span>{i.name} × {i.quantity}</span>
+            <span>{formatZAR(i.price * i.quantity)}</span>
+          </li>
+        ))}
+      </ul>
       <div className="totals">
         <p><span>Subtotal</span><span>{formatZAR(subtotal)}</span></p>
         <p><span>Shipping</span><span>{formatZAR(SHIPPING_COST)}</span></p>
         <p><span>VAT</span><span>{formatZAR(vat)}</span></p>
         <p className="total"><strong>Total</strong><strong>{formatZAR(total)}</strong></p>
       </div>
-
       <div className="step-buttons">
         <button className="btn ghost" onClick={() => setStep(1)}>Back</button>
         <button className="btn primary" onClick={() => setStep(3)}>Pay {formatZAR(total)}</button>
       </div>
     </div>,
 
+    // Processing Step
     <div className="step-page center" key="processing">
       <div className="spinner"></div>
       <p>Processing your payment...</p>
@@ -193,6 +210,8 @@ const Checkout = () => {
     <>
       <ToastContainer position="top-center" autoClose={3000} />
       {showConfetti && <Confetti recycle={false} numberOfPieces={250} />}
+
+      {/* Success Modal */}
       {showSuccessModal && (
         <div className="success-modal">
           <div className="success-box">
@@ -224,18 +243,17 @@ const Checkout = () => {
         </div>
       )}
 
+      {/* Main Checkout Layout */}
       <div className="checkout-root">
         <div className="progress-wrap">
           <div className="progress" style={{ width: `${(step + 1) * 33.33}%` }} />
         </div>
-
         <div className="checkout-container">
           <div className="checkout-left">
-            <div className="steps-wrapper" style={{ transform: `translateX(-${step * 44}%)` }}>
+            <div className="steps-wrapper" style={{ transform: `translateX(-${step * 37}%)` }}>
               {steps}
             </div>
           </div>
-
           <aside className="checkout-summary">
             <div className="summary-card">
               <h3>Order Summary</h3>
