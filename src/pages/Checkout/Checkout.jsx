@@ -115,7 +115,7 @@ const Checkout = () => {
       templateParams,
       import.meta.env.VITE_EMAILJS_USER_ID
     )
-    .then(() => toast.success("📧 Receipt sent via EmailJS!"))
+    .then(() => toast.success("📧 Receipt sent!"))
     .catch((err) => {
       toast.error("Failed to send email. Try again.");
       console.error(err);
@@ -236,8 +236,8 @@ const Checkout = () => {
 
             <div className="modal-buttons">
               <button className="btn primary" onClick={downloadReceipt}>Download Receipt</button>
-              <button className="btn orange" onClick={sendEmailReceipt}>Email Receipt</button>
-              <button className="btn ghost" onClick={() => window.location.href = "/"}>Back to Home</button>
+              <button className="btn orange" onClick={sendEmailReceipt}>Get Email of Receipt</button>
+              <button className="btn ghost" onClick={() => window.location.href = "/"}>View Order Summary </button>
             </div>
           </div>
         </div>
