@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
 import Confetti from "react-confetti";
 import { toast, ToastContainer } from "react-toastify";
+import emailjs from "emailjs-com";
 import {
   FaUser, FaEnvelope, FaMapMarkerAlt, FaCreditCard,
   FaCalendarAlt, FaLock, FaPhone, FaCopy
 } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 import "./Checkout.css";
-
-const formatZAR = (amount) =>
-  new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(amount);
 
 const SHIPPING_COST = 85;
 const VAT_RATE = 0.15;
@@ -19,20 +17,22 @@ const provinces = [
   "Limpopo", "Mpumalanga", "North West", "Northern Cape", "Western Cape"
 ];
 
+const formatZAR = (amount) =>
+  new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(amount);
+
 const Checkout = () => {
   const [step, setStep] = useState(0);
-
-  /** SUCCESS MODAL STATE */
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
-  /** ORDER ID */
-  const [orderId] = useState(
-    "AS-" + Math.random().toString(36).substring(2, 10).toUpperCase()
-  );
-
-  /** CART */
+  const [orderId] = useState("AS-" + Math.random().toString(36).substring(2, 10).toUpperCase());
   const [cart, setCart] = useState([]);
+  const [form, setForm] = useState({
+    name: "", email: "", phone: "",
+    address: "", suburb: "", city: "",
+    postalCode: "", province: "",
+    cardNumber: "", expiry: "", cvv: ""
+  });
+
   useEffect(() => {
     setCart(JSON.parse(localStorage.getItem("cart")) || []);
   }, []);
@@ -41,32 +41,34 @@ const Checkout = () => {
   const vat = subtotal * VAT_RATE;
   const total = subtotal + SHIPPING_COST + vat;
 
-  /** FORM STATE */
-  const [form, setForm] = useState({
-    name: "", email: "", phone: "",
-    address: "", suburb: "", city: "",
-    postalCode: "", province: "",
-    cardNumber: "", expiry: "", cvv: ""
-  });
-
   const update = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
 
   /** INPUT FORMATTERS */
   const autoFormatPhone = (v) =>
     v.replace(/\D/g, "").slice(0, 10).replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3");
-
   const autoFormatPostal = (v) => v.replace(/\D/g, "").slice(0, 4);
-
   const autoFormatCard = (v) =>
     v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
-
   const autoFormatExpiry = (v) => {
     const s = v.replace(/\D/g, "").slice(0, 4);
     if (s.length <= 2) return s;
     return s.slice(0, 2) + "/" + s.slice(2);
   };
 
-  /** PAYMENT PROCESS → SHOW SUCCESS POPUP + TOAST */
+  /** VALIDATION */
+  const isShippingValid = () => (
+    form.name.trim() && form.email.trim() && form.phone.trim() &&
+    form.province.trim() && form.address.trim() &&
+    form.suburb.trim() && form.city.trim() && form.postalCode.trim()
+  );
+
+  const isPaymentValid = () => (
+    form.cardNumber.trim().length === 19 &&
+    form.expiry.trim().length === 5 &&
+    form.cvv.trim().length === 3
+  );
+
+  /** PAYMENT SUCCESS EFFECT */
   useEffect(() => {
     if (step === 3) {
       const timer = setTimeout(() => {
@@ -88,7 +90,7 @@ const Checkout = () => {
   /** DOWNLOAD RECEIPT */
   const downloadReceipt = () => {
     const receipt =
-      `Order Receipt\n\nCustomer: ${form.name}\nEmail: ${form.email}\nOrder ID: ${orderId}\nTotal: ${formatZAR(total)}`;
+      `Order Receipt\n\nCustomer: ${form.name}\nEmail: ${form.email}\nOrder ID: ${orderId}\nTotal: ${formatZAR(total)}\nItems:\n${cart.map(i => `${i.name} x${i.quantity}`).join("\n")}`;
     const blob = new Blob([receipt], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -97,191 +99,111 @@ const Checkout = () => {
     toast.success("Receipt downloaded!");
   };
 
-  /** EMAIL RECEIPT MOCK */
-  const emailReceipt = () => {
-    toast.success(`📧 Receipt sent to ${form.email}`);
+  /** SEND EMAIL VIA EMAILJS */
+  const sendEmailReceipt = () => {
+    const templateParams = {
+      to_name: form.name,
+      to_email: form.email,
+      order_id: orderId,
+      total: formatZAR(total),
+      items: cart.map(i => `${i.name} × ${i.quantity}`).join(", "),
+    };
+
+    emailjs.send(
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+      templateParams,
+      import.meta.env.VITE_EMAILJS_USER_ID
+    )
+    .then(() => toast.success("📧 Receipt sent via EmailJS!"))
+    .catch((err) => {
+      toast.error("Failed to send email. Try again.");
+      console.error(err);
+    });
   };
 
   /** STEPS */
   const steps = [
-    /* STEP 0 — SHIPPING */
+    // SHIPPING
     <div className="step-page" key="shipping">
       <h2>Shipping Information</h2>
 
-      <label className="field">
-        <FaUser />
-        <input
-          placeholder="Full Name"
-          value={form.name}
-          onChange={(e) => update("name", e.target.value)}
-        />
-      </label>
-
-      <label className="field">
-        <FaEnvelope />
-        <input
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => update("email", e.target.value)}
-        />
-      </label>
-
-      <label className="field">
-        <FaPhone />
-        <input
-          placeholder="Phone"
-          value={form.phone}
-          onChange={(e) => update("phone", autoFormatPhone(e.target.value))}
-        />
-      </label>
-
-      <label className="field">
-        <FaMapMarkerAlt />
-        <select
-          value={form.province}
-          onChange={(e) => update("province", e.target.value)}
-        >
+      <label className="field"><FaUser /><input placeholder="Full Name" value={form.name} onChange={e => update("name", e.target.value)} /></label>
+      <label className="field"><FaEnvelope /><input placeholder="Email" value={form.email} onChange={e => update("email", e.target.value)} /></label>
+      <label className="field"><FaPhone /><input placeholder="Phone" value={form.phone} onChange={e => update("phone", autoFormatPhone(e.target.value))} /></label>
+      <label className="field"><FaMapMarkerAlt />
+        <select value={form.province} onChange={e => update("province", e.target.value)}>
           <option value="">Select Province</option>
-          {provinces.map((p) => (
-            <option key={p}>{p}</option>
-          ))}
+          {provinces.map(p => <option key={p}>{p}</option>)}
         </select>
       </label>
-
-      <label className="field">
-        <FaMapMarkerAlt />
-        <input
-          placeholder="Street Address"
-          value={form.address}
-          onChange={(e) => update("address", e.target.value)}
-        />
-      </label>
+      <label className="field"><FaMapMarkerAlt /><input placeholder="Street Address" value={form.address} onChange={e => update("address", e.target.value)} /></label>
 
       <div className="row-3">
-        <input
-          placeholder="Suburb"
-          value={form.suburb}
-          onChange={(e) => update("suburb", e.target.value)}
-        />
-        <input
-          placeholder="City"
-          value={form.city}
-          onChange={(e) => update("city", e.target.value)}
-        />
-        <input
-          placeholder="Postal Code"
-          value={form.postalCode}
-          onChange={(e) => update("postalCode", autoFormatPostal(e.target.value))}
-        />
+        <input placeholder="Suburb" value={form.suburb} onChange={e => update("suburb", e.target.value)} />
+        <input placeholder="City" value={form.city} onChange={e => update("city", e.target.value)} />
+        <input placeholder="Postal Code" value={form.postalCode} onChange={e => update("postalCode", autoFormatPostal(e.target.value))} />
       </div>
 
-      <button className="btn primary" onClick={() => setStep(1)}>
-        Next
-      </button>
+      <button className="btn primary" onClick={() => setStep(1)} disabled={!isShippingValid()}>Next</button>
     </div>,
 
-    /* STEP 1 — PAYMENT */
+    // PAYMENT
     <div className="step-page" key="payment">
       <h2>Payment Details</h2>
 
-      <label className="field">
-        <FaCreditCard />
-        <input
-          placeholder="Card Number"
-          value={form.cardNumber}
-          onChange={(e) => update("cardNumber", autoFormatCard(e.target.value))}
-        />
-      </label>
+      <div className="card-preview">
+        <div className="card-front">
+          <p className="card-number">{form.cardNumber || "#### #### #### ####"}</p>
+          <div className="card-name">{form.name || "FULL NAME"}</div>
+          <div className="card-expiry">{form.expiry || "MM/YY"}</div>
+        </div>
+        <div className="card-back">
+          <div className="cvv">{form.cvv || "CVV"}</div>
+        </div>
+      </div>
 
+      <label className="field"><FaCreditCard /><input placeholder="Card Number" value={form.cardNumber} onChange={e => update("cardNumber", autoFormatCard(e.target.value))} /></label>
       <div className="row-2">
-        <label className="field">
-          <FaCalendarAlt />
-          <input
-            placeholder="MM/YY"
-            value={form.expiry}
-            onChange={(e) => update("expiry", autoFormatExpiry(e.target.value))}
-          />
-        </label>
-
-        <label className="field">
-          <FaLock />
-          <input
-            placeholder="CVV"
-            value={form.cvv}
-            onChange={(e) =>
-              update("cvv", e.target.value.replace(/\D/g, "").slice(0, 3))
-            }
-          />
-        </label>
+        <label className="field"><FaCalendarAlt /><input placeholder="MM/YY" value={form.expiry} onChange={e => update("expiry", autoFormatExpiry(e.target.value))} /></label>
+        <label className="field"><FaLock /><input placeholder="CVV" value={form.cvv} onChange={e => update("cvv", e.target.value.replace(/\D/g,"").slice(0,3))} /></label>
       </div>
 
       <div className="step-buttons">
-        <button className="btn ghost" onClick={() => setStep(0)}>
-          Back
-        </button>
-        <button className="btn primary" onClick={() => setStep(2)}>
-          Next
-        </button>
+        <button className="btn ghost" onClick={() => setStep(0)}>Back</button>
+        <button className="btn primary" onClick={() => setStep(2)} disabled={!isPaymentValid()}>Next</button>
       </div>
     </div>,
 
-    /* STEP 2 — REVIEW */
+    // REVIEW
     <div className="step-page" key="review">
       <h2>Review & Confirm</h2>
-
-      <p>
-        <strong>{form.name}</strong> – {form.phone}
-      </p>
-      <p>
-        {form.address}, {form.suburb}, {form.city}, {form.postalCode}
-      </p>
+      <p><strong>{form.name}</strong> – {form.phone}</p>
+      <p>{form.address}, {form.suburb}, {form.city}, {form.postalCode}</p>
       <p>{form.province}</p>
 
       <ul className="review-list">
-        {cart.map((i, x) => (
-          <li key={x}>
-            <span>
-              {i.name} × {i.quantity}
-            </span>
-            <span>{formatZAR(i.price * i.quantity)}</span>
-          </li>
-        ))}
+        {cart.map((i, x) => <li key={x}><span>{i.name} × {i.quantity}</span><span>{formatZAR(i.price * i.quantity)}</span></li>)}
       </ul>
 
       <div className="totals">
-        <p>
-          <span>Subtotal</span>
-          <span>{formatZAR(subtotal)}</span>
-        </p>
-        <p>
-          <span>Shipping</span>
-          <span>{formatZAR(SHIPPING_COST)}</span>
-        </p>
-        <p>
-          <span>VAT</span>
-          <span>{formatZAR(vat)}</span>
-        </p>
-        <p className="total">
-          <strong>Total</strong>
-          <strong>{formatZAR(total)}</strong>
-        </p>
+        <p><span>Subtotal</span><span>{formatZAR(subtotal)}</span></p>
+        <p><span>Shipping</span><span>{formatZAR(SHIPPING_COST)}</span></p>
+        <p><span>VAT</span><span>{formatZAR(vat)}</span></p>
+        <p className="total"><strong>Total</strong><strong>{formatZAR(total)}</strong></p>
       </div>
 
       <div className="step-buttons">
-        <button className="btn ghost" onClick={() => setStep(1)}>
-          Back
-        </button>
-        <button className="btn primary" onClick={() => setStep(3)}>
-          Pay {formatZAR(total)}
-        </button>
+        <button className="btn ghost" onClick={() => setStep(1)}>Back</button>
+        <button className="btn primary" onClick={() => setStep(3)}>Pay {formatZAR(total)}</button>
       </div>
     </div>,
 
-    /* STEP 3 — PROCESSING */
+    // PROCESSING
     <div className="step-page center" key="processing">
       <div className="spinner"></div>
       <p>Processing your payment...</p>
-    </div>,
+    </div>
   ];
 
   return (
@@ -289,7 +211,6 @@ const Checkout = () => {
       <ToastContainer position="top-center" autoClose={3000} />
       {showConfetti && <Confetti recycle={false} numberOfPieces={250} />}
 
-      {/* SUCCESS POPUP */}
       {showSuccessModal && (
         <div className="success-modal">
           <div className="success-box">
@@ -314,23 +235,14 @@ const Checkout = () => {
             </div>
 
             <div className="modal-buttons">
-              <button className="btn primary" onClick={downloadReceipt}>
-                Download Receipt
-              </button>
-
-              <button className="btn orange" onClick={emailReceipt}>
-                Email Receipt
-              </button>
-
-              <button className="btn ghost track">
-                Track Order
-              </button>
+              <button className="btn primary" onClick={downloadReceipt}>Download Receipt</button>
+              <button className="btn orange" onClick={sendEmailReceipt}>Email Receipt</button>
+              <button className="btn ghost" onClick={() => window.location.href = "/"}>Back to Home</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MAIN CHECKOUT LAYOUT */}
       <div className="checkout-root">
         <div className="progress-wrap">
           <div className="progress" style={{ width: `${(step + 1) * 33.33}%` }} />
@@ -338,10 +250,7 @@ const Checkout = () => {
 
         <div className="checkout-container">
           <div className="checkout-left">
-            <div
-              className="steps-wrapper"
-              style={{ transform: `translateX(-${step * 25}%)` }}
-            >
+            <div className="steps-wrapper" style={{ transform: `translateX(-${step * 25}%)` }}>
               {steps}
             </div>
           </div>
@@ -349,33 +258,12 @@ const Checkout = () => {
           <aside className="checkout-summary">
             <div className="summary-card">
               <h3>Order Summary</h3>
-
-              {cart.map((item, i) => (
-                <div key={i} className="summary-item">
-                  <span>{item.name}</span>
-                  <span>{formatZAR(item.price * item.quantity)}</span>
-                </div>
-              ))}
-
+              {cart.map((item, i) => <div key={i} className="summary-item"><span>{item.name}</span><span>{formatZAR(item.price * item.quantity)}</span></div>)}
               <hr />
-
-              <p>
-                <span>Subtotal</span>
-                <span>{formatZAR(subtotal)}</span>
-              </p>
-              <p>
-                <span>Shipping</span>
-                <span>{formatZAR(SHIPPING_COST)}</span>
-              </p>
-              <p>
-                <span>VAT</span>
-                <span>{formatZAR(vat)}</span>
-              </p>
-
-              <p className="total">
-                <strong>Total</strong>
-                <strong>{formatZAR(total)}</strong>
-              </p>
+              <p><span>Subtotal</span><span>{formatZAR(subtotal)}</span></p>
+              <p><span>Shipping</span><span>{formatZAR(SHIPPING_COST)}</span></p>
+              <p><span>VAT</span><span>{formatZAR(vat)}</span></p>
+              <p className="total"><strong>Total</strong><strong>{formatZAR(total)}</strong></p>
             </div>
           </aside>
         </div>
