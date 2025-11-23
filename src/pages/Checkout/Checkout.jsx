@@ -250,7 +250,7 @@ const Checkout = () => {
         </div>
         <div className="checkout-container">
           <div className="checkout-left">
-            <div className="steps-wrapper" style={{ transform: `translateX(-${step * 37}%)` }}>
+            <div className="steps-wrapper" style={{ transform: `translateX(-${step * 67}%)` }}>
               {steps}
             </div>
           </div>
