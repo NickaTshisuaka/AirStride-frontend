@@ -27,6 +27,14 @@ const Products = () => {
   const normalize = (str) =>
     str?.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
 
+   // Normalize product
+  const normalizeProduct = (p) => ({
+    ...p,
+    product_id: p._id || p.product_id,
+    imageUrl: p.imageUrl || p.image || "https://placehold.co/600x600",
+    price: Number(p.price || 0),
+    inventory_count: p.inventory_count ?? 0, // FIXED: use correct field
+  });
   // Fetch products from API
   useEffect(() => {
     if (authLoading) return;
