@@ -24,12 +24,11 @@ const Checkout = () => {
   const [step, setStep] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showEmailPopup, setShowEmailPopup] = useState(false);
 
-  const [orderId] = useState(
-    "AS-" + Math.random().toString(36).substring(2, 10).toUpperCase()
-  );
-
+  const [orderId] = useState("AS-" + Math.random().toString(36).substring(2, 10).toUpperCase());
   const [cart, setCart] = useState([]);
+
   useEffect(() => {
     setCart(JSON.parse(localStorage.getItem("cart")) || []);
   }, []);
@@ -56,7 +55,7 @@ const Checkout = () => {
     return s.slice(0, 2) + "/" + s.slice(2);
   };
 
-  // Validation for each step
+  // Step validations
   const isShippingValid = () =>
     form.name && form.email && form.phone && form.address && form.suburb &&
     form.city && form.postalCode && form.province;
@@ -71,9 +70,9 @@ const Checkout = () => {
         setShowConfetti(true);
         setShowSuccessModal(true);
 
-        // Save order to localStorage
+        // Save order
         const savedOrders = JSON.parse(localStorage.getItem("orders")) || [];
-        const newOrder = {
+        savedOrders.push({
           id: orderId,
           date: new Date().toLocaleString(),
           total,
@@ -84,11 +83,10 @@ const Checkout = () => {
             img: i.image || ""
           })),
           address: { ...form }
-        };
-        savedOrders.push(newOrder);
+        });
         localStorage.setItem("orders", JSON.stringify(savedOrders));
 
-        // Clear cart after successful payment
+        // Clear cart
         localStorage.removeItem("cart");
         window.dispatchEvent(new Event("cartUpdated"));
 
@@ -116,7 +114,7 @@ const Checkout = () => {
     toast.success("Receipt downloaded!");
   };
 
-  // Email receipt using EmailJS
+  // Send receipt via EmailJS
   const sendEmailReceipt = () => {
     const templateParams = {
       to_name: form.name,
@@ -127,18 +125,20 @@ const Checkout = () => {
     };
 
     emailjs.send(
-      import.meta.env.service_uztg1lh,
-      import.meta.env.template_1wdwiad,
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
       templateParams,
-      import.meta.env.RIlnlcSIlbll-IpKa
+      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
     )
-      .then(() => toast.success(`Receipt sent to ${form.email} ✅`))
+      .then(() => {
+        toast.success(`Receipt sent to ${form.email} ✅`);
+        setShowEmailPopup(true);
+      })
       .catch((err) => toast.error(`Email failed: ${err.text}`));
   };
 
-  // Steps
   const steps = [
-    // Shipping Step
+    // Shipping
     <div className="step-page" key="shipping">
       <h2>Shipping Information</h2>
       <label className="field"><FaUser /><input placeholder="Full Name" value={form.name} onChange={e => update("name", e.target.value)} /></label>
@@ -159,9 +159,16 @@ const Checkout = () => {
       <button className="btn primary" disabled={!isShippingValid()} onClick={() => setStep(1)}>Next</button>
     </div>,
 
-    // Payment Step
+    // Payment
     <div className="step-page" key="payment">
       <h2>Payment Details</h2>
+
+      {/* Display user info from previous step */}
+      <div className="user-summary">
+        <p><strong>{form.name}</strong> – {form.email}</p>
+        <p>{form.address}, {form.city}, {form.postalCode}</p>
+      </div>
+
       <label className="field futuristic-card"><FaCreditCard /><input placeholder="Card Number" value={form.cardNumber} onChange={e => update("cardNumber", autoFormatCard(e.target.value))} /></label>
       <div className="row-2">
         <label className="field"><FaCalendarAlt /><input placeholder="MM/YY" value={form.expiry} onChange={e => update("expiry", autoFormatExpiry(e.target.value))} /></label>
@@ -173,7 +180,7 @@ const Checkout = () => {
       </div>
     </div>,
 
-    // Review Step
+    // Review & Confirm
     <div className="step-page" key="review">
       <h2>Review & Confirm</h2>
       <p><strong>{form.name}</strong> – {form.phone}</p>
@@ -199,7 +206,7 @@ const Checkout = () => {
       </div>
     </div>,
 
-    // Processing Step
+    // Processing
     <div className="step-page center" key="processing">
       <div className="spinner"></div>
       <p>Processing your payment...</p>
@@ -243,10 +250,20 @@ const Checkout = () => {
         </div>
       )}
 
+      {/* Email Popup */}
+      {showEmailPopup && (
+        <div className="email-popup">
+          <div className="popup-box">
+            <p>Receipt successfully sent to <strong>{form.email}</strong>!</p>
+            <button className="btn primary" onClick={() => setShowEmailPopup(false)}>OK</button>
+          </div>
+        </div>
+      )}
+
       {/* Main Checkout Layout */}
       <div className="checkout-root">
         <div className="progress-wrap">
-          <div className="progress" style={{ width: `${(step + 1) * 20.33}%` }} />
+          <div className="progress" style={{ width: `${(step + 1) * 25}%` }} />
         </div>
         <div className="checkout-container">
           <div className="checkout-left">
