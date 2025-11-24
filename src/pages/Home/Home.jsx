@@ -6,10 +6,10 @@ export default function Home() {
 
   // External video URLs
   const videos = [
-    "https://pinimg.com/originals/10/55/59/1055599907732025.mp4",
-    "https://pinimg.com/originals/32/37/03/3237030978158082.mp4",
-    "https://pinimg.com/originals/12/59/60/12596073952721763.mp4",
-    "https://pinimg.com/originals/56/30/18/56301897870748.mp4", // slower
+    "https://pin.it/6ZWurk75q",
+    "https://pin.it/HqgmLw1rV",
+    "https://pin.it/311emxxCi",
+    "https://pin.it/5fsUMyLQk", // slower
   ];
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
