@@ -116,26 +116,37 @@ const Checkout = () => {
 
   // Send receipt via EmailJS
   const sendEmailReceipt = () => {
-    const templateParams = {
-      to_name: form.name,
-      to_email: form.email,
-      order_id: orderId,
-      total_paid: formatZAR(total),
-      items: cart.map(i => `${i.name} x${i.quantity}`).join(", ")
-    };
-
-    emailjs.send(
-      import.meta.env.VITE_EMAILJS_SERVICE_ID,
-      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-      templateParams,
-      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-    )
-      .then(() => {
-        toast.success(`Receipt sent to ${form.email} ✅`);
-        setShowEmailPopup(true);
-      })
-      .catch((err) => toast.error(`Email failed: ${err.text}`));
+  const templateParams = {
+    to_name: form.name,
+    to_email: form.email,
+    order_id: orderId,
+    total_paid: formatZAR(total),
+    items: cart.map(i => `${i.name} x${i.quantity}`).join(", ")
   };
+
+  console.log("EmailJS send params:", {
+    serviceID: import.meta.env.VITE_EMAILJS_SERVICE_ID,
+    templateID: import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+    publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+    templateParams
+  });
+
+  emailjs.send(
+    import.meta.env.VITE_EMAILJS_SERVICE_ID,
+    import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+    templateParams,
+    import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+  )
+    .then((response) => {
+      console.log("EmailJS success:", response);
+      toast.success(`Receipt sent to ${form.email} ✅`);
+      setShowEmailPopup(true);
+    })
+    .catch((error) => {
+      console.error("EmailJS error detail:", error);
+      toast.error(`Email failed: ${error.text || JSON.stringify(error)}`);
+    });
+};
 
   const steps = [
     // Shipping
