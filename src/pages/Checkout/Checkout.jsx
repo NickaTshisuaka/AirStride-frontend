@@ -237,32 +237,41 @@ const Checkout = () => {
   // ---------------------------------------------
   // EMAIL RECEIPT
   // ---------------------------------------------
-  const sendEmailReceipt = () => {
-    const templateParams = {
-      to_name: form.name,
-      to_email: form.email,
-      order_id: orderId,
-      total_paid: formatZAR(total),
-      items: cart.map((i) => `${i.name} x${i.quantity}`).join(", "),
-    };
+  // ---------------------------------------------
+// EMAIL RECEIPT
+// ---------------------------------------------
+const sendEmailReceipt = () => {
+  // Check if email is filled and valid
+  if (!form.email || !/\S+@\S+\.\S+/.test(form.email)) {
+    toast.error("Please enter a valid email address to receive the receipt.");
+    return;
+  }
 
-    emailjs
-      .send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        templateParams,
-        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-      )
-      .then(() => {
-        toast.success(`Receipt emailed to ${form.email} ✅`);
-        setShowConfetti(false);
-        setShowEmailPopup(false);
-      })
-      .catch((error) => {
-        console.error("EmailJS error:", error);
-        toast.error(`Email failed: ${error.text || JSON.stringify(error)}`);
-      });
+  const templateParams = {
+    to_name: form.name,
+    to_email: form.email,
+    order_id: orderId,
+    total_paid: formatZAR(total),
+    items: cart.map((i) => `${i.name} x${i.quantity}`).join(", "),
   };
+
+  emailjs
+    .send(
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+      templateParams,
+      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+    )
+    .then(() => {
+      toast.success(`Receipt emailed to ${form.email} ✅`);
+      setShowConfetti(false);
+      setShowEmailPopup(false);
+    })
+    .catch((error) => {
+      console.error("EmailJS error:", error);
+      toast.error(`Email failed: ${error.text || JSON.stringify(error)}`);
+    });
+};
 
   // ---------------------------------------------
   // DOWNLOAD RECEIPT
