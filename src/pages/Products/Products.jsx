@@ -8,8 +8,8 @@ import { useAuth } from "../../AuthContext";
 import { useNavigate } from "react-router-dom";
 import "./Products.css";
 
-// Use environment variable for API URL
-const BASE_API_URL = import.meta.env.VITE_API_URL; // e.g., http://3.210.9.239:5000/api
+// API Base URL from environment
+const BASE_API_URL = import.meta.env.VITE_API_URL;
 
 const Products = () => {
   const { cart, addToCart } = useCartContext();
@@ -23,19 +23,23 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Normalize strings for search
-  const normalize = (str) =>
-    str?.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
-
-   // Normalize product
+  /** -------------------------------------
+   * NORMALIZE PRODUCT SHAPE
+   * Ensures every product has:
+   *   _id, product_id, imageUrl, price, inventory_count
+   ---------------------------------------- */
   const normalizeProduct = (p) => ({
     ...p,
-    product_id: p._id || p.product_id,
+    _id: p._id,
+    product_id: p._id, // always Mongo ID
     imageUrl: p.imageUrl || p.image || "https://placehold.co/600x600",
     price: Number(p.price || 0),
-    inventory_count: p.inventory_count ?? 0, // FIXED: use correct field
+    inventory_count: p.inventory_count ?? 0,
   });
-  // Fetch products from API
+
+  /** -------------------------------------
+   * FETCH PRODUCTS
+   ---------------------------------------- */
   useEffect(() => {
     if (authLoading) return;
 
@@ -43,29 +47,24 @@ const Products = () => {
       setLoading(true);
       try {
         const headers = idToken ? { Authorization: `Bearer ${idToken}` } : {};
-const res = await axios.get(`${BASE_API_URL}/products`, { headers });
-        const prods = Array.isArray(res.data) ? res.data : res.data.products || [];
+        const res = await axios.get(`${BASE_API_URL}/products`, { headers });
 
+        // API response safety
+        const prods =
+          Array.isArray(res.data)
+            ? res.data
+            : res.data.products || res.data.data || [];
 
-        // Map products for frontend use
-        const mappedProds = prods.map((p) => ({
-  ...p,
-  product_id: p._id.toString(),  // ALWAYS use Mongo _id
-  inventory_count: p.inventory_count ?? 0,
-}));
+        const normalized = prods.map(normalizeProduct);
 
-
-        setProducts(mappedProds);
-        setFilteredProducts(mappedProds);
+        setProducts(normalized);
+        setFilteredProducts(normalized);
       } catch (err) {
         console.error("Product fetch error:", err);
 
-        // Fallback: show 8 placeholder cards if network/API fails
-        const placeholders = Array.from({ length: 8 }, (_, i) => ({
-          product_id: `placeholder-${i}`,
-        }));
-        setProducts(placeholders);
-        setFilteredProducts(placeholders);
+        // If error → show no results instead of fake IDs
+        setProducts([]);
+        setFilteredProducts([]);
       } finally {
         setLoading(false);
       }
@@ -74,57 +73,68 @@ const res = await axios.get(`${BASE_API_URL}/products`, { headers });
     fetchProducts();
   }, [idToken, authLoading]);
 
-  // Filter products as user types
+  /** -------------------------------------
+   * SEARCH FILTERING
+   ---------------------------------------- */
+  const normalizeString = (str) =>
+    str?.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
+
   useEffect(() => {
-    const term = normalize(searchTerm);
+    const term = normalizeString(searchTerm);
     if (!term) {
       setFilteredProducts(products);
       return;
     }
 
     const filtered = products.filter((p) => {
-      const name = normalize(p.name);
-      const category = normalize(p.category);
+      const name = normalizeString(p.name);
+      const category = normalizeString(p.category);
       return name.includes(term) || category.includes(term);
     });
+
     setFilteredProducts(filtered);
   }, [searchTerm, products]);
 
-  // Highlight search matches
+  /** -------------------------------------
+   * HIGHLIGHT SEARCH MATCH
+   ---------------------------------------- */
   const highlightMatch = (text) => {
-    const term = normalize(searchTerm);
+    const term = normalizeString(searchTerm);
     if (!term) return text;
-    const regex = new RegExp(`(${term})`, "gi");
-    return text.replace(regex, "<mark>$1</mark>");
+    return text.replace(new RegExp(`(${term})`, "gi"), "<mark>$1</mark>");
   };
 
-  // Cart & favorites helpers
+  /** -------------------------------------
+   * CART & FAVORITES HELPERS
+   ---------------------------------------- */
   const isInCart = (id) => cart.some((item) => item.product_id === id);
   const isFavorite = (id) => favorites.some((item) => item.product_id === id);
 
-  // Handle add to cart
   const handleAddToCart = (product) => {
     if (!isInCart(product.product_id)) {
       addToCart(product);
-      setToastMessage(`${product.name || "Item"} added to cart 🛒`);
+      setToastMessage(`${product.name} added to cart 🛒`);
     } else {
-      setToastMessage(`${product.name || "Item"} is already in your cart`);
+      setToastMessage(`${product.name} is already in your cart`);
     }
   };
 
-  // Handle favorites toggle
   const handleToggleFavorite = (product) => {
     if (isFavorite(product.product_id)) {
       removeFavorite(product.product_id);
-      setToastMessage(`${product.name || "Item"} removed from favorites ❤️`);
+      setToastMessage(`${product.name} removed from favorites ❤️`);
     } else {
       addFavorite(product);
-      setToastMessage(`${product.name || "Item"} added to favorites ❤️`);
+      setToastMessage(`${product.name} added to favorites ❤️`);
     }
   };
 
+  /** -------------------------------------
+   * RENDER
+   ---------------------------------------- */
   return (
     <div className="products-page">
+      {/* SEARCH */}
       <div className="search-bar">
         <input
           type="text"
@@ -134,6 +144,7 @@ const res = await axios.get(`${BASE_API_URL}/products`, { headers });
         />
       </div>
 
+      {/* PRODUCT GRID */}
       <section className="products-grid">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => (
@@ -147,32 +158,49 @@ const res = await axios.get(`${BASE_API_URL}/products`, { headers });
               </div>
             ))
           : filteredProducts.map((product) => (
-              <div key={product.product_id} className="product-card">
+              <div key={product._id} className="product-card">
                 <img
-                  src={product.image || ""}
-                  alt={product.name || "Product"}
-                  className={`product-img ${!product.image ? "no-image" : ""}`}
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="product-img"
                 />
+
                 <div className="info">
                   <h3
                     dangerouslySetInnerHTML={{
-                      __html: highlightMatch(product.name || "No Name"),
+                      __html: highlightMatch(product.name || "Unnamed Product"),
                     }}
                   />
-                  <p>{product.price ? `R${Number(product.price).toFixed(2)}` : "Price N/A"}</p>
-                  {product.inventory_count < 1 && <p className="out-of-stock">Out of Stock</p>}
+
+                  <p>R{product.price.toFixed(2)}</p>
+
+                  {product.inventory_count < 1 && (
+                    <p className="out-of-stock">Out of Stock</p>
+                  )}
+
+                  {/* BUTTONS */}
                   <div className="buttons">
+                    {/* ADD TO CART */}
                     <button
                       onClick={() => handleAddToCart(product)}
                       disabled={product.inventory_count < 1 || isInCart(product.product_id)}
                     >
-                      <ShoppingCart /> {isInCart(product.product_id) ? "In Cart" : "Add to Cart"}
+                      <ShoppingCart />{" "}
+                      {isInCart(product.product_id) ? "In Cart" : "Add to Cart"}
                     </button>
+
+                    {/* FAVORITE */}
                     <button onClick={() => handleToggleFavorite(product)}>
-                      <Heart fill={isFavorite(product.product_id) ? "currentColor" : "none"} />
+                      <Heart
+                        fill={isFavorite(product.product_id) ? "currentColor" : "none"}
+                      />
                       {isFavorite(product.product_id) ? "Unfav" : "Fav"}
                     </button>
-                    <button onClick={() => navigate(`/product/${product.product_id}`)}>
+
+                    {/* VIEW DETAILS */}
+                    <button
+                      onClick={() => navigate(`/product/${product.product_id}`)}
+                    >
                       View Details
                     </button>
                   </div>
@@ -181,6 +209,7 @@ const res = await axios.get(`${BASE_API_URL}/products`, { headers });
             ))}
       </section>
 
+      {/* TOAST MESSAGE */}
       {toastMessage && <div className="toast">{toastMessage}</div>}
     </div>
   );
