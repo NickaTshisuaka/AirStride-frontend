@@ -9,6 +9,8 @@ import {
   GithubAuthProvider,
   FacebookAuthProvider,
   TwitterAuthProvider,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
 } from "firebase/auth";
 
 import { toast, ToastContainer } from "react-toastify";
@@ -27,6 +29,9 @@ const SigninLogin = () => {
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isPhoneSent, setIsPhoneSent] = useState(false);
 
   const { login, signup, currentUser, loading } = useAuth();
   const navigate = useNavigate();
@@ -38,6 +43,57 @@ const SigninLogin = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (error) setError("");
+  };
+
+  const setupRecaptcha = () => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        "recaptcha-container",
+        {
+          size: "invisible",
+          callback: (response) => {
+            console.log("reCAPTCHA solved", response);
+          },
+        },
+        auth
+      );
+    }
+  };
+
+  const sendVerificationCode = async () => {
+    if (!phoneNumber) {
+      setError("Enter a phone number");
+      return;
+    }
+    try {
+      setupRecaptcha();
+      const appVerifier = window.recaptchaVerifier;
+      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+      window.confirmationResult = confirmationResult;
+      setIsPhoneSent(true);
+      toast.success("OTP sent! Check your phone.");
+    } catch (err) {
+      console.error("Error sending SMS:", err);
+      setError("Failed to send OTP. Try again.");
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (!otp) {
+      setError("Enter the OTP code");
+      return;
+    }
+    try {
+      const result = await window.confirmationResult.confirm(otp);
+      const user = result.user;
+      localStorage.setItem("email", user.phoneNumber);
+      localStorage.setItem("firstName", user.displayName || user.phoneNumber);
+      toast.success("Phone verified successfully!");
+      navigate("/home", { replace: true });
+    } catch (err) {
+      console.error("Invalid OTP:", err);
+      setError("Invalid OTP. Try again.");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -313,6 +369,40 @@ const SigninLogin = () => {
                   {provider}
                 </button>
               ))}
+            </div>
+
+            <div className="phone-login">
+              <h3>Or sign in with your phone</h3>
+              <div id="recaptcha-container"></div>
+              {!isPhoneSent ? (
+                <>
+                  <input
+                    type="text"
+                    placeholder="+27123456789"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="auth-input"
+                    disabled={isLoading}
+                  />
+                  <button onClick={sendVerificationCode} className="auth-button" disabled={isLoading}>
+                    Send OTP
+                  </button>
+                </>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Enter OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="auth-input"
+                    disabled={isLoading}
+                  />
+                  <button onClick={verifyOtp} className="auth-button" disabled={isLoading}>
+                    Verify OTP
+                  </button>
+                </>
+              )}
             </div>
 
             <div className="auth-footer">
