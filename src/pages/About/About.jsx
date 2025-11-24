@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { FaLightbulb, FaHeartbeat, FaRunning, FaUsers } from "react-icons/fa";
@@ -9,24 +9,42 @@ const fadeIn = { initial: { opacity: 0 }, whileInView: { opacity: 1 }, transitio
 
 export default function AboutPage() {
   const navigate = useNavigate();
+  const heroRef = useRef(null);
+  const videoRef = useRef(null);
+
+  // Smooth parallax on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!heroRef.current || !videoRef.current) return;
+
+      const scrollY = window.scrollY;
+      // Move video slightly slower than scroll
+      videoRef.current.style.transform = `translateY(${scrollY * 0.3}px)`;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <main className="about-page">
 
       {/* HERO */}
-      <header className="hero">
-        <video className="hero-video" autoPlay muted loop playsInline>
+      <header className="hero" ref={heroRef}>
+        <video ref={videoRef} className="hero-video" autoPlay muted loop playsInline>
           <source src="/videos/vid3.mp4" type="video/mp4" />
         </video>
         <div className="hero-overlay" />
         <motion.div {...fadeUp} className="hero-inner" viewport={{ once: true }}>
           <h1>About AirStride</h1>
           <p className="subtitle">Helping joggers breathe better, run further, and live healthier.</p>
-          <button className="hero-cta" onClick={() => navigate("/products")}>Explore Products</button>
+          <button className="hero-cta" onClick={() => navigate("/products")}>
+            Explore Products
+          </button>
         </motion.div>
       </header>
 
-      {/* All sections now scroll over the video */}
+      {/* STORY */}
       <section className="story-section">
         <motion.div className="story-media" {...fadeIn} viewport={{ once: true }}>
           <img src="https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?auto=format&fit=crop&w=950&q=80" alt="Runner breathing during a run" />
@@ -104,30 +122,22 @@ export default function AboutPage() {
         <h2 className="section-title">Meet the Team</h2>
         <div className="team-grid">
           <motion.div className="team-card" {...fadeUp} viewport={{ once: true }}>
-            <div className="team-img-wrap">
-              <img src="/pic3.jpeg" alt="Jordan Miles" />
-            </div>
+            <div className="team-img-wrap"><img src="/pic3.jpeg" alt="Jordan Miles" /></div>
             <h4>Jordan Miles</h4>
             <p className="role">Breathing Science Researcher</p>
           </motion.div>
           <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.12 }} viewport={{ once: true }}>
-            <div className="team-img-wrap">
-              <img src="/pic4.jpeg" alt="Casey Morgan" />
-            </div>
+            <div className="team-img-wrap"><img src="/pic4.jpeg" alt="Casey Morgan" /></div>
             <h4>Casey Morgan</h4>
             <p className="role">Fitness & Endurance Specialist</p>
           </motion.div>
           <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.24 }} viewport={{ once: true }}>
-            <div className="team-img-wrap">
-              <img src="/pic5.jpeg" alt="Sam Taylor" />
-            </div>
+            <div className="team-img-wrap"><img src="/pic5.jpeg" alt="Sam Taylor" /></div>
             <h4>Sam Taylor</h4>
             <p className="role">Lead Developer</p>
           </motion.div>
           <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.36 }} viewport={{ once: true }}>
-            <div className="team-img-wrap">
-              <img src="/pic6.jpeg" alt="Alex Reed" />
-            </div>
+            <div className="team-img-wrap"><img src="/pic6.jpeg" alt="Alex Reed" /></div>
             <h4>Alex Reed</h4>
             <p className="role">Product Designer</p>
           </motion.div>
