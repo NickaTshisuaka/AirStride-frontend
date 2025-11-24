@@ -17,10 +17,10 @@ const provinces = [
   "Limpopo", "Mpumalanga", "North West", "Northern Cape", "Western Cape"
 ];
 
+const EXPIRY_TIME = 2 * 60 * 60 * 1000;
+
 const formatZAR = (amount) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(amount);
-
-const EXPIRY_TIME = 2 * 60 * 60 * 1000;
 
 const saveWithExpiry = (key, value) => {
   const record = { value, timestamp: new Date().getTime() };
@@ -49,25 +49,31 @@ const Checkout = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showEmailPopup, setShowEmailPopup] = useState(false);
+  const [isPaymentProcessed, setIsPaymentProcessed] = useState(false);
 
   const [orderId] = useState("AS-" + Math.random().toString(36).substring(2, 10).toUpperCase());
   const [cart, setCart] = useState([]);
-
-  useEffect(() => {
-    const savedCart = loadWithExpiry("cart");
-    setCart(savedCart || []);
-  }, []);
-
-  const subtotal = cart.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
-  const vat = subtotal * VAT_RATE;
-  const total = subtotal + SHIPPING_COST + vat;
-  const totalItems = cart.reduce((sum, i) => sum + (i.quantity || 1), 0);
 
   const [form, setForm] = useState({
     name: "", email: "", phone: "",
     address: "", suburb: "", city: "", postalCode: "", province: "",
     cardNumber: "", expiry: "", cvv: ""
   });
+
+  useEffect(() => {
+    const savedCart = loadWithExpiry("cart");
+    if (!savedCart || savedCart.length === 0) {
+      toast.info("Your cart is empty.");
+      setCart([]);
+    } else {
+      setCart(savedCart);
+    }
+  }, []);
+
+  const subtotal = cart.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
+  const vat = subtotal * VAT_RATE;
+  const total = subtotal + SHIPPING_COST + vat;
+  const totalItems = cart.reduce((sum, i) => sum + (i.quantity || 1), 0);
 
   const update = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
 
@@ -85,10 +91,12 @@ const Checkout = () => {
     form.city && form.postalCode && form.province;
 
   const isPaymentValid = () =>
-    form.cardNumber.length === 19 && form.expiry.length === 5 && form.cvv.length === 3;
+    form.cardNumber.replace(/\s/g, "").length === 16 && form.expiry.length === 5 && form.cvv.length === 3;
 
   useEffect(() => {
-    if (step === 3) {
+    if (step === 3 && !isPaymentProcessed) {
+      setIsPaymentProcessed(true);
+
       const timer = setTimeout(() => {
         setShowConfetti(true);
         setShowSuccessModal(true);
@@ -114,9 +122,10 @@ const Checkout = () => {
         setTimeout(() => setShowConfetti(false), 5000);
         toast.success("Payment Successful! 🎉");
       }, 1500);
+
       return () => clearTimeout(timer);
     }
-  }, [step]);
+  }, [step, isPaymentProcessed, cart, form, orderId, total]);
 
   const copyOrderId = () => {
     navigator.clipboard.writeText(orderId);
@@ -187,10 +196,18 @@ const Checkout = () => {
     link.href = URL.createObjectURL(blob);
     link.download = "receipt.html";
     link.click();
+    URL.revokeObjectURL(link.href);
     toast.success("Receipt downloaded!");
   };
 
   const sendEmailReceipt = () => {
+    if (!import.meta.env.VITE_EMAILJS_SERVICE_ID ||
+        !import.meta.env.VITE_EMAILJS_TEMPLATE_ID ||
+        !import.meta.env.VITE_EMAILJS_PUBLIC_KEY) {
+      toast.error("Email service is not properly configured.");
+      return;
+    }
+
     const templateParams = {
       to_name: form.name,
       to_email: form.email,
@@ -199,26 +216,17 @@ const Checkout = () => {
       items: cart.map(i => `${i.name} x${i.quantity}`).join(", ")
     };
 
-    console.log("EmailJS send params:", {
-      serviceID: import.meta.env.VITE_EMAILJS_SERVICE_ID,
-      templateID: import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-      publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
-      templateParams
-    });
-
     emailjs.send(
       import.meta.env.VITE_EMAILJS_SERVICE_ID,
       import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
       templateParams,
       import.meta.env.VITE_EMAILJS_PUBLIC_KEY
     )
-      .then((response) => {
-        console.log("EmailJS success:", response);
+      .then(() => {
         toast.success(`Receipt sent to ${form.email} ✅`);
         setShowEmailPopup(true);
       })
       .catch((error) => {
-        console.error("EmailJS error detail:", error);
         toast.error(`Email failed: ${error.text || JSON.stringify(error)}`);
       });
   };
@@ -330,11 +338,11 @@ const Checkout = () => {
       )}
       <div className="checkout-root">
         <div className="progress-wrap">
-          <div className="progress" style={{ width: `${(step + 1) * 25}%` }} />
+          <div className="progress" style={{ width: `${((step + 1) / steps.length) * 100}%` }} />
         </div>
         <div className="checkout-container">
           <div className="checkout-left">
-            <div className="steps-wrapper" style={{ transform: `translateX(-${step * 25}%)` }}>
+            <div className="steps-wrapper" style={{ transform: `translateX(-${(step / steps.length) * 100}%)` }}>
               {steps}
             </div>
           </div>
