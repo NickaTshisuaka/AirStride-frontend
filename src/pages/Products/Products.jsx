@@ -8,8 +8,10 @@ import { useAuth } from "../../AuthContext";
 import { useNavigate } from "react-router-dom";
 import "./Products.css";
 
-// API Base URL from environment
 const BASE_API_URL = import.meta.env.VITE_API_URL;
+
+// How long cache should live (milliseconds) — e.g. 2 hours
+const CACHE_LIFETIME = 1000 * 60 * 60 * 2;
 
 const Products = () => {
   const { cart, addToCart } = useCartContext();
@@ -25,47 +27,87 @@ const Products = () => {
 
   /** -------------------------------------
    * NORMALIZE PRODUCT SHAPE
-   * Ensures every product has:
-   *   _id, product_id, imageUrl, price, inventory_count
    ---------------------------------------- */
   const normalizeProduct = (p) => ({
     ...p,
     _id: p._id,
-    product_id: p._id, // always Mongo ID
+    product_id: p._id,
     imageUrl: p.imageUrl || p.image || "https://placehold.co/600x600",
     price: Number(p.price || 0),
     inventory_count: p.inventory_count ?? 0,
   });
 
   /** -------------------------------------
-   * FETCH PRODUCTS
+   * LOCAL STORAGE CACHING
+   ---------------------------------------- */
+  const loadFromCache = () => {
+    try {
+      const cached = JSON.parse(localStorage.getItem("products_cache"));
+      if (!cached) return null;
+
+      const expired = Date.now() - cached.timestamp > CACHE_LIFETIME;
+      if (expired) {
+        localStorage.removeItem("products_cache");
+        return null;
+      }
+
+      return cached.products;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const saveToCache = (products) => {
+    localStorage.setItem(
+      "products_cache",
+      JSON.stringify({
+        timestamp: Date.now(),
+        products,
+      })
+    );
+  };
+
+  /** -------------------------------------
+   * FETCH PRODUCTS (with caching)
    ---------------------------------------- */
   useEffect(() => {
     if (authLoading) return;
 
+    // 1️⃣ — Try to load cached products immediately
+    const cachedProducts = loadFromCache();
+    if (cachedProducts) {
+      setProducts(cachedProducts);
+      setFilteredProducts(cachedProducts);
+      setLoading(false); // show cached instantly
+    }
+
+    // 2️⃣ — Always refresh from API in background
     const fetchProducts = async () => {
-      setLoading(true);
       try {
         const headers = idToken ? { Authorization: `Bearer ${idToken}` } : {};
         const res = await axios.get(`${BASE_API_URL}/products`, { headers });
 
-        // API response safety
-        const prods =
-          Array.isArray(res.data)
-            ? res.data
-            : res.data.products || res.data.data || [];
+        const prods = Array.isArray(res.data)
+          ? res.data
+          : res.data.products || res.data.data || [];
 
         const normalized = prods.map(normalizeProduct);
 
         setProducts(normalized);
         setFilteredProducts(normalized);
+
+        // Save to localStorage
+        saveToCache(normalized);
       } catch (err) {
         console.error("Product fetch error:", err);
 
-        // If error → show no results instead of fake IDs
-        setProducts([]);
-        setFilteredProducts([]);
+        // If there was cached data, do NOT show error
+        if (!cachedProducts) {
+          setProducts([]);
+          setFilteredProducts([]);
+        }
       } finally {
+        // If no cache was loaded, this sets loading false
         setLoading(false);
       }
     };
@@ -77,7 +119,8 @@ const Products = () => {
    * SEARCH FILTERING
    ---------------------------------------- */
   const normalizeString = (str) =>
-    str?.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
+    str?.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") ||
+    "";
 
   useEffect(() => {
     const term = normalizeString(searchTerm);
@@ -96,7 +139,7 @@ const Products = () => {
   }, [searchTerm, products]);
 
   /** -------------------------------------
-   * HIGHLIGHT SEARCH MATCH
+   * HIGHLIGHT MATCHES
    ---------------------------------------- */
   const highlightMatch = (text) => {
     const term = normalizeString(searchTerm);
@@ -105,7 +148,7 @@ const Products = () => {
   };
 
   /** -------------------------------------
-   * CART & FAVORITES HELPERS
+   * INTERACTIONS
    ---------------------------------------- */
   const isInCart = (id) => cart.some((item) => item.product_id === id);
   const isFavorite = (id) => favorites.some((item) => item.product_id === id);
@@ -134,7 +177,6 @@ const Products = () => {
    ---------------------------------------- */
   return (
     <div className="products-page">
-      {/* SEARCH */}
       <div className="search-bar">
         <input
           type="text"
@@ -144,12 +186,11 @@ const Products = () => {
         />
       </div>
 
-      {/* PRODUCT GRID */}
       <section className="products-grid">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="product-card shimmer">
-                <div className="product-img-placeholder" />
+                <div className="product-img-placeholder"></div>
                 <div className="info-placeholder">
                   <div className="line short"></div>
                   <div className="line medium"></div>
@@ -168,7 +209,7 @@ const Products = () => {
                 <div className="info">
                   <h3
                     dangerouslySetInnerHTML={{
-                      __html: highlightMatch(product.name || "Unnamed Product"),
+                      __html: highlightMatch(product.name),
                     }}
                   />
 
@@ -178,9 +219,8 @@ const Products = () => {
                     <p className="out-of-stock">Out of Stock</p>
                   )}
 
-                  {/* BUTTONS */}
                   <div className="buttons">
-                    {/* ADD TO CART */}
+                    {/* CART */}
                     <button
                       onClick={() => handleAddToCart(product)}
                       disabled={product.inventory_count < 1 || isInCart(product.product_id)}
@@ -189,7 +229,7 @@ const Products = () => {
                       {isInCart(product.product_id) ? "In Cart" : "Add to Cart"}
                     </button>
 
-                    {/* FAVORITE */}
+                    {/* FAVORITES */}
                     <button onClick={() => handleToggleFavorite(product)}>
                       <Heart
                         fill={isFavorite(product.product_id) ? "currentColor" : "none"}
@@ -197,10 +237,8 @@ const Products = () => {
                       {isFavorite(product.product_id) ? "Unfav" : "Fav"}
                     </button>
 
-                    {/* VIEW DETAILS */}
-                    <button
-                      onClick={() => navigate(`/product/${product.product_id}`)}
-                    >
+                    {/* DETAIL PAGE */}
+                    <button onClick={() => navigate(`/product/${product.product_id}`)}>
                       View Details
                     </button>
                   </div>
@@ -209,7 +247,6 @@ const Products = () => {
             ))}
       </section>
 
-      {/* TOAST MESSAGE */}
       {toastMessage && <div className="toast">{toastMessage}</div>}
     </div>
   );
