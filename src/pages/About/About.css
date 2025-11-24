@@ -84,6 +84,8 @@
 
 .story-media img {
   width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
   border-radius: 20px;
   transition: transform 0.5s ease;
@@ -128,18 +130,22 @@
   justify-content: center;
 }
 
-.mission-vision .card {
+.unified-card {
   flex: 1 1 300px;
-  background: linear-gradient(to top right, #ff7a00, #ff9f4d);
+  min-height: 220px;
+  background: linear-gradient(to right, #ff7a00, #ff9f4d);
   color: white;
   padding: 30px;
   border-radius: 20px;
   text-align: center;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   transition: transform 0.3s ease;
 }
 
-.mission-vision .card:hover {
+.unified-card:hover {
   transform: translateY(-5px);
 }
 
@@ -168,13 +174,20 @@
   padding: 25px;
   border-radius: 20px;
   box-shadow: 0 10px 28px rgba(0,0,0,0.08);
-  transition: 0.3s ease;
+  transition: transform 0.3s ease;
   border-left: 6px solid #ff7a00;
+  text-align: center;
 }
 
 .value-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+}
+
+.value-icon {
+  font-size: 2.2rem;
+  margin-bottom: 12px;
+  color: #ff7a00;
 }
 
 /* FEATURES */
@@ -191,6 +204,8 @@
 
 .potential-item img {
   width: 100%;
+  height: 250px;
+  object-fit: cover;
   border-radius: 20px;
   margin-bottom: 15px;
   transition: transform 0.5s ease;
@@ -213,11 +228,12 @@
 }
 
 .team-card {
-  background: white;
+  background: rgba(255,255,255,0.9);
   padding: 20px;
   border-radius: 20px;
   box-shadow: 0 10px 28px rgba(0,0,0,0.08);
   transition: transform 0.3s ease;
+  text-align: center;
 }
 
 .team-card:hover {
@@ -225,10 +241,18 @@
   box-shadow: 0 12px 35px rgba(0,0,0,0.12);
 }
 
-.team-card img {
+.team-img-wrap {
   width: 100%;
+  height: 250px;
+  overflow: hidden;
   border-radius: 20px;
   margin-bottom: 15px;
+}
+
+.team-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* CEO */

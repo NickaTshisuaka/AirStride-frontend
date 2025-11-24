@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { FaLightbulb, FaHeartbeat, FaRunning, FaUsers } from "react-icons/fa";
 import "./About.css";
 
 const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, transition: { duration: 0.7 } };
@@ -49,11 +50,11 @@ export default function AboutPage() {
 
       {/* MISSION + VISION */}
       <section className="mission-vision">
-        <motion.div className="card mission" {...fadeUp} viewport={{ once: true }}>
+        <motion.div className="card unified-card" {...fadeUp} viewport={{ once: true }}>
           <h3>Mission</h3>
           <p>Design breathing-enhancement technology that improves performance, boosts endurance, and supports healthy living.</p>
         </motion.div>
-        <motion.div className="card vision" {...fadeUp} transition={{ delay: 0.2 }} viewport={{ once: true }}>
+        <motion.div className="card unified-card" {...fadeUp} transition={{ delay: 0.2 }} viewport={{ once: true }}>
           <h3>Vision</h3>
           <p>A world where every jogger can breathe freely and perform at their best.</p>
         </motion.div>
@@ -64,18 +65,22 @@ export default function AboutPage() {
         <h2 className="section-title">Our Values</h2>
         <div className="values-grid">
           <motion.div {...fadeUp} className="value-card" viewport={{ once: true }}>
+            <FaLightbulb className="value-icon" />
             <h4>Innovation</h4>
             <p>Research-driven design and continuous iteration.</p>
           </motion.div>
           <motion.div {...fadeUp} className="value-card" transition={{ delay: 0.15 }} viewport={{ once: true }}>
+            <FaHeartbeat className="value-icon" />
             <h4>Health</h4>
             <p>Prioritizing long-term breathing efficiency and wellbeing.</p>
           </motion.div>
           <motion.div {...fadeUp} className="value-card" transition={{ delay: 0.3 }} viewport={{ once: true }}>
+            <FaRunning className="value-icon" />
             <h4>Performance</h4>
             <p>Empowering runners to go further and feel confident doing it.</p>
           </motion.div>
           <motion.div {...fadeUp} className="value-card" transition={{ delay: 0.45 }} viewport={{ once: true }}>
+            <FaUsers className="value-icon" />
             <h4>Community</h4>
             <p>Supporting runners of all levels through education and product access.</p>
           </motion.div>
@@ -111,22 +116,30 @@ export default function AboutPage() {
         <h2 className="section-title">Meet the Team</h2>
         <div className="team-grid">
           <motion.div className="team-card" {...fadeUp} viewport={{ once: true }}>
-            <img src="/pic3.jpeg" alt="Jordan Miles" />
+            <div className="team-img-wrap">
+              <img src="/pic3.jpeg" alt="Jordan Miles" />
+            </div>
             <h4>Jordan Miles</h4>
             <p className="role">Breathing Science Researcher</p>
           </motion.div>
           <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.12 }} viewport={{ once: true }}>
-            <img src="/pic4.jpeg" alt="Casey Morgan" />
+            <div className="team-img-wrap">
+              <img src="/pic4.jpeg" alt="Casey Morgan" />
+            </div>
             <h4>Casey Morgan</h4>
             <p className="role">Fitness & Endurance Specialist</p>
           </motion.div>
           <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.24 }} viewport={{ once: true }}>
-            <img src="/pic5.jpeg" alt="Sam Taylor" />
+            <div className="team-img-wrap">
+              <img src="/pic5.jpeg" alt="Sam Taylor" />
+            </div>
             <h4>Sam Taylor</h4>
             <p className="role">Lead Developer</p>
           </motion.div>
           <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.36 }} viewport={{ once: true }}>
-            <img src="/pic6.jpeg" alt="Alex Reed" />
+            <div className="team-img-wrap">
+              <img src="/pic6.jpeg" alt="Alex Reed" />
+            </div>
             <h4>Alex Reed</h4>
             <p className="role">Product Designer</p>
           </motion.div>
