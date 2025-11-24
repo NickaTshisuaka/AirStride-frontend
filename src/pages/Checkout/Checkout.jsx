@@ -20,24 +20,19 @@ const provinces = [
 const formatZAR = (amount) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(amount);
 
-const EXPIRY_TIME = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+const EXPIRY_TIME = 2 * 60 * 60 * 1000;
 
 const saveWithExpiry = (key, value) => {
-  const record = {
-    value,
-    timestamp: new Date().getTime()
-  };
+  const record = { value, timestamp: new Date().getTime() };
   localStorage.setItem(key, JSON.stringify(record));
 };
 
 const loadWithExpiry = (key) => {
   const record = localStorage.getItem(key);
   if (!record) return null;
-
   try {
     const parsed = JSON.parse(record);
     if (!parsed.timestamp) return parsed.value;
-
     const now = new Date().getTime();
     if (now - parsed.timestamp > EXPIRY_TIME) {
       localStorage.removeItem(key);
@@ -76,7 +71,6 @@ const Checkout = () => {
 
   const update = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
 
-  // Input formatters
   const autoFormatPhone = (v) => v.replace(/\D/g, "").slice(0, 10).replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3");
   const autoFormatPostal = (v) => v.replace(/\D/g, "").slice(0, 4);
   const autoFormatCard = (v) => v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
@@ -86,7 +80,6 @@ const Checkout = () => {
     return s.slice(0, 2) + "/" + s.slice(2);
   };
 
-  // Step validations
   const isShippingValid = () =>
     form.name && form.email && form.phone && form.address && form.suburb &&
     form.city && form.postalCode && form.province;
@@ -94,14 +87,12 @@ const Checkout = () => {
   const isPaymentValid = () =>
     form.cardNumber.length === 19 && form.expiry.length === 5 && form.cvv.length === 3;
 
-  // Payment success
   useEffect(() => {
     if (step === 3) {
       const timer = setTimeout(() => {
         setShowConfetti(true);
         setShowSuccessModal(true);
 
-        // Save order with expiry
         const savedOrders = loadWithExpiry("orders") || [];
         savedOrders.push({
           id: orderId,
@@ -117,7 +108,6 @@ const Checkout = () => {
         });
         saveWithExpiry("orders", savedOrders);
 
-        // Clear cart
         localStorage.removeItem("cart");
         window.dispatchEvent(new Event("cartUpdated"));
 
@@ -128,24 +118,78 @@ const Checkout = () => {
     }
   }, [step]);
 
-  // Copy order ID
   const copyOrderId = () => {
     navigator.clipboard.writeText(orderId);
     toast.info("Order ID copied!");
   };
 
-  // Download receipt
   const downloadReceipt = () => {
-    const receipt = `Order Receipt\n\nCustomer: ${form.name}\nEmail: ${form.email}\nOrder ID: ${orderId}\nTotal: ${formatZAR(total)}\nItems:\n${cart.map(i => `${i.name} x${i.quantity}`).join("\n")}`;
-    const blob = new Blob([receipt], { type: "text/plain" });
+    const htmlReceipt = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h2 { color: #333; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+            th { background-color: #f4f4f4; }
+            tfoot td { font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h2>Order Receipt</h2>
+          <p><strong>Customer:</strong> ${form.name}</p>
+          <p><strong>Email:</strong> ${form.email}</p>
+          <p><strong>Order ID:</strong> ${orderId}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${cart.map(i => `
+                <tr>
+                  <td>${i.name}</td>
+                  <td>${i.quantity}</td>
+                  <td>${formatZAR(i.price)}</td>
+                  <td>${formatZAR(i.price * i.quantity)}</td>
+                </tr>`).join('')}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3">Subtotal</td>
+                <td>${formatZAR(subtotal)}</td>
+              </tr>
+              <tr>
+                <td colspan="3">Shipping</td>
+                <td>${formatZAR(SHIPPING_COST)}</td>
+              </tr>
+              <tr>
+                <td colspan="3">VAT</td>
+                <td>${formatZAR(vat)}</td>
+              </tr>
+              <tr>
+                <td colspan="3">Total Paid</td>
+                <td>${formatZAR(total)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlReceipt], { type: "text/html" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "receipt.txt";
+    link.download = "receipt.html";
     link.click();
     toast.success("Receipt downloaded!");
   };
 
-  // Send receipt via EmailJS
   const sendEmailReceipt = () => {
     const templateParams = {
       to_name: form.name,
@@ -180,7 +224,6 @@ const Checkout = () => {
   };
 
   const steps = [
-    // Shipping
     <div className="step-page" key="shipping">
       <h2>Shipping Information</h2>
       <label className="field"><FaUser /><input placeholder="Full Name" value={form.name} onChange={e => update("name", e.target.value)} /></label>
@@ -200,16 +243,12 @@ const Checkout = () => {
       </div>
       <button className="btn primary" disabled={!isShippingValid()} onClick={() => setStep(1)}>Next</button>
     </div>,
-
-    // Payment
     <div className="step-page" key="payment">
       <h2>Payment Details</h2>
-
       <div className="user-summary">
         <p><strong>{form.name}</strong> – {form.email}</p>
         <p>{form.address}, {form.city}, {form.postalCode}</p>
       </div>
-
       <label className="field futuristic-card"><FaCreditCard /><input placeholder="Card Number" value={form.cardNumber} onChange={e => update("cardNumber", autoFormatCard(e.target.value))} /></label>
       <div className="row-2">
         <label className="field"><FaCalendarAlt /><input placeholder="MM/YY" value={form.expiry} onChange={e => update("expiry", autoFormatExpiry(e.target.value))} /></label>
@@ -220,8 +259,6 @@ const Checkout = () => {
         <button className="btn primary" disabled={!isPaymentValid()} onClick={() => setStep(2)}>Next</button>
       </div>
     </div>,
-
-    // Review & Confirm
     <div className="step-page" key="review">
       <h2>Review & Confirm</h2>
       <p><strong>{form.name}</strong> – {form.phone}</p>
@@ -246,8 +283,6 @@ const Checkout = () => {
         <button className="btn primary" onClick={() => setStep(3)}>Pay {formatZAR(total)}</button>
       </div>
     </div>,
-
-    // Processing
     <div className="step-page center" key="processing">
       <div className="spinner"></div>
       <p>Processing your payment...</p>
@@ -258,8 +293,6 @@ const Checkout = () => {
     <>
       <ToastContainer position="top-center" autoClose={3000} />
       {showConfetti && <Confetti recycle={false} numberOfPieces={250} />}
-
-      {/* Success Modal */}
       {showSuccessModal && (
         <div className="success-modal">
           <div className="success-box">
@@ -270,18 +303,15 @@ const Checkout = () => {
             </div>
             <h2>Order Successful 🎉</h2>
             <p>Thank you, <strong>{form.name}</strong>! Your payment has been processed.</p>
-
             <div className="order-id-box">
               <span>Order ID:</span>
               <strong>{orderId}</strong>
               <FaCopy className="copy-icon" onClick={copyOrderId} />
             </div>
-
             <div className="summary-mini">
               <p><span>Total Paid:</span> {formatZAR(total)}</p>
               <p><span>Items:</span> {totalItems}</p>
             </div>
-
             <div className="modal-buttons">
               <button className="btn primary" onClick={downloadReceipt}>Download Receipt</button>
               <button className="btn orange" onClick={sendEmailReceipt}>Receive Receipt via Email</button>
@@ -290,8 +320,6 @@ const Checkout = () => {
           </div>
         </div>
       )}
-
-      {/* Email Popup */}
       {showEmailPopup && (
         <div className="email-popup">
           <div className="popup-box">
@@ -300,8 +328,6 @@ const Checkout = () => {
           </div>
         </div>
       )}
-
-      {/* Main Checkout Layout */}
       <div className="checkout-root">
         <div className="progress-wrap">
           <div className="progress" style={{ width: `${(step + 1) * 25}%` }} />
@@ -317,7 +343,7 @@ const Checkout = () => {
               <h3>Order Summary</h3>
               {cart.map((item, i) => (
                 <div key={i} className="summary-item">
-                  <span>{item.name}</span>
+                  <span>{item.name} × {item.quantity}</span>
                   <span>{formatZAR(item.price * item.quantity)}</span>
                 </div>
               ))}
