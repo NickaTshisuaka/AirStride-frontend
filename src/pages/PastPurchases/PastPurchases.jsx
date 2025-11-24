@@ -8,13 +8,18 @@ const PastPurchases = () => {
 
   useEffect(() => {
     try {
-      const savedOrders = JSON.parse(localStorage.getItem("orders")) || [];
-      // Ensure each order has a valid items array
-      const cleanedOrders = savedOrders.map(order => ({
+      let savedOrders = JSON.parse(localStorage.getItem("orders"));
+      if (!Array.isArray(savedOrders)) {
+        console.warn("Orders in localStorage is not an array, resetting...");
+        savedOrders = [];
+      }
+
+      const cleanedOrders = savedOrders.map((order) => ({
         ...order,
         items: Array.isArray(order.items) ? order.items : [],
-        address: order.address || {}
+        shipping: order.shipping || {},
       }));
+
       setOrders(cleanedOrders);
     } catch (err) {
       console.error("Failed to load orders:", err);
@@ -22,7 +27,7 @@ const PastPurchases = () => {
     }
   }, []);
 
-  if (!orders || orders.length === 0) {
+  if (!orders.length) {
     return (
       <div className="past-purchases-page">
         <h1>No past orders found</h1>
@@ -41,16 +46,16 @@ const PastPurchases = () => {
       {orders.map((order, idx) => (
         <div key={idx} className="single-order">
           <p>
-            <strong>Order Date:</strong> {order.date}
+            <strong>Order Date:</strong> {order.date || "Unknown"}
           </p>
           <p>
             <strong>Shipping Address:</strong>
             <br />
-            {order.address.address || ""}
+            {order.shipping.address || ""}
             <br />
-            {order.address.suburb || ""}, {order.address.city || ""}
+            {order.shipping.suburb || ""}, {order.shipping.city || ""}
             <br />
-            {order.address.province || ""} {order.address.postalCode || ""}
+            {order.shipping.province || ""} {order.shipping.postalCode || ""}
           </p>
 
           {order.shippingTime && (
