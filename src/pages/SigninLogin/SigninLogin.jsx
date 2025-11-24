@@ -14,7 +14,7 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./SigninLogin.css";
-import { signInWithGoogle } from "../firebaseAuth";
+import { signInWithGoogle } from "../../firebaseAuth.js";
 
 const SigninLogin = () => {
   const [isLogin, setIsLogin] = useState(true);
