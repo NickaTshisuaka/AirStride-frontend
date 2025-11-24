@@ -20,6 +20,36 @@ const provinces = [
 const formatZAR = (amount) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(amount);
 
+// Expiry utility functions
+const EXPIRY_TIME = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+
+const saveWithExpiry = (key, value) => {
+  const record = {
+    value,
+    timestamp: new Date().getTime()
+  };
+  localStorage.setItem(key, JSON.stringify(record));
+};
+
+const loadWithExpiry = (key) => {
+  const record = localStorage.getItem(key);
+  if (!record) return null;
+
+  try {
+    const parsed = JSON.parse(record);
+    if (!parsed.timestamp) return parsed.value; // fallback if no timestamp
+
+    const now = new Date().getTime();
+    if (now - parsed.timestamp > EXPIRY_TIME) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    return parsed.value;
+  } catch {
+    return null;
+  }
+};
+
 const Checkout = () => {
   const [step, setStep] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -30,7 +60,8 @@ const Checkout = () => {
   const [cart, setCart] = useState([]);
 
   useEffect(() => {
-    setCart(JSON.parse(localStorage.getItem("cart")) || []);
+    const savedCart = loadWithExpiry("cart");
+    setCart(savedCart || []);
   }, []);
 
   const subtotal = cart.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
@@ -70,8 +101,8 @@ const Checkout = () => {
         setShowConfetti(true);
         setShowSuccessModal(true);
 
-        // Save order
-        const savedOrders = JSON.parse(localStorage.getItem("orders")) || [];
+        // Save order with expiry
+        const savedOrders = loadWithExpiry("orders") || [];
         savedOrders.push({
           id: orderId,
           date: new Date().toLocaleString(),
@@ -84,7 +115,7 @@ const Checkout = () => {
           })),
           address: { ...form }
         });
-        localStorage.setItem("orders", JSON.stringify(savedOrders));
+        saveWithExpiry("orders", savedOrders);
 
         // Clear cart
         localStorage.removeItem("cart");
@@ -116,37 +147,37 @@ const Checkout = () => {
 
   // Send receipt via EmailJS
   const sendEmailReceipt = () => {
-  const templateParams = {
-    to_name: form.name,
-    to_email: form.email,
-    order_id: orderId,
-    total_paid: formatZAR(total),
-    items: cart.map(i => `${i.name} x${i.quantity}`).join(", ")
-  };
+    const templateParams = {
+      to_name: form.name,
+      to_email: form.email,
+      order_id: orderId,
+      total_paid: formatZAR(total),
+      items: cart.map(i => `${i.name} x${i.quantity}`).join(", ")
+    };
 
-  console.log("EmailJS send params:", {
-    serviceID: import.meta.env.VITE_EMAILJS_SERVICE_ID,
-    templateID: import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-    publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
-    templateParams
-  });
-
-  emailjs.send(
-    import.meta.env.VITE_EMAILJS_SERVICE_ID,
-    import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-    templateParams,
-    import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-  )
-    .then((response) => {
-      console.log("EmailJS success:", response);
-      toast.success(`Receipt sent to ${form.email} ✅`);
-      setShowEmailPopup(true);
-    })
-    .catch((error) => {
-      console.error("EmailJS error detail:", error);
-      toast.error(`Email failed: ${error.text || JSON.stringify(error)}`);
+    console.log("EmailJS send params:", {
+      serviceID: import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      templateID: import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+      publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+      templateParams
     });
-};
+
+    emailjs.send(
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+      templateParams,
+      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+    )
+      .then((response) => {
+        console.log("EmailJS success:", response);
+        toast.success(`Receipt sent to ${form.email} ✅`);
+        setShowEmailPopup(true);
+      })
+      .catch((error) => {
+        console.error("EmailJS error detail:", error);
+        toast.error(`Email failed: ${error.text || JSON.stringify(error)}`);
+      });
+  };
 
   const steps = [
     // Shipping
