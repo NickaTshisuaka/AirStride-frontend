@@ -1,0 +1,130 @@
+/* src/components/Footer.css */
+.footer {
+  background: linear-gradient(to top, #0d1b2a, #1b2a49);
+  color: white;
+  padding: 60px 20px 20px 20px;
+  font-family: "Poppins", sans-serif;
+}
+
+.footer a {
+  color: white;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.footer a:hover {
+  color: orange;
+}
+
+.footer-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.footer-brand h2 {
+  font-size: 28px;
+  color: white;
+  margin-bottom: 5px;
+  background: linear-gradient(90deg, #4facfe, #00f2fe);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.footer-brand p {
+  font-size: 14px;
+  color: #ddd;
+}
+
+.footer-links h4,
+.footer-social h4,
+.footer-newsletter h4 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: orange;
+}
+
+.footer-links ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-links li {
+  margin-bottom: 8px;
+}
+
+.footer-social .social-icons a {
+  margin-right: 12px;
+  font-size: 20px;
+  color: white;
+  transition: 0.3s ease;
+}
+
+.footer-social .social-icons a:hover {
+  color: orange;
+  transform: scale(1.2);
+}
+
+.footer-newsletter p {
+  font-size: 14px;
+  color: #ccc;
+  margin-bottom: 10px;
+}
+
+.newsletter-form {
+  display: flex;
+  gap: 10px;
+}
+
+.newsletter-form input {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  outline: none;
+}
+
+.newsletter-form button {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 6px;
+  background: orange;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.newsletter-form button:hover {
+  background: #ff9900;
+  transform: scale(1.05);
+}
+
+.footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  border-top: 1px solid #333;
+  padding-top: 15px;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.footer-bottom .legal-links a {
+  margin-left: 20px;
+}
+
+@media (max-width: 900px) {
+  .footer-top {
+    flex-direction: column;
+    gap: 25px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+}
