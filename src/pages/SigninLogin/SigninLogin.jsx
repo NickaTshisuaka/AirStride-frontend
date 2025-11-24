@@ -34,35 +34,39 @@ const SigninLogin = () => {
   const { login, signup, currentUser, loading } = useAuth();
   const navigate = useNavigate();
 
-  // ✅ Refs for recaptcha and confirmation result
   const recaptchaRef = useRef(null);
   const confirmationResultRef = useRef(null);
 
-  // Initialize recaptcha safely after mount
   useEffect(() => {
-    const initRecaptcha = () => {
+    if (!window.recaptchaVerifier) {
       const container = document.getElementById("recaptcha-container");
-      if (container && !recaptchaRef.current) {
-        recaptchaRef.current = new RecaptchaVerifier(
-          "recaptcha-container",
-          {
-            size: "invisible",
-            callback: (response) => {
-              console.log("reCAPTCHA solved", response);
+      if (container) {
+        try {
+          window.recaptchaVerifier = new RecaptchaVerifier(
+            "recaptcha-container",
+            {
+              size: "invisible",
+              callback: (response) => {
+                console.log("reCAPTCHA solved", response);
+              },
             },
-          },
-          auth
-        );
+            auth
+          );
+          recaptchaRef.current = window.recaptchaVerifier;
+        } catch (error) {
+          console.error("RecaptchaVerifier initialization error:", error);
+        }
       }
-    };
-
-    // Slight delay to ensure DOM exists
-    const timer = setTimeout(initRecaptcha, 500);
+    }
 
     return () => {
-      clearTimeout(timer);
-      if (recaptchaRef.current) {
-        recaptchaRef.current.clear();
+      if (window.recaptchaVerifier) {
+        try {
+          window.recaptchaVerifier.clear();
+        } catch (error) {
+          console.error("Error clearing recaptcha:", error);
+        }
+        window.recaptchaVerifier = null;
         recaptchaRef.current = null;
       }
     };
@@ -84,8 +88,8 @@ const SigninLogin = () => {
       return;
     }
 
-    if (!recaptchaRef.current) {
-      setError("reCAPTCHA not ready yet");
+    if (!window.recaptchaVerifier) {
+      setError("reCAPTCHA not ready yet. Please wait.");
       return;
     }
 
@@ -93,11 +97,10 @@ const SigninLogin = () => {
     setError("");
 
     try {
-      confirmationResultRef.current = await signInWithPhoneNumber(
-        auth,
-        phoneNumber,
-        recaptchaRef.current
-      );
+      const appVerifier = window.recaptchaVerifier;
+      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+      confirmationResultRef.current = confirmationResult;
+      window.confirmationResult = confirmationResult;
       setIsPhoneSent(true);
       toast.success("OTP sent! Check your phone.");
     } catch (err) {
@@ -107,6 +110,8 @@ const SigninLogin = () => {
         msg = "Invalid phone number format. Use +27XXXXXXXXX";
       } else if (err.code === "auth/too-many-requests") {
         msg = "Too many attempts. Try again later.";
+      } else if (err.code === "auth/quota-exceeded") {
+        msg = "SMS quota exceeded. Try again later.";
       }
       setError(msg);
     } finally {
@@ -120,7 +125,7 @@ const SigninLogin = () => {
       return;
     }
 
-    if (!confirmationResultRef.current) {
+    if (!confirmationResultRef.current && !window.confirmationResult) {
       setError("No OTP request found. Please resend.");
       return;
     }
@@ -129,7 +134,8 @@ const SigninLogin = () => {
     setError("");
 
     try {
-      const result = await confirmationResultRef.current.confirm(otp);
+      const confirmResult = confirmationResultRef.current || window.confirmationResult;
+      const result = await confirmResult.confirm(otp);
       const user = result.user;
 
       localStorage.setItem("email", user.phoneNumber);
@@ -149,7 +155,6 @@ const SigninLogin = () => {
     e.preventDefault();
     setError("");
 
-    // Basic validations
     if (isLogin) {
       if (!formData.email || !formData.password) {
         setError("Please fill in all fields");
