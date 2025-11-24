@@ -14,6 +14,7 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./SigninLogin.css";
+import { signInWithGoogle } from "../firebaseAuth";
 
 const SigninLogin = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -186,6 +187,29 @@ const SigninLogin = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    setError("");
+    try {
+      // Call your firebaseAuth helper
+      const user = await signInWithGoogle();
+      
+      console.log("Google logged in:", user);
+
+      // Save info for your app
+      localStorage.setItem("email", user.email);
+      localStorage.setItem("firstName", user.displayName || user.email.split("@")[0]);
+
+      // Redirect after login
+      navigate("/home", { replace: true });
+    } catch (err) {
+      console.error("Google sign-in failed:", err);
+      setError("Google Sign-In failed. Try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
       <ToastContainer position="top-center" autoClose={4000} hideProgressBar={false} />
@@ -270,7 +294,15 @@ const SigninLogin = () => {
             <div className="auth-divider"><span>or continue with</span></div>
 
             <div className="social-login">
-              {["Google", "GitHub", "Facebook", "Twitter"].map((provider) => (
+              <button
+                type="button"
+                className="social-button google"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+              >
+                Sign in with Google
+              </button>
+              {["GitHub", "Facebook", "Twitter"].map((provider) => (
                 <button
                   key={provider}
                   type="button"
@@ -278,7 +310,7 @@ const SigninLogin = () => {
                   onClick={() => handleSocialLogin(provider)}
                   disabled={isLoading}
                 >
-                  <i className={`fab fa-${provider.toLowerCase()}`}></i>
+                  {provider}
                 </button>
               ))}
             </div>
