@@ -169,59 +169,70 @@ const Checkout = () => {
   // ---------------------------------------------
   // HANDLE PAYMENT + EMAIL
   // ---------------------------------------------
-  const handlePay = async () => {
-    if (isPaymentProcessing) return;
+ const handlePay = async () => {
+  if (isPaymentProcessing) return;
 
-    if (!cart.length) {
-      toast.error("Cart is empty.");
-      return;
-    }
+  if (!cart.length) {
+    toast.error("Cart is empty.");
+    return;
+  }
 
-    const shippingErrors = validateShipping();
-    if (shippingErrors.length) {
-      shippingErrors.forEach((err) => toast.error(err));
-      setStep(0);
-      return;
-    }
+  const shippingErrors = validateShipping();
+  if (shippingErrors.length) {
+    shippingErrors.forEach((err) => toast.error(err));
+    setStep(0);
+    return;
+  }
 
-    const paymentErrors = validatePayment();
-    if (paymentErrors.length) {
-      paymentErrors.forEach((err) => toast.error(err));
-      setStep(1);
-      return;
-    }
+  const paymentErrors = validatePayment();
+  if (paymentErrors.length) {
+    paymentErrors.forEach((err) => toast.error(err));
+    setStep(1);
+    return;
+  }
 
+  try {
+    setIsPaymentProcessing(true);
+    setStep(3);
+
+    // fake delay
+    await new Promise((res) => setTimeout(res, 1200));
+
+    // Safe localStorage handling
+    let savedOrders = [];
     try {
-      setIsPaymentProcessing(true);
-      setStep(3);
-
-      // fake delay
-      await new Promise((res) => setTimeout(res, 1200));
-
-      // Save order
-      const savedOrders = JSON.parse(localStorage.getItem("orders") || "[]");
-      const orderData = {
-        id: orderId,
-        date: new Date().toLocaleString(),
-        total,
-        items: cart,
-        shipping: { ...form },
-      };
-      savedOrders.push(orderData);
-      saveWithExpiry("orders", savedOrders);
-
-      clearCart(); // ✅ clear cart via context
-
-      setShowConfetti(true);
-      setShowSuccessModal(true);
-      toast.success("Payment successful! 🎉");
+      const rawOrders = localStorage.getItem("orders");
+      savedOrders = rawOrders ? JSON.parse(rawOrders) : [];
+      if (!Array.isArray(savedOrders)) savedOrders = [];
     } catch (err) {
-      console.error("Payment error:", err);
-      toast.error("Payment failed.");
-    } finally {
-      setIsPaymentProcessing(false);
+      console.warn("Corrupted localStorage orders, resetting...", err);
+      savedOrders = [];
     }
-  };
+
+    const orderData = {
+      id: orderId,
+      date: new Date().toLocaleString(),
+      total,
+      items: cart,
+      shipping: { ...form },
+    };
+
+    savedOrders.push(orderData);
+    saveWithExpiry("orders", savedOrders);
+
+    clearCart(); // ✅ clear cart via context
+
+    setShowConfetti(true);
+    setShowSuccessModal(true);
+    toast.success("Payment successful! 🎉");
+  } catch (err) {
+    console.error("Payment error:", err);
+    toast.error("Payment failed.");
+  } finally {
+    setIsPaymentProcessing(false);
+  }
+};
+
 
   // ---------------------------------------------
   // EMAIL RECEIPT
