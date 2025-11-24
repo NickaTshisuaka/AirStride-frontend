@@ -1,8 +1,8 @@
 // src/pages/AuthenticationPages/SigninLogin.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../../AuthContext.jsx";
-import { auth } from "../../firebase.js";
+import { auth, signInWithGoogle } from "../../firebaseAuth.js";
 import {
   signInWithPopup,
   GoogleAuthProvider,
@@ -12,11 +12,9 @@ import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
 } from "firebase/auth";
-
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./SigninLogin.css";
-import { signInWithGoogle } from "../../firebaseAuth.js";
 
 const SigninLogin = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -36,32 +34,36 @@ const SigninLogin = () => {
   const { login, signup, currentUser, loading } = useAuth();
   const navigate = useNavigate();
 
+  // ✅ Refs for recaptcha and confirmation result
+  const recaptchaRef = useRef(null);
+  const confirmationResultRef = useRef(null);
+
+  // Initialize recaptcha safely after mount
   useEffect(() => {
     const initRecaptcha = () => {
-      if (!window.recaptchaVerifier && document.getElementById("recaptcha-container")) {
-        try {
-          window.recaptchaVerifier = new RecaptchaVerifier(
-            "recaptcha-container",
-            {
-              size: "invisible",
-              callback: (response) => {
-                console.log("reCAPTCHA solved", response);
-              },
+      const container = document.getElementById("recaptcha-container");
+      if (container && !recaptchaRef.current) {
+        recaptchaRef.current = new RecaptchaVerifier(
+          "recaptcha-container",
+          {
+            size: "invisible",
+            callback: (response) => {
+              console.log("reCAPTCHA solved", response);
             },
-            auth
-          );
-        } catch (error) {
-          console.error("RecaptchaVerifier initialization error:", error);
-        }
+          },
+          auth
+        );
       }
     };
 
-    initRecaptcha();
+    // Slight delay to ensure DOM exists
+    const timer = setTimeout(initRecaptcha, 500);
 
     return () => {
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = null;
+      clearTimeout(timer);
+      if (recaptchaRef.current) {
+        recaptchaRef.current.clear();
+        recaptchaRef.current = null;
       }
     };
   }, []);
@@ -82,30 +84,31 @@ const SigninLogin = () => {
       return;
     }
 
+    if (!recaptchaRef.current) {
+      setError("reCAPTCHA not ready yet");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
     try {
-      if (!window.recaptchaVerifier) {
-        throw new Error("reCAPTCHA not initialized");
-      }
-
-      const appVerifier = window.recaptchaVerifier;
-      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
-      window.confirmationResult = confirmationResult;
+      confirmationResultRef.current = await signInWithPhoneNumber(
+        auth,
+        phoneNumber,
+        recaptchaRef.current
+      );
       setIsPhoneSent(true);
       toast.success("OTP sent! Check your phone.");
     } catch (err) {
       console.error("Error sending SMS:", err);
-      let errorMessage = "Failed to send OTP. Try again.";
-      
+      let msg = "Failed to send OTP. Try again.";
       if (err.code === "auth/invalid-phone-number") {
-        errorMessage = "Invalid phone number format. Use +27XXXXXXXXX";
+        msg = "Invalid phone number format. Use +27XXXXXXXXX";
       } else if (err.code === "auth/too-many-requests") {
-        errorMessage = "Too many attempts. Please try again later.";
+        msg = "Too many attempts. Try again later.";
       }
-      
-      setError(errorMessage);
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -117,16 +120,21 @@ const SigninLogin = () => {
       return;
     }
 
+    if (!confirmationResultRef.current) {
+      setError("No OTP request found. Please resend.");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
     try {
-      const result = await window.confirmationResult.confirm(otp);
+      const result = await confirmationResultRef.current.confirm(otp);
       const user = result.user;
-      
+
       localStorage.setItem("email", user.phoneNumber);
       localStorage.setItem("firstName", user.displayName || user.phoneNumber);
-      
+
       toast.success("Phone verified successfully!");
       setTimeout(() => navigate("/home", { replace: true }), 800);
     } catch (err) {
@@ -141,6 +149,7 @@ const SigninLogin = () => {
     e.preventDefault();
     setError("");
 
+    // Basic validations
     if (isLogin) {
       if (!formData.email || !formData.password) {
         setError("Please fill in all fields");
@@ -286,8 +295,6 @@ const SigninLogin = () => {
     setError("");
     try {
       const user = await signInWithGoogle();
-      
-      console.log("Google logged in:", user);
 
       localStorage.setItem("email", user.email);
       localStorage.setItem("firstName", user.displayName || user.email.split("@")[0]);
@@ -305,7 +312,6 @@ const SigninLogin = () => {
   return (
     <>
       <ToastContainer position="top-center" autoClose={4000} hideProgressBar={false} />
-
       <div className="auth-container gradient-bg">
         <div className="auth-wrapper glass-card">
           <div className="auth-form-wrapper">
@@ -381,13 +387,7 @@ const SigninLogin = () => {
               )}
 
               <button type="submit" className="auth-button" disabled={isLoading}>
-                {isLoading
-                  ? isLogin
-                    ? "Signing In..."
-                    : "Signing Up..."
-                  : isLogin
-                  ? "Sign In"
-                  : "Sign Up"}
+                {isLoading ? (isLogin ? "Signing In..." : "Signing Up...") : isLogin ? "Sign In" : "Sign Up"}
               </button>
             </form>
 
