@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
+// Firebase config from environment variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -11,5 +12,16 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+// Initialize Firebase app
 const app = initializeApp(firebaseConfig);
+
+// Initialize Firebase Auth
 export const auth = getAuth(app);
+
+// For development/testing only: disable app verification if needed
+if (import.meta.env.DEV) {
+  auth.settings = {
+    ...auth.settings,
+    appVerificationDisabledForTesting: true, // allows testing phone auth without real SMS
+  };
+}

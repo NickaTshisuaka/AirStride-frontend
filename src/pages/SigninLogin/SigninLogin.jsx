@@ -1,5 +1,5 @@
 // src/pages/AuthenticationPages/SigninLogin.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../../AuthContext.jsx";
 import { auth } from "../../firebase.js";
@@ -35,6 +35,20 @@ const SigninLogin = () => {
 
   const { login, signup, currentUser, loading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!window.recaptchaVerifier && document.getElementById("recaptcha-container")) {
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        "recaptcha-container",
+        { 
+          size: "invisible", 
+          callback: (response) => console.log("reCAPTCHA solved", response) 
+        },
+        auth
+      );
+    }
+  }, []);
+
   if (!loading && currentUser) {
     return <Navigate to="/home" replace />;
   }
@@ -45,28 +59,12 @@ const SigninLogin = () => {
     if (error) setError("");
   };
 
-  const setupRecaptcha = () => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(
-        "recaptcha-container",
-        {
-          size: "invisible",
-          callback: (response) => {
-            console.log("reCAPTCHA solved", response);
-          },
-        },
-        auth
-      );
-    }
-  };
-
   const sendVerificationCode = async () => {
     if (!phoneNumber) {
       setError("Enter a phone number");
       return;
     }
     try {
-      setupRecaptcha();
       const appVerifier = window.recaptchaVerifier;
       const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
       window.confirmationResult = confirmationResult;
