@@ -1,15 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Home.css";
 
 export default function Home() {
   const videoRef = useRef(null);
+  const navigate = useNavigate();
 
-  // External video URLs
+  // Local video files (will exist tomorrow)
   const videos = [
-    "https://pin.it/6ZWurk75q",
-    "https://pin.it/HqgmLw1rV",
-    "https://pin.it/311emxxCi",
-    "https://pin.it/5fsUMyLQk", // slower
+    "/videos/video1.mp4",
+    "/videos/video2.mp4",
+    "/videos/video3.mp4",
+    "/videos/video4.mp4", // slower
   ];
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -66,7 +68,6 @@ export default function Home() {
 
   return (
     <div className="home-page">
-
       {/* HERO VIDEO SECTION */}
       <section className="hero-section">
         <video
@@ -84,7 +85,12 @@ export default function Home() {
         <div className="hero-text">
           <h1 className="title">AirStride</h1>
           <p className="subtitle">Breathing technology built for runners.</p>
-          <button className="explore-btn">Explore Products</button>
+          <button
+            className="explore-btn"
+            onClick={() => navigate("/products")}
+          >
+            Explore Products
+          </button>
         </div>
       </section>
 
@@ -133,8 +139,13 @@ export default function Home() {
       {/* FINAL CTA */}
       <section className="final-section">
         <h2>Ready to Upgrade Your Run?</h2>
-        <p>Experience the next generation of breathing performance gear.</p>
-        <button className="cta-bottom">Shop the Collection</button>
+        <p>Experience the next generation of breathing performance gear.Learn More about who weare and what we stand for here at AirStride</p>
+        <button
+          className="cta-bottom"
+          onClick={() => navigate("/about")}
+        >
+          Shop the Collection
+        </button>
       </section>
     </div>
   );
