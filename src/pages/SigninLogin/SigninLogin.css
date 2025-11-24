@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #007bff, #ff7e00);
-  padding: 20px;
+  /* padding: 20px; */
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   position: relative;
   overflow: hidden;
@@ -82,6 +82,7 @@
   border-radius: 12px;
   font-size: 16px;
   background-color: #f8fafc;
+  margin-top: 2%;
   transition: all 0.3s ease;
   outline: none;
 }
