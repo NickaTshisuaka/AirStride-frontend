@@ -3,84 +3,133 @@ import "./Home.css";
 
 export default function Home() {
   const videoRef = useRef(null);
-  const [fadeText, setFadeText] = useState(false);
+
+  const videos = [
+    "/video1.mp4",
+    "/video2.mp4",
+    "/video3.mp4",
+    "/video4.mp4", // This one will be slowed down
+  ];
+
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [showOverlay, setShowOverlay] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
-
     if (!video) return;
 
-    const checkTime = () => {
-      const duration = video.duration;
-      const current = video.currentTime;
-
-      // Fade text when video is about to end
-      if (duration - current < 1.5) {
-        setFadeText(true);
+    const handleTimeUpdate = () => {
+      if (video.duration - video.currentTime < 1.5) {
+        setShowOverlay(true); // show “AirStride” overlay to hide brand logo
       } else {
-        setFadeText(false);
+        setShowOverlay(false);
       }
     };
 
-    video.addEventListener("timeupdate", checkTime);
-    return () => video.removeEventListener("timeupdate", checkTime);
-  }, []);
+    const handleVideoEnd = () => {
+      // Switch to next video
+      const next = (currentVideoIndex + 1) % videos.length;
+      setCurrentVideoIndex(next);
+
+      // Slow down the 4th video
+      if (next === 3) {
+        video.playbackRate = 0.7;
+      } else {
+        video.playbackRate = 1.0;
+      }
+
+      video.play();
+    };
+
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("ended", handleVideoEnd);
+
+    return () => {
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("ended", handleVideoEnd);
+    };
+  }, [currentVideoIndex]);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.src = videos[currentVideoIndex];
+      videoRef.current.play();
+    }
+  }, [currentVideoIndex]);
 
   return (
     <div className="home-page">
 
       {/* VIDEO HERO SECTION */}
       <section className="hero-section">
+
         <video
           ref={videoRef}
           className="hero-video"
-          src="/video1.mp4"
           autoPlay
           muted
-          loop
+          playsInline
         />
 
-        <div className={`hero-text ${fadeText ? "fade-out" : ""}`}>
+        {/* OVERLAY THAT HIDES BRAND LOGOS */}
+        <div className={`brand-cover ${showOverlay ? "visible" : ""}`}>
           <h1>AirStride</h1>
-          <p>Breathing technology built for runners.</p>
+        </div>
+
+        {/* HEADLINE TEXT */}
+        <div className="hero-text">
+          <h1 className="title">AirStride</h1>
+          <p className="subtitle">Breathing technology built for runners.</p>
           <button className="explore-btn">Explore Products</button>
         </div>
       </section>
 
-      {/* PARALLAX SECTION 1 */}
+      {/* PARALLAX 1 */}
       <section className="parallax parallax-one">
-        <div className="parallax-content">
+        <div className="parallax-content fade-in">
           <h2>Performance Meets Breathing Science</h2>
           <p>
-            AirStride enhances lung efficiency through lightweight, smart
-            airflow engineering. Built for comfort, endurance and real results.
+            Developed with biomechanical research, AirStride enhances lung
+            efficiency using lightweight airflow engineering designed to adapt
+            to your natural movement patterns.
           </p>
         </div>
       </section>
 
-      {/* CONTENT BLOCK AFTER PARALLAX */}
-      <section className="content-section">
-        <h2>Why Runners Choose AirStride</h2>
-        <p>
-          Our tech focuses on airflow optimization, heat reduction,
-          respiratory support and long-distance performance.
-        </p>
+      {/* FEATURES SECTION */}
+      <section className="info-section">
+        <h2 className="section-title">Why Athletes Choose AirStride</h2>
+        <div className="info-grid">
+          <div className="info-card">
+            <h3>Advanced Airflow Control</h3>
+            <p>Optimized oxygen uptake and steady breathing during long runs.</p>
+          </div>
+          <div className="info-card">
+            <h3>Lightweight Comfort</h3>
+            <p>Designed with premium breathable materials that reduce fatigue.</p>
+          </div>
+          <div className="info-card">
+            <h3>Smart Endurance Support</h3>
+            <p>Backed by sports science to improve stamina and recovery time.</p>
+          </div>
+        </div>
       </section>
 
-      {/* PARALLAX SECTION 2 */}
+      {/* PARALLAX 2 */}
       <section className="parallax parallax-two">
-        <div className="parallax-content">
+        <div className="parallax-content fade-in delay">
           <h2>Technology That Moves With You</h2>
           <p>
-            A seamless fusion of biomechanics and breathable materials ensures
-            a natural running experience.
+            Every stride activates micro-air channels that adapt to your pace,
+            temperature, and breathing rhythm.
           </p>
         </div>
       </section>
 
-      {/* FINAL CONTENT SECTION */}
-      <section className="content-section">
+      {/* FINAL CTA */}
+      <section className="final-section">
         <h2>Ready to Upgrade Your Run?</h2>
+        <p>Experience the next generation of breathing performance gear.</p>
         <button className="cta-bottom">Shop the Collection</button>
       </section>
     </div>

@@ -1,208 +1,183 @@
-/* --- THEME COLORS FROM USER --- */
-:root {
-  --bg: #ffffff;
-  --text: #111111;
-  --card: #f8f8f8;
-  --accent: #f7931e;
-}
-
-[data-theme="dark"] {
-  --bg: #111111;
-  --text: #f8f8f8;
-  --card: #1e1e1e;
-  --accent: #f7931e;
-}
-
-/* GENERAL */
+/* === GENERAL PAGE === */
 .home-page {
-  font-family: "Poppins", sans-serif;
-  background: var(--bg);
-  color: var(--text);
   overflow-x: hidden;
+  background: linear-gradient(to bottom, #f8fbff, #eaf3ff);
+  font-family: "Poppins", sans-serif;
+  color: #0a2540;
 }
 
-/* VIDEO HERO SECTION */
+/* === HERO VIDEO SECTION === */
 .hero-section {
   position: relative;
   height: 100vh;
-  width: 100%;
   overflow: hidden;
 }
 
 .hero-video {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: brightness(55%);
 }
 
-/* Hero Text */
+/* === BRAND LOGO COVER OVERLAY === */
+.brand-cover {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 130px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.65), transparent);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 20px;
+  opacity: 0;
+  transition: opacity 0.7s ease-in-out;
+}
+
+.brand-cover.visible {
+  opacity: 1;
+}
+
+.brand-cover h1 {
+  color: white;
+  font-size: 2.2rem;
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+/* === HERO TEXT === */
 .hero-text {
   position: absolute;
-  bottom: 22%;
-  left: 8%;
-  z-index: 10;
-  transition: opacity 0.8s ease-in-out;
+  top: 30%;
+  left: 5%;
+  animation: slideUp 1.5s ease forwards;
 }
 
-.hero-text.fade-out {
-  opacity: 0;
+.title {
+  font-size: 4rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #ff7a00, #ff9f4d);
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
-.hero-text h1 {
-  font-size: 5rem;
-  font-weight: 900;
-  color: var(--accent);
-  text-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
-}
-
-.hero-text p {
-  font-size: 1.4rem;
+.subtitle {
   color: white;
-  max-width: 420px;
-}
-
-/* Floating elements */
-.float-img {
-  position: absolute;
-  width: 260px;
-  height: 260px;
-  object-fit: cover;
-  border-radius: 20px;
-  filter: brightness(80%);
-  animation: float 6s ease-in-out infinite;
-  opacity: 0.8;
-}
-
-.float-img.left {
-  top: 25%;
-  left: -5%;
-}
-
-.float-img.right {
-  bottom: 15%;
-  right: -5%;
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-25px); }
-  100% { transform: translateY(0px); }
+  font-size: 1.2rem;
+  max-width: 400px;
+  margin-top: 10px;
 }
 
 .explore-btn {
-  margin-top: 25px;
-  padding: 12px 40px;
-  background: var(--accent);
-  font-size: 1.2rem;
-  border: none;
+  margin-top: 20px;
+  padding: 12px 28px;
+  background: #ff7a00;
   color: white;
-  border-radius: 12px;
+  border: none;
+  border-radius: 30px;
+  font-size: 1rem;
   cursor: pointer;
-  transition: 0.3s;
+  transition: 0.3s ease;
 }
 
 .explore-btn:hover {
-  background: #dd7f15;
+  transform: translateY(-3px);
+  box-shadow: 0px 8px 20px rgba(255, 122, 0, 0.4);
 }
 
-/* PARALLAX */
+/* === PARALLAX SECTIONS === */
 .parallax {
-  height: 70vh;
+  height: 90vh;
   background-attachment: fixed;
-  background-position: center;
   background-size: cover;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background-position: center;
+  position: relative;
 }
 
 .parallax-one {
-  background-image: url("https://images.pexels.com/photos/1199590/pexels-photo-1199590.jpeg");
+  background-image: url("/parallax1.jpg");
 }
 
 .parallax-two {
-  background-image: url("https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg");
+  background-image: url("/parallax2.jpg");
 }
 
 .parallax-content {
-  background: rgba(0, 0, 0, 0.45);
-  padding: 40px 45px;
-  border-radius: 14px;
-  text-align: center;
-  max-width: 650px;
+  position: absolute;
+  bottom: 10%;
+  left: 5%;
+  max-width: 550px;
   color: white;
+  animation: fadeIn 2s ease forwards;
 }
 
-.parallax-content h2 {
-  color: var(--accent);
-  font-size: 2.3rem;
-}
-
-/* BETWEEN SECTIONS */
-.content-section {
-  padding: 90px 10%;
+/* === INFO SECTION === */
+.info-section {
+  padding: 80px 5%;
   text-align: center;
-  background: var(--bg);
 }
 
-.content-section h2 {
-  color: var(--accent);
-  font-size: 2rem;
+.section-title {
+  font-size: 2.4rem;
+  margin-bottom: 40px;
+  background: linear-gradient(to right, #0047ab, #3fa9f5);
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
-.content-section p {
-  color: var(--text);
-  max-width: 750px;
-  margin: 0 auto;
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 25px;
 }
 
-/* CTA BOTTOM */
+.info-card {
+  padding: 25px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+  transition: 0.3s ease;
+  border-left: 6px solid #ff7a00;
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
+}
+
+.info-card h3 {
+  color: #ff7a00;
+}
+
+/* === FINAL SECTION === */
+.final-section {
+  text-align: center;
+  padding: 100px 5%;
+}
+
 .cta-bottom {
-  margin-top: 20px;
-  padding: 15px 45px;
-  background: var(--accent);
-  color: white;
+  padding: 14px 36px;
+  border-radius: 35px;
   border: none;
-  border-radius: 10px;
-  font-size: 1.3rem;
+  background: linear-gradient(to right, #ff7a00, #ff9f4d);
+  color: white;
+  font-size: 1.2rem;
   cursor: pointer;
-  transition: 0.3s;
+  transition: 0.3s ease;
 }
 
 .cta-bottom:hover {
-  background: #dd7f15;
+  transform: translateY(-4px);
+  box-shadow: 0px 10px 26px rgba(255, 122, 0, 0.4);
 }
 
-/* --- SCROLL REVEAL ANIMATION --- */
-.reveal {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: 0.9s ease-out;
+/* === ANIMATIONS === */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(50px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.reveal.active {
-  opacity: 1;
-  transform: translateY(0px);
-}
-
-/* --- STAGGER INSIDE PARRALAX BOXES --- */
-.stagger > * {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: staggerFade 0.8s ease forwards;
-}
-
-.stagger > *:nth-child(1) { animation-delay: 0.1s; }
-.stagger > *:nth-child(2) { animation-delay: 0.3s; }
-.stagger > *:nth-child(3) { animation-delay: 0.5s; }
-
-@keyframes staggerFade {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
 }

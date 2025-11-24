@@ -244,23 +244,35 @@ const Checkout = () => {
 // EMAIL RECEIPT
 // ---------------------------------------------
 const sendEmailReceipt = () => {
-  // Validate that the user entered a proper email
   if (!form.email || !/\S+@\S+\.\S+/.test(form.email)) {
-    toast.error("Please enter a valid email address to receive the receipt.");
+    toast.error("Please enter a valid email before emailing receipt.");
     return;
   }
 
-  // Prepare template parameters matching your EmailJS template
-  const templateParams = {
-    to_name: form.name || "Customer",
-    email: form.email,          // Must match {{email}} in your EmailJS template
-    order_id: orderId,
-    total_paid: formatZAR(total),
-    items: cart.map((i) => `${i.name} x${i.quantity}`).join(", "),
-    date: new Date().toLocaleString(),
+  // Convert cart items → EmailJS-friendly array
+  const orderItems = cart.map((item) => ({
+    name: item.name,
+    units: item.quantity,
+    price: (item.price * item.quantity).toFixed(2),
+    image_url: item.image,      // IMPORTANT: must exist in your product objects
+  }));
+
+  // FULL cost breakdown for template
+  const cost = {
+    shipping: SHIPPING_COST.toFixed(2),
+    tax: vat.toFixed(2),
+    total: total.toFixed(2),
   };
 
-  // Send email
+  // Data passed to EmailJS must match template {{variables}}
+  const templateParams = {
+    email: form.email,             // matches {{email}}
+    customer_name: form.name,      // matches {{customer_name}}
+    order_id: orderId,             // matches {{order_id}}
+    orders: orderItems,            // matches {{#orders}} ... {{/orders}}
+    cost,                          // matches {{cost.shipping}}, {{cost.tax}}, {{cost.total}}
+  };
+
   emailjs
     .send(
       import.meta.env.VITE_EMAILJS_SERVICE_ID,
@@ -269,17 +281,16 @@ const sendEmailReceipt = () => {
       import.meta.env.VITE_EMAILJS_PUBLIC_KEY
     )
     .then(() => {
-      toast.success(`Receipt emailed to ${form.email} ✅`);
+      toast.success(`Receipt sent to ${form.email} 🎉`);
       setShowConfetti(false);
       setShowEmailPopup(false);
     })
     .catch((error) => {
       console.error("EmailJS error:", error);
-      toast.error(
-        `Email failed: ${error.text || "Please check the email address and template variable"}`
-      );
+      toast.error("Email failed. Check template variables.");
     });
 };
+
 
 
   // ---------------------------------------------

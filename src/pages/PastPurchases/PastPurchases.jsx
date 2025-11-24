@@ -66,24 +66,32 @@ const PastPurchases = () => {
 
           <h2>Items:</h2>
           {order.items.length > 0 ? (
-            <div className="order-items-grid">
-              {order.items.map((item, index) => (
-                <div key={index} className="order-item-card">
-                  {item.img && <img src={item.img} alt={item.name} />}
-                  <div className="order-item-info">
-                    <h3>{item.name}</h3>
-                    <p>Qty: {item.quantity || 1}</p>
-                    <p>Price: R {item.price?.toFixed(2) || "0.00"}</p>
-                    <p>
-                      Subtotal: R {((item.price || 0) * (item.quantity || 1)).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p>No items found for this order.</p>
-          )}
+  <div className="order-items-grid">
+    {order.items.map((item, index) => (
+      <div key={index} className="order-item-card">
+        <img
+          src={item.img || item.imageUrl || "https://placehold.co/100x100"}
+          alt={item.name}
+        />
+
+        <div className="order-item-info">
+          <h3>{item.name}</h3>
+
+          <p>Qty: {item.quantity || 1}</p>
+
+          <p>Price: R {Number(item.price).toFixed(2)}</p>
+
+          <p>
+            Subtotal: R {(Number(item.price) * Number(item.quantity || 1)).toFixed(2)}
+          </p>
+        </div>
+      </div>
+    ))}
+  </div>
+) : (
+  <p>No items found for this order.</p>
+)}
+
 
           <h2 className="order-total">
             <strong>Total Paid: R {order.total?.toFixed(2) || "0.00"}</strong>
