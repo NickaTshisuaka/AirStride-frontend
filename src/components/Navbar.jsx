@@ -11,7 +11,8 @@ const Navbar = () => {
   const [cartCount, setCartCount] = useState(0);
   const [cartAnimate, setCartAnimate] = useState(false);
   const [firstName, setFirstName] = useState("");
-
+  const [navSearch, setNavSearch] = useState("");
+  
   // Set user name
   useEffect(() => {
     if (user?.displayName) {
@@ -87,7 +88,6 @@ const Navbar = () => {
           {showSearch && (
             <div className="search-bar">
               <i className="fas fa-search"></i>
-              const [navSearch, setNavSearch] = useState("");
 
 <input
   type="text"
