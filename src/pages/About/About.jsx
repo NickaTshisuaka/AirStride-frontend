@@ -16,7 +16,7 @@ export default function AboutPage() {
       {/* HERO */}
       <header className="hero">
         <video className="hero-video" autoPlay muted loop playsInline>
-          <source src="/videos/hero.mp4" type="video/mp4" />
+          <source src="/videos/video1.mp4" type="video/mp4" />
         </video>
         <div className="hero-overlay" />
         <motion.div {...fadeUp} className="hero-inner" viewport={{ once: true }}>
@@ -49,7 +49,7 @@ export default function AboutPage() {
       </section>
 
       {/* MISSION + VISION */}
-      <section className="mission-vision">
+      {/* <section className="mission-vision">
         <motion.div className="card unified-card" {...fadeUp} viewport={{ once: true }}>
           <h3>Mission</h3>
           <p>Design breathing-enhancement technology that improves performance, boosts endurance, and supports healthy living.</p>
@@ -58,7 +58,7 @@ export default function AboutPage() {
           <h3>Vision</h3>
           <p>A world where every jogger can breathe freely and perform at their best.</p>
         </motion.div>
-      </section>
+      </section> */}
 
       {/* VALUES */}
       <section className="values-section">
@@ -157,7 +157,7 @@ export default function AboutPage() {
               "Every runner deserves to breathe freely. AirStride isn't just a product — it's a movement toward healthier,
               stronger, more confident athletes everywhere."
             </p>
-            <button className="cta-btn" onClick={() => navigate("/contact")}>Contact the Founder</button>
+            <button className="cta-btn" onClick={() => navigate("/faq")}>Contact the Founder</button>
           </div>
         </motion.div>
       </section>
