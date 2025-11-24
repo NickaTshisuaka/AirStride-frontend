@@ -5,13 +5,13 @@ import { toast, ToastContainer } from "react-toastify";
 import emailjs from "@emailjs/browser";
 import "react-toastify/dist/ReactToastify.css";
 import "./Checkout.css";
+import { useCartContext } from "../../contexts/CartContext"; // ✅ Import context
 
 // ---------------------------------------------
 // SETTINGS
 // ---------------------------------------------
 const SHIPPING_COST = 85;
 const VAT_RATE = 0.15;
-const EXPIRY_TIME = 2 * 60 * 60 * 1000;
 
 // ---------------------------------------------
 // HELPERS
@@ -22,26 +22,6 @@ const formatZAR = (amount = 0) =>
 const saveWithExpiry = (key, value) => {
   const record = { value, timestamp: Date.now() };
   localStorage.setItem(key, JSON.stringify(record));
-};
-
-const loadWithExpiry = (key) => {
-  const raw = localStorage.getItem(key);
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed.timestamp && Date.now() - parsed.timestamp > EXPIRY_TIME) {
-      localStorage.removeItem(key);
-      return null;
-    }
-    return parsed.value;
-  } catch (err) {
-    console.warn("loadWithExpiry parse error:", err);
-    return null;
-  }
-};
-
-const broadcastCartUpdated = () => {
-  localStorage.setItem("cartUpdated", Date.now().toString());
 };
 
 // Input-format helpers
@@ -62,6 +42,7 @@ const formatPhone = (value) =>
 // COMPONENT
 // ---------------------------------------------
 const Checkout = () => {
+  const { cart, clearCart } = useCartContext(); // ✅ use context
   const [step, setStep] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -69,12 +50,10 @@ const Checkout = () => {
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
 
   const mountedRef = useRef(true);
-
   const [orderId] = useState(
     "AS-" + Math.random().toString(36).substring(2, 10).toUpperCase()
   );
 
-  const [cart, setCart] = useState([]);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -90,53 +69,6 @@ const Checkout = () => {
   });
 
   const [fieldErrors, setFieldErrors] = useState({});
-
-  // ---------------------------------------------
-  // LOAD CART ON MOUNT
-  // ---------------------------------------------
-  useEffect(() => {
-    mountedRef.current = true;
-    const saved = loadWithExpiry("cart");
-    console.log("Loaded saved cart:", saved);
-    if (!saved || !Array.isArray(saved) || saved.length === 0) {
-      setCart([]);
-      toast.info("Your cart is empty. Add items before checking out.");
-    } else {
-      const cleaned = saved.map((item) => ({
-        quantity: Math.max(1, Number(item.quantity) || 1),
-        price: Number(item.price) || 0,
-        name: item.name || "Item",
-        image: item.image || "",
-        product_id: item.product_id || item._id || null,
-        ...item,
-      }));
-      setCart(cleaned);
-      console.log("Cleaned cart:", cleaned);
-    }
-
-    const onStorage = (e) => {
-      if (e.key === "cartUpdated") {
-        const newest = loadWithExpiry("cart") || [];
-        console.log("Storage event, new cart:", newest);
-        setCart(
-          Array.isArray(newest)
-            ? newest.map((i) => ({
-                quantity: Math.max(1, Number(i.quantity) || 1),
-                price: Number(i.price) || 0,
-                name: i.name || "Item",
-                ...i,
-              }))
-            : []
-        );
-      }
-    };
-
-    window.addEventListener("storage", onStorage);
-    return () => {
-      mountedRef.current = false;
-      window.removeEventListener("storage", onStorage);
-    };
-  }, []);
 
   // ---------------------------------------------
   // TOTALS
@@ -163,7 +95,6 @@ const Checkout = () => {
 
     setForm((prev) => ({ ...prev, [key]: value }));
 
-    // live validation
     const newErrors = { ...fieldErrors };
     switch (key) {
       case "name":
@@ -239,11 +170,8 @@ const Checkout = () => {
   // HANDLE PAYMENT + EMAIL
   // ---------------------------------------------
   const handlePay = async () => {
-    console.log("handlePay called, step:", step, "form:", form, "cart:", cart);
-    if (isPaymentProcessing) {
-      console.log("Already processing payment, aborting.");
-      return;
-    }
+    if (isPaymentProcessing) return;
+
     if (!cart.length) {
       toast.error("Cart is empty.");
       return;
@@ -253,7 +181,6 @@ const Checkout = () => {
     if (shippingErrors.length) {
       shippingErrors.forEach((err) => toast.error(err));
       setStep(0);
-      console.log("Shipping validation errors:", shippingErrors);
       return;
     }
 
@@ -261,20 +188,18 @@ const Checkout = () => {
     if (paymentErrors.length) {
       paymentErrors.forEach((err) => toast.error(err));
       setStep(1);
-      console.log("Payment validation errors:", paymentErrors);
       return;
     }
 
     try {
       setIsPaymentProcessing(true);
       setStep(3);
-      console.log("Payment processing started...");
 
       // fake delay
       await new Promise((res) => setTimeout(res, 1200));
 
       // Save order
-      const savedOrders = loadWithExpiry("orders") || [];
+      const savedOrders = JSON.parse(localStorage.getItem("orders") || "[]");
       const orderData = {
         id: orderId,
         date: new Date().toLocaleString(),
@@ -282,16 +207,10 @@ const Checkout = () => {
         items: cart,
         shipping: { ...form },
       };
-      console.log("Order data to save:", orderData);
-
       savedOrders.push(orderData);
       saveWithExpiry("orders", savedOrders);
-      console.log("Saved orders to localStorage");
 
-      localStorage.removeItem("cart");
-      broadcastCartUpdated();
-      setCart([]);
-      console.log("Cart cleared after payment");
+      clearCart(); // ✅ clear cart via context
 
       setShowConfetti(true);
       setShowSuccessModal(true);
@@ -301,7 +220,6 @@ const Checkout = () => {
       toast.error("Payment failed.");
     } finally {
       setIsPaymentProcessing(false);
-      console.log("Payment processing finished.");
     }
   };
 
@@ -317,13 +235,6 @@ const Checkout = () => {
       items: cart.map((i) => `${i.name} x${i.quantity}`).join(", "),
     };
 
-    console.log("EmailJS send params:", {
-      service: import.meta.env.VITE_EMAILJS_SERVICE_ID,
-      template: import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-      publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
-      templateParams,
-    });
-
     emailjs
       .send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
@@ -331,10 +242,8 @@ const Checkout = () => {
         templateParams,
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY
       )
-      .then((response) => {
-        console.log("EmailJS success:", response);
+      .then(() => {
         toast.success(`Receipt emailed to ${form.email} ✅`);
-        // After successful email, stop confetti
         setShowConfetti(false);
         setShowEmailPopup(false);
       })
@@ -348,7 +257,6 @@ const Checkout = () => {
   // DOWNLOAD RECEIPT
   // ---------------------------------------------
   const downloadReceipt = () => {
-    console.log("downloadReceipt clicked");
     const html = `
       <html>
       <head><meta charset="utf-8" /><title>Receipt ${orderId}</title></head>
@@ -385,7 +293,6 @@ const Checkout = () => {
     a.click();
     URL.revokeObjectURL(url);
 
-    console.log("Receipt download triggered, stopping confetti");
     setShowConfetti(false);
   };
 
@@ -397,101 +304,35 @@ const Checkout = () => {
   return (
     <div className="checkout-container">
       {showConfetti && <Confetti />}
-
       <ToastContainer />
       <h1>Checkout</h1>
 
       <div className="steps">
-        <button className={step === 0 ? "active" : ""} onClick={() => setStep(0)}>
-          Shipping
-        </button>
-        <button className={step === 1 ? "active" : ""} onClick={() => setStep(1)}>
-          Payment
-        </button>
-        <button className={step === 2 ? "active" : ""} onClick={() => setStep(2)}>
-          Review
-        </button>
+        <button className={step === 0 ? "active" : ""} onClick={() => setStep(0)}>Shipping</button>
+        <button className={step === 1 ? "active" : ""} onClick={() => setStep(1)}>Payment</button>
+        <button className={step === 2 ? "active" : ""} onClick={() => setStep(2)}>Review</button>
       </div>
 
       <div className="step-content">
         {step === 0 && (
           <div className="form-section">
-            <input
-              className={inputClass("name")}
-              placeholder="Full Name"
-              value={form.name}
-              onChange={(e) => update("name", e.target.value)}
-            />
-            <input
-              className={inputClass("email")}
-              placeholder="Email"
-              value={form.email}
-              onChange={(e) => update("email", e.target.value)}
-            />
-            <input
-              className={inputClass("phone")}
-              placeholder="Phone Number"
-              value={form.phone}
-              onChange={(e) => update("phone", e.target.value)}
-            />
-            <input
-              className={inputClass("address")}
-              placeholder="Address"
-              value={form.address}
-              onChange={(e) => update("address", e.target.value)}
-            />
-            <input
-              placeholder="Suburb"
-              value={form.suburb}
-              onChange={(e) => update("suburb", e.target.value)}
-            />
-            <input
-              className={inputClass("city")}
-              placeholder="City"
-              value={form.city}
-              onChange={(e) => update("city", e.target.value)}
-            />
-            <input
-              className={inputClass("postalCode")}
-              placeholder="Postal Code"
-              value={form.postalCode}
-              onChange={(e) => update("postalCode", e.target.value)}
-            />
-            <input
-              className={inputClass("province")}
-              placeholder="Province"
-              value={form.province}
-              onChange={(e) => update("province", e.target.value)}
-            />
-
+            <input className={inputClass("name")} placeholder="Full Name" value={form.name} onChange={(e) => update("name", e.target.value)} />
+            <input className={inputClass("email")} placeholder="Email" value={form.email} onChange={(e) => update("email", e.target.value)} />
+            <input className={inputClass("phone")} placeholder="Phone Number" value={form.phone} onChange={(e) => update("phone", e.target.value)} />
+            <input className={inputClass("address")} placeholder="Address" value={form.address} onChange={(e) => update("address", e.target.value)} />
+            <input placeholder="Suburb" value={form.suburb} onChange={(e) => update("suburb", e.target.value)} />
+            <input className={inputClass("city")} placeholder="City" value={form.city} onChange={(e) => update("city", e.target.value)} />
+            <input className={inputClass("postalCode")} placeholder="Postal Code" value={form.postalCode} onChange={(e) => update("postalCode", e.target.value)} />
+            <input className={inputClass("province")} placeholder="Province" value={form.province} onChange={(e) => update("province", e.target.value)} />
             <button onClick={() => setStep(1)}>Next →</button>
           </div>
         )}
 
         {step === 1 && (
           <div className="form-section">
-            <input
-              className={inputClass("cardNumber")}
-              placeholder="Card Number (16 digits)"
-              value={form.cardNumber}
-              maxLength={19}
-              onChange={(e) => update("cardNumber", e.target.value)}
-            />
-            <input
-              className={inputClass("expiry")}
-              placeholder="Expiry (MM/YY)"
-              value={form.expiry}
-              maxLength={5}
-              onChange={(e) => update("expiry", e.target.value)}
-            />
-            <input
-              className={inputClass("cvv")}
-              placeholder="CVV"
-              maxLength={3}
-              value={form.cvv}
-              onChange={(e) => update("cvv", e.target.value)}
-            />
-
+            <input className={inputClass("cardNumber")} placeholder="Card Number (16 digits)" value={form.cardNumber} maxLength={19} onChange={(e) => update("cardNumber", e.target.value)} />
+            <input className={inputClass("expiry")} placeholder="Expiry (MM/YY)" value={form.expiry} maxLength={5} onChange={(e) => update("expiry", e.target.value)} />
+            <input className={inputClass("cvv")} placeholder="CVV" maxLength={3} value={form.cvv} onChange={(e) => update("cvv", e.target.value)} />
             <button onClick={() => setStep(2)}>Next →</button>
           </div>
         )}
@@ -504,10 +345,7 @@ const Checkout = () => {
             <p>VAT: {formatZAR(vat)}</p>
             <p>Shipping: {formatZAR(SHIPPING_COST)}</p>
             <h3>Total: {formatZAR(total)}</h3>
-
-            <button className="pay-btn" onClick={handlePay} disabled={isPaymentProcessing}>
-              {isPaymentProcessing ? "Processing…" : "PAY NOW"}
-            </button>
+            <button className="pay-btn" onClick={handlePay} disabled={isPaymentProcessing}>{isPaymentProcessing ? "Processing…" : "PAY NOW"}</button>
           </div>
         )}
       </div>
@@ -516,16 +354,9 @@ const Checkout = () => {
         <div className="success-modal">
           <h2>🎉 Payment Successful!</h2>
           <p>Your order ID is <strong>{orderId}</strong></p>
-
           <button onClick={downloadReceipt}>Download Receipt</button>
           <button onClick={sendEmailReceipt}>Email Receipt</button>
-          <button onClick={() => {
-            console.log("View Past Purchases clicked");
-            setShowConfetti(false);
-            window.location.href = "/PastPurchases";
-          }}>
-            View Past Purchases
-          </button>
+          <button onClick={() => { setShowConfetti(false); window.location.href = "/PastPurchases"; }}>View Past Purchases</button>
         </div>
       )}
 
@@ -534,12 +365,7 @@ const Checkout = () => {
           <h3>Email Receipt</h3>
           <p>Sending to: <strong>{form.email}</strong></p>
           <button onClick={sendEmailReceipt}>Send Now</button>
-          <button onClick={() => {
-            console.log("Email popup closed without sending");
-            setShowEmailPopup(false);
-          }}>
-            Cancel
-          </button>
+          <button onClick={() => setShowEmailPopup(false)}>Cancel</button>
         </div>
       )}
     </div>
