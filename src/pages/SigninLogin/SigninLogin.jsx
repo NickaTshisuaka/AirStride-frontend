@@ -37,16 +37,33 @@ const SigninLogin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!window.recaptchaVerifier && document.getElementById("recaptcha-container")) {
-      window.recaptchaVerifier = new RecaptchaVerifier(
-        "recaptcha-container",
-        { 
-          size: "invisible", 
-          callback: (response) => console.log("reCAPTCHA solved", response) 
-        },
-        auth
-      );
-    }
+    const initRecaptcha = () => {
+      if (!window.recaptchaVerifier && document.getElementById("recaptcha-container")) {
+        try {
+          window.recaptchaVerifier = new RecaptchaVerifier(
+            "recaptcha-container",
+            {
+              size: "invisible",
+              callback: (response) => {
+                console.log("reCAPTCHA solved", response);
+              },
+            },
+            auth
+          );
+        } catch (error) {
+          console.error("RecaptchaVerifier initialization error:", error);
+        }
+      }
+    };
+
+    initRecaptcha();
+
+    return () => {
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = null;
+      }
+    };
   }, []);
 
   if (!loading && currentUser) {
@@ -64,7 +81,15 @@ const SigninLogin = () => {
       setError("Enter a phone number");
       return;
     }
+
+    setIsLoading(true);
+    setError("");
+
     try {
+      if (!window.recaptchaVerifier) {
+        throw new Error("reCAPTCHA not initialized");
+      }
+
       const appVerifier = window.recaptchaVerifier;
       const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
       window.confirmationResult = confirmationResult;
@@ -72,7 +97,17 @@ const SigninLogin = () => {
       toast.success("OTP sent! Check your phone.");
     } catch (err) {
       console.error("Error sending SMS:", err);
-      setError("Failed to send OTP. Try again.");
+      let errorMessage = "Failed to send OTP. Try again.";
+      
+      if (err.code === "auth/invalid-phone-number") {
+        errorMessage = "Invalid phone number format. Use +27XXXXXXXXX";
+      } else if (err.code === "auth/too-many-requests") {
+        errorMessage = "Too many attempts. Please try again later.";
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -81,16 +116,24 @@ const SigninLogin = () => {
       setError("Enter the OTP code");
       return;
     }
+
+    setIsLoading(true);
+    setError("");
+
     try {
       const result = await window.confirmationResult.confirm(otp);
       const user = result.user;
+      
       localStorage.setItem("email", user.phoneNumber);
       localStorage.setItem("firstName", user.displayName || user.phoneNumber);
+      
       toast.success("Phone verified successfully!");
-      navigate("/home", { replace: true });
+      setTimeout(() => navigate("/home", { replace: true }), 800);
     } catch (err) {
       console.error("Invalid OTP:", err);
       setError("Invalid OTP. Try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -98,7 +141,6 @@ const SigninLogin = () => {
     e.preventDefault();
     setError("");
 
-    // Validation
     if (isLogin) {
       if (!formData.email || !formData.password) {
         setError("Please fill in all fields");
@@ -125,7 +167,6 @@ const SigninLogin = () => {
         const userCredential = await login(formData.email, formData.password);
         const displayName = userCredential?.user?.displayName || formData.email.split("@")[0];
 
-        // Save to localStorage
         localStorage.setItem("email", formData.email);
         localStorage.setItem("firstName", displayName);
 
@@ -134,7 +175,6 @@ const SigninLogin = () => {
       } else {
         await signup(formData.email, formData.password);
 
-        // Save to localStorage
         localStorage.setItem("email", formData.email);
         localStorage.setItem("firstName", formData.firstName);
         localStorage.setItem("lastName", formData.lastName);
@@ -183,6 +223,9 @@ const SigninLogin = () => {
       lastName: "",
     });
     setError("");
+    setPhoneNumber("");
+    setOtp("");
+    setIsPhoneSent(false);
   };
 
   const handleSocialLogin = async (provider) => {
@@ -191,9 +234,6 @@ const SigninLogin = () => {
     try {
       let authProvider;
       switch (provider) {
-        case "Google":
-          authProvider = new GoogleAuthProvider();
-          break;
         case "GitHub":
           authProvider = new GithubAuthProvider();
           break;
@@ -211,13 +251,13 @@ const SigninLogin = () => {
 
       const result = await signInWithPopup(auth, authProvider);
       if (result.user) {
-        // Save user info to localStorage for AccountSettings
         localStorage.setItem("email", result.user.email);
         localStorage.setItem(
           "firstName",
           result.user.displayName || result.user.email.split("@")[0]
         );
-        navigate("/home", { replace: true });
+        toast.success(`Welcome, ${result.user.displayName || "User"}!`);
+        setTimeout(() => navigate("/home", { replace: true }), 800);
       }
     } catch (err) {
       console.error(`${provider} login error:`, err);
@@ -245,17 +285,15 @@ const SigninLogin = () => {
     setIsLoading(true);
     setError("");
     try {
-      // Call your firebaseAuth helper
       const user = await signInWithGoogle();
       
       console.log("Google logged in:", user);
 
-      // Save info for your app
       localStorage.setItem("email", user.email);
       localStorage.setItem("firstName", user.displayName || user.email.split("@")[0]);
 
-      // Redirect after login
-      navigate("/home", { replace: true });
+      toast.success(`🎉 Welcome, ${user.displayName || "User"}!`);
+      setTimeout(() => navigate("/home", { replace: true }), 800);
     } catch (err) {
       console.error("Google sign-in failed:", err);
       setError("Google Sign-In failed. Try again.");
@@ -336,16 +374,26 @@ const SigninLogin = () => {
 
               {isLogin && (
                 <div className="forgot-password">
-                  <a href="#" className="forgot-link">Forgot your password?</a>
+                  <a href="#" className="forgot-link">
+                    Forgot your password?
+                  </a>
                 </div>
               )}
 
               <button type="submit" className="auth-button" disabled={isLoading}>
-                {isLoading ? (isLogin ? "Signing In..." : "Signing Up...") : (isLogin ? "Sign In" : "Sign Up")}
+                {isLoading
+                  ? isLogin
+                    ? "Signing In..."
+                    : "Signing Up..."
+                  : isLogin
+                  ? "Sign In"
+                  : "Sign Up"}
               </button>
             </form>
 
-            <div className="auth-divider"><span>or continue with</span></div>
+            <div className="auth-divider">
+              <span>or continue with</span>
+            </div>
 
             <div className="social-login">
               <button
@@ -375,15 +423,20 @@ const SigninLogin = () => {
               {!isPhoneSent ? (
                 <>
                   <input
-                    type="text"
+                    type="tel"
                     placeholder="+27123456789"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     className="auth-input"
                     disabled={isLoading}
                   />
-                  <button onClick={sendVerificationCode} className="auth-button" disabled={isLoading}>
-                    Send OTP
+                  <button
+                    type="button"
+                    onClick={sendVerificationCode}
+                    className="auth-button"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Sending..." : "Send OTP"}
                   </button>
                 </>
               ) : (
@@ -395,9 +448,28 @@ const SigninLogin = () => {
                     onChange={(e) => setOtp(e.target.value)}
                     className="auth-input"
                     disabled={isLoading}
+                    maxLength={6}
                   />
-                  <button onClick={verifyOtp} className="auth-button" disabled={isLoading}>
-                    Verify OTP
+                  <button
+                    type="button"
+                    onClick={verifyOtp}
+                    className="auth-button"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Verifying..." : "Verify OTP"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPhoneSent(false);
+                      setOtp("");
+                      setError("");
+                    }}
+                    className="toggle-button"
+                    disabled={isLoading}
+                    style={{ marginTop: "10px" }}
+                  >
+                    Resend OTP
                   </button>
                 </>
               )}
@@ -406,7 +478,12 @@ const SigninLogin = () => {
             <div className="auth-footer">
               <p>
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
-                <button type="button" onClick={toggleForm} className="toggle-button" disabled={isLoading}>
+                <button
+                  type="button"
+                  onClick={toggleForm}
+                  className="toggle-button"
+                  disabled={isLoading}
+                >
                   {isLogin ? "Sign up" : "Sign in"}
                 </button>
               </p>
