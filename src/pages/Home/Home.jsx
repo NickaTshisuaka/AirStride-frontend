@@ -4,11 +4,12 @@ import "./Home.css";
 export default function Home() {
   const videoRef = useRef(null);
 
+  // External video URLs
   const videos = [
     "https://pinimg.com/originals/10/55/59/1055599907732025.mp4",
     "https://pinimg.com/originals/32/37/03/3237030978158082.mp4",
     "https://pinimg.com/originals/12/59/60/12596073952721763.mp4",
-    "https://pinimg.com/originals/56/30/18/563018698770748.mp4", // slower
+    "https://pinimg.com/originals/56/30/18/56301897870748.mp4", // slower
   ];
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -19,6 +20,7 @@ export default function Home() {
     if (!video) return;
 
     const handleTimeUpdate = () => {
+      console.log("Video currentTime:", video.currentTime);
       if (video.duration - video.currentTime < 1.5) {
         setShowOverlay(true);
       } else {
@@ -27,17 +29,9 @@ export default function Home() {
     };
 
     const handleVideoEnd = () => {
+      console.log("Video ended. Switching to next video...");
       const next = (currentVideoIndex + 1) % videos.length;
       setCurrentVideoIndex(next);
-
-      // Slow down the 4th video
-      if (next === 3) {
-        video.playbackRate = 0.7;
-      } else {
-        video.playbackRate = 1.0;
-      }
-
-      video.play();
     };
 
     video.addEventListener("timeupdate", handleTimeUpdate);
@@ -47,16 +41,28 @@ export default function Home() {
       video.removeEventListener("timeupdate", handleTimeUpdate);
       video.removeEventListener("ended", handleVideoEnd);
     };
-  }, [currentVideoIndex]);
+  }, [currentVideoIndex, videos.length]);
 
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.src = videos[currentVideoIndex];
-      videoRef.current.play().catch(() => {
-        console.warn("Video autoplay prevented by browser. User interaction required.");
-      });
+    const video = videoRef.current;
+    if (!video) return;
+
+    console.log("Switching video to index:", currentVideoIndex, videos[currentVideoIndex]);
+    video.src = videos[currentVideoIndex];
+
+    // Slow down the 4th video
+    if (currentVideoIndex === 3) {
+      video.playbackRate = 0.7;
+      console.log("Slowing down 4th video");
+    } else {
+      video.playbackRate = 1.0;
     }
-  }, [currentVideoIndex]);
+
+    video
+      .play()
+      .then(() => console.log("Video playing"))
+      .catch((err) => console.error("Video play error:", err));
+  }, [currentVideoIndex, videos]);
 
   return (
     <div className="home-page">
