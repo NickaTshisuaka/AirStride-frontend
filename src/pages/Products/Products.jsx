@@ -171,6 +171,16 @@ const Products = () => {
       setToastMessage(`${product.name} added to favorites ❤️`);
     }
   };
+  // Listen for navbar search input
+useEffect(() => {
+  const handleSearch = (e) => {
+    setSearchTerm(e.detail); // Update Products page search
+  };
+
+  window.addEventListener("productSearch", handleSearch);
+  return () => window.removeEventListener("productSearch", handleSearch);
+}, []);
+
 
   /** -------------------------------------
    * RENDER
