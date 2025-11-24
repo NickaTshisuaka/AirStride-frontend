@@ -14,7 +14,7 @@ import { AuthProvider, useAuth } from "./AuthContext.jsx";
 import { ThemeProvider } from "./contexts/ThemeContext.jsx";
 import { CartProvider } from "./contexts/CartContext";
 import GlobalProvider from "../src/contexts/GlobalProvider.jsx";
-import Footer from "./components/Footer.jsx";
+import Footer from "./components/Footer/Footer.jsx";
 
 // Pages
 import Home from "./pages/Home/Home.jsx";
