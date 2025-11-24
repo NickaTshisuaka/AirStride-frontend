@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import Confetti from "react-confetti";
 import { toast, ToastContainer } from "react-toastify";
+import emailjs from "@emailjs/browser";
 import "react-toastify/dist/ReactToastify.css";
 import "./Checkout.css";
 
@@ -16,9 +17,7 @@ const EXPIRY_TIME = 2 * 60 * 60 * 1000;
 // HELPERS
 // ---------------------------------------------
 const formatZAR = (amount = 0) =>
-  new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(
-    amount
-  );
+  new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(amount);
 
 const saveWithExpiry = (key, value) => {
   const record = { value, timestamp: Date.now() };
@@ -28,20 +27,15 @@ const saveWithExpiry = (key, value) => {
 const loadWithExpiry = (key) => {
   const raw = localStorage.getItem(key);
   if (!raw) return null;
-
   try {
     const parsed = JSON.parse(raw);
-    if (parsed && parsed.timestamp) {
-      if (Date.now() - parsed.timestamp > EXPIRY_TIME) {
-        localStorage.removeItem(key);
-        return null;
-      }
-      return parsed.value;
+    if (parsed.timestamp && Date.now() - parsed.timestamp > EXPIRY_TIME) {
+      localStorage.removeItem(key);
+      return null;
     }
-    return parsed;
+    return parsed.value;
   } catch (err) {
-    console.warn("Invalid JSON for", key, err);
-    localStorage.removeItem(key);
+    console.warn("loadWithExpiry parse error:", err);
     return null;
   }
 };
@@ -50,27 +44,19 @@ const broadcastCartUpdated = () => {
   localStorage.setItem("cartUpdated", Date.now().toString());
 };
 
-// ---------------------------------------------
-// INPUT MASKING HELPERS
-// ---------------------------------------------
+// Input-format helpers
 const formatCardNumber = (value) =>
-  value
-    .replace(/\D/g, "")
-    .replace(/(.{4})/g, "$1 ")
-    .trim();
+  value.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim();
 
 const formatExpiry = (value) =>
   value
     .replace(/\D/g, "")
-    .replace(/^([2-9])$/, "0$1") // prepend 0 if first digit is 2-9
+    .replace(/^([2-9])$/, "0$1")
     .replace(/^([01][0-9]{1})([0-9]{0,2})$/, "$1/$2")
     .slice(0, 5);
 
 const formatPhone = (value) =>
-  value
-    .replace(/\D/g, "")
-    .replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3")
-    .slice(0, 11);
+  value.replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3").slice(0, 11);
 
 // ---------------------------------------------
 // COMPONENT
@@ -81,6 +67,7 @@ const Checkout = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showEmailPopup, setShowEmailPopup] = useState(false);
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+
   const mountedRef = useRef(true);
 
   const [orderId] = useState(
@@ -102,7 +89,7 @@ const Checkout = () => {
     cvv: "",
   });
 
-  const [fieldErrors, setFieldErrors] = useState({}); // live validation state
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // ---------------------------------------------
   // LOAD CART ON MOUNT
@@ -110,6 +97,7 @@ const Checkout = () => {
   useEffect(() => {
     mountedRef.current = true;
     const saved = loadWithExpiry("cart");
+    console.log("Loaded saved cart:", saved);
     if (!saved || !Array.isArray(saved) || saved.length === 0) {
       setCart([]);
       toast.info("Your cart is empty. Add items before checking out.");
@@ -123,11 +111,13 @@ const Checkout = () => {
         ...item,
       }));
       setCart(cleaned);
+      console.log("Cleaned cart:", cleaned);
     }
 
     const onStorage = (e) => {
       if (e.key === "cartUpdated") {
         const newest = loadWithExpiry("cart") || [];
+        console.log("Storage event, new cart:", newest);
         setCart(
           Array.isArray(newest)
             ? newest.map((i) => ({
@@ -153,14 +143,9 @@ const Checkout = () => {
   // ---------------------------------------------
   const subtotal = useMemo(
     () =>
-      cart.reduce(
-        (s, i) =>
-          s + (Number(i.price) || 0) * (Number(i.quantity) || 1),
-        0
-      ),
+      cart.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.quantity) || 1), 0),
     [cart]
   );
-
   const vat = useMemo(() => subtotal * VAT_RATE, [subtotal]);
   const total = useMemo(() => subtotal + vat + SHIPPING_COST, [subtotal, vat]);
   const totalItems = useMemo(
@@ -169,7 +154,7 @@ const Checkout = () => {
   );
 
   // ---------------------------------------------
-  // INPUT HANDLER WITH MASKING AND LIVE VALIDATION
+  // UPDATE FORM + LIVE VALIDATION
   // ---------------------------------------------
   const update = (key, value) => {
     if (key === "cardNumber") value = formatCardNumber(value);
@@ -179,49 +164,51 @@ const Checkout = () => {
     setForm((prev) => ({ ...prev, [key]: value }));
 
     // live validation
-    const errors = { ...fieldErrors };
+    const newErrors = { ...fieldErrors };
     switch (key) {
       case "name":
-        errors.name = value.trim() ? "" : "Full Name is required";
+        newErrors.name = value.trim() ? "" : "Full Name is required";
         break;
       case "email":
-        errors.email = /\S+@\S+\.\S+/.test(value) ? "" : "Email is invalid";
+        newErrors.email = /\S+@\S+\.\S+/.test(value) ? "" : "Email is invalid";
         break;
       case "phone":
-        errors.phone = value.replace(/\s/g, "").length === 10 ? "" : "Phone invalid";
+        newErrors.phone =
+          value.replace(/\s/g, "").length >= 10 ? "" : "Phone is invalid";
         break;
       case "address":
-        errors.address = value.trim() ? "" : "Address required";
+        newErrors.address = value.trim() ? "" : "Address is required";
         break;
       case "city":
-        errors.city = value.trim() ? "" : "City required";
+        newErrors.city = value.trim() ? "" : "City is required";
         break;
       case "postalCode":
-        errors.postalCode = value.trim() ? "" : "Postal Code required";
+        newErrors.postalCode = value.trim() ? "" : "Postal Code is required";
         break;
       case "province":
-        errors.province = value.trim() ? "" : "Province required";
+        newErrors.province = value.trim() ? "" : "Province is required";
         break;
       case "cardNumber":
-        errors.cardNumber =
+        newErrors.cardNumber =
           value.replace(/\s/g, "").length === 16 ? "" : "Card must be 16 digits";
         break;
       case "expiry":
-        errors.expiry = /^((0[1-9])|(1[0-2]))\/\d{2}$/.test(value)
+        newErrors.expiry = /^((0[1-9])|(1[0-2]))\/\d{2}$/.test(value)
           ? ""
           : "Expiry MM/YY";
         break;
       case "cvv":
-        errors.cvv = value.replace(/\D/g, "").length === 3 ? "" : "CVV must be 3 digits";
+        newErrors.cvv =
+          value.replace(/\D/g, "").length === 3 ? "" : "CVV must be 3 digits";
         break;
       default:
         break;
     }
-    setFieldErrors(errors);
+    setFieldErrors(newErrors);
   };
 
   // ---------------------------------------------
-  // VALIDATION FOR FINAL CHECKOUT
+  // FINAL VALIDATION
   // ---------------------------------------------
   const validateShipping = () => {
     const errors = [];
@@ -249,10 +236,14 @@ const Checkout = () => {
   };
 
   // ---------------------------------------------
-  // HANDLE PAYMENT
+  // HANDLE PAYMENT + EMAIL
   // ---------------------------------------------
   const handlePay = async () => {
-    if (isPaymentProcessing) return;
+    console.log("handlePay called, step:", step, "form:", form, "cart:", cart);
+    if (isPaymentProcessing) {
+      console.log("Already processing payment, aborting.");
+      return;
+    }
     if (!cart.length) {
       toast.error("Cart is empty.");
       return;
@@ -262,6 +253,7 @@ const Checkout = () => {
     if (shippingErrors.length) {
       shippingErrors.forEach((err) => toast.error(err));
       setStep(0);
+      console.log("Shipping validation errors:", shippingErrors);
       return;
     }
 
@@ -269,15 +261,19 @@ const Checkout = () => {
     if (paymentErrors.length) {
       paymentErrors.forEach((err) => toast.error(err));
       setStep(1);
+      console.log("Payment validation errors:", paymentErrors);
       return;
     }
 
     try {
       setIsPaymentProcessing(true);
       setStep(3);
+      console.log("Payment processing started...");
 
+      // fake delay
       await new Promise((res) => setTimeout(res, 1200));
 
+      // Save order
       const savedOrders = loadWithExpiry("orders") || [];
       const orderData = {
         id: orderId,
@@ -286,47 +282,82 @@ const Checkout = () => {
         items: cart,
         shipping: { ...form },
       };
+      console.log("Order data to save:", orderData);
 
       savedOrders.push(orderData);
       saveWithExpiry("orders", savedOrders);
+      console.log("Saved orders to localStorage");
 
       localStorage.removeItem("cart");
       broadcastCartUpdated();
       setCart([]);
+      console.log("Cart cleared after payment");
 
       setShowConfetti(true);
       setShowSuccessModal(true);
       toast.success("Payment successful! 🎉");
-
-      setTimeout(() => setShowConfetti(false), 4500);
     } catch (err) {
-      console.error(err);
+      console.error("Payment error:", err);
       toast.error("Payment failed.");
     } finally {
       setIsPaymentProcessing(false);
-      setStep(0);
+      console.log("Payment processing finished.");
     }
+  };
+
+  // ---------------------------------------------
+  // EMAIL RECEIPT
+  // ---------------------------------------------
+  const sendEmailReceipt = () => {
+    const templateParams = {
+      to_name: form.name,
+      to_email: form.email,
+      order_id: orderId,
+      total_paid: formatZAR(total),
+      items: cart.map((i) => `${i.name} x${i.quantity}`).join(", "),
+    };
+
+    console.log("EmailJS send params:", {
+      service: import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      template: import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+      publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+      templateParams,
+    });
+
+    emailjs
+      .send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        templateParams,
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      )
+      .then((response) => {
+        console.log("EmailJS success:", response);
+        toast.success(`Receipt emailed to ${form.email} ✅`);
+        // After successful email, stop confetti
+        setShowConfetti(false);
+        setShowEmailPopup(false);
+      })
+      .catch((error) => {
+        console.error("EmailJS error:", error);
+        toast.error(`Email failed: ${error.text || JSON.stringify(error)}`);
+      });
   };
 
   // ---------------------------------------------
   // DOWNLOAD RECEIPT
   // ---------------------------------------------
   const downloadReceipt = () => {
+    console.log("downloadReceipt clicked");
     const html = `
       <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Receipt ${orderId}</title>
-      </head>
+      <head><meta charset="utf-8" /><title>Receipt ${orderId}</title></head>
       <body style="font-family: Arial; padding: 20px;">
         <h2>Order Receipt</h2>
         <p><strong>Order ID:</strong> ${orderId}</p>
         <p><strong>Customer:</strong> ${form.name} (${form.email})</p>
-
         <table border="1" cellpadding="8" cellspacing="0" width="100%">
-          <thead>
-            <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
-          </thead>
+          <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
           <tbody>
             ${cart
               .map(
@@ -341,7 +372,6 @@ const Checkout = () => {
               .join("")}
           </tbody>
         </table>
-
         <h3>Grand Total: ${formatZAR(total)}</h3>
       </body>
       </html>
@@ -354,46 +384,114 @@ const Checkout = () => {
     a.download = `Receipt-${orderId}.html`;
     a.click();
     URL.revokeObjectURL(url);
+
+    console.log("Receipt download triggered, stopping confetti");
+    setShowConfetti(false);
   };
 
   // ---------------------------------------------
-  // UI RENDER
+  // RENDER
   // ---------------------------------------------
-  const inputClass = (field) =>
-    fieldErrors[field] ? "input-error" : "";
+  const inputClass = (field) => (fieldErrors[field] ? "input-error" : "");
 
   return (
     <div className="checkout-container">
       {showConfetti && <Confetti />}
+
       <ToastContainer />
       <h1>Checkout</h1>
 
       <div className="steps">
-        <button className={step === 0 ? "active" : ""} onClick={() => setStep(0)}>Shipping</button>
-        <button className={step === 1 ? "active" : ""} onClick={() => setStep(1)}>Payment</button>
-        <button className={step === 2 ? "active" : ""} onClick={() => setStep(2)}>Review</button>
+        <button className={step === 0 ? "active" : ""} onClick={() => setStep(0)}>
+          Shipping
+        </button>
+        <button className={step === 1 ? "active" : ""} onClick={() => setStep(1)}>
+          Payment
+        </button>
+        <button className={step === 2 ? "active" : ""} onClick={() => setStep(2)}>
+          Review
+        </button>
       </div>
 
       <div className="step-content">
         {step === 0 && (
           <div className="form-section">
-            <input className={inputClass("name")} placeholder="Full Name" value={form.name} onChange={(e) => update("name", e.target.value)} />
-            <input className={inputClass("email")} placeholder="Email" value={form.email} onChange={(e) => update("email", e.target.value)} />
-            <input className={inputClass("phone")} placeholder="Phone Number" value={form.phone} onChange={(e) => update("phone", e.target.value)} />
-            <input className={inputClass("address")} placeholder="Address" value={form.address} onChange={(e) => update("address", e.target.value)} />
-            <input placeholder="Suburb" value={form.suburb} onChange={(e) => update("suburb", e.target.value)} />
-            <input className={inputClass("city")} placeholder="City" value={form.city} onChange={(e) => update("city", e.target.value)} />
-            <input className={inputClass("postalCode")} placeholder="Postal Code" value={form.postalCode} onChange={(e) => update("postalCode", e.target.value)} />
-            <input className={inputClass("province")} placeholder="Province" value={form.province} onChange={(e) => update("province", e.target.value)} />
+            <input
+              className={inputClass("name")}
+              placeholder="Full Name"
+              value={form.name}
+              onChange={(e) => update("name", e.target.value)}
+            />
+            <input
+              className={inputClass("email")}
+              placeholder="Email"
+              value={form.email}
+              onChange={(e) => update("email", e.target.value)}
+            />
+            <input
+              className={inputClass("phone")}
+              placeholder="Phone Number"
+              value={form.phone}
+              onChange={(e) => update("phone", e.target.value)}
+            />
+            <input
+              className={inputClass("address")}
+              placeholder="Address"
+              value={form.address}
+              onChange={(e) => update("address", e.target.value)}
+            />
+            <input
+              placeholder="Suburb"
+              value={form.suburb}
+              onChange={(e) => update("suburb", e.target.value)}
+            />
+            <input
+              className={inputClass("city")}
+              placeholder="City"
+              value={form.city}
+              onChange={(e) => update("city", e.target.value)}
+            />
+            <input
+              className={inputClass("postalCode")}
+              placeholder="Postal Code"
+              value={form.postalCode}
+              onChange={(e) => update("postalCode", e.target.value)}
+            />
+            <input
+              className={inputClass("province")}
+              placeholder="Province"
+              value={form.province}
+              onChange={(e) => update("province", e.target.value)}
+            />
+
             <button onClick={() => setStep(1)}>Next →</button>
           </div>
         )}
 
         {step === 1 && (
           <div className="form-section">
-            <input className={inputClass("cardNumber")} placeholder="Card Number (16 digits)" value={form.cardNumber} maxLength={19} onChange={(e) => update("cardNumber", e.target.value)} />
-            <input className={inputClass("expiry")} placeholder="Expiry (MM/YY)" value={form.expiry} maxLength={5} onChange={(e) => update("expiry", e.target.value)} />
-            <input className={inputClass("cvv")} placeholder="CVV" maxLength={3} value={form.cvv} onChange={(e) => update("cvv", e.target.value)} />
+            <input
+              className={inputClass("cardNumber")}
+              placeholder="Card Number (16 digits)"
+              value={form.cardNumber}
+              maxLength={19}
+              onChange={(e) => update("cardNumber", e.target.value)}
+            />
+            <input
+              className={inputClass("expiry")}
+              placeholder="Expiry (MM/YY)"
+              value={form.expiry}
+              maxLength={5}
+              onChange={(e) => update("expiry", e.target.value)}
+            />
+            <input
+              className={inputClass("cvv")}
+              placeholder="CVV"
+              maxLength={3}
+              value={form.cvv}
+              onChange={(e) => update("cvv", e.target.value)}
+            />
+
             <button onClick={() => setStep(2)}>Next →</button>
           </div>
         )}
@@ -406,7 +504,10 @@ const Checkout = () => {
             <p>VAT: {formatZAR(vat)}</p>
             <p>Shipping: {formatZAR(SHIPPING_COST)}</p>
             <h3>Total: {formatZAR(total)}</h3>
-            <button className="pay-btn" onClick={handlePay}>PAY NOW</button>
+
+            <button className="pay-btn" onClick={handlePay} disabled={isPaymentProcessing}>
+              {isPaymentProcessing ? "Processing…" : "PAY NOW"}
+            </button>
           </div>
         )}
       </div>
@@ -415,16 +516,30 @@ const Checkout = () => {
         <div className="success-modal">
           <h2>🎉 Payment Successful!</h2>
           <p>Your order ID is <strong>{orderId}</strong></p>
+
           <button onClick={downloadReceipt}>Download Receipt</button>
-          <button onClick={() => setShowEmailPopup(true)}>Email Receipt</button>
+          <button onClick={sendEmailReceipt}>Email Receipt</button>
+          <button onClick={() => {
+            console.log("View Past Purchases clicked");
+            setShowConfetti(false);
+            window.location.href = "/PastPurchases";
+          }}>
+            View Past Purchases
+          </button>
         </div>
       )}
 
       {showEmailPopup && (
         <div className="email-popup">
-          <h3>Enter your email</h3>
-          <input placeholder="Email" value={form.email} onChange={(e) => update("email", e.target.value)} />
-          <button onClick={() => setShowEmailPopup(false)}>Send</button>
+          <h3>Email Receipt</h3>
+          <p>Sending to: <strong>{form.email}</strong></p>
+          <button onClick={sendEmailReceipt}>Send Now</button>
+          <button onClick={() => {
+            console.log("Email popup closed without sending");
+            setShowEmailPopup(false);
+          }}>
+            Cancel
+          </button>
         </div>
       )}
     </div>
