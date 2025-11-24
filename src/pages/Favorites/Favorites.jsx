@@ -26,14 +26,12 @@ const Favorites = () => {
 
   // Remove product from favorites
   const handleRemoveFavorite = (id, name) => {
-    console.log("Removing favorite:", id, name); // <-- debug log
+    console.log("Removing favorite:", id, name);
+
+    // Remove from context
     removeFavorite(id);
 
-    // Log updated favorites after a short delay to ensure state updated
-    setTimeout(() => {
-      console.log("Updated favorites array:", favorites);
-    }, 100);
-
+    // Show toast
     setToastMessage(`${name} removed from favorites ❤️`);
   };
 
