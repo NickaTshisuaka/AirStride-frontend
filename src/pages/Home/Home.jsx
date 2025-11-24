@@ -5,10 +5,10 @@ export default function Home() {
   const videoRef = useRef(null);
 
   const videos = [
-    "/video1.mp4",
-    "/video2.mp4",
-    "/video3.mp4",
-    "/video4.mp4", // This one will be slowed down
+    "https://pinimg.com/originals/10/55/59/1055599907732025.mp4",
+    "https://pinimg.com/originals/32/37/03/3237030978158082.mp4",
+    "https://pinimg.com/originals/12/59/60/12596073952721763.mp4",
+    "https://pinimg.com/originals/56/30/18/563018698770748.mp4", // slower
   ];
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -20,14 +20,13 @@ export default function Home() {
 
     const handleTimeUpdate = () => {
       if (video.duration - video.currentTime < 1.5) {
-        setShowOverlay(true); // show “AirStride” overlay to hide brand logo
+        setShowOverlay(true);
       } else {
         setShowOverlay(false);
       }
     };
 
     const handleVideoEnd = () => {
-      // Switch to next video
       const next = (currentVideoIndex + 1) % videos.length;
       setCurrentVideoIndex(next);
 
@@ -53,16 +52,17 @@ export default function Home() {
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.src = videos[currentVideoIndex];
-      videoRef.current.play();
+      videoRef.current.play().catch(() => {
+        console.warn("Video autoplay prevented by browser. User interaction required.");
+      });
     }
   }, [currentVideoIndex]);
 
   return (
     <div className="home-page">
 
-      {/* VIDEO HERO SECTION */}
+      {/* HERO VIDEO SECTION */}
       <section className="hero-section">
-
         <video
           ref={videoRef}
           className="hero-video"
@@ -71,12 +71,10 @@ export default function Home() {
           playsInline
         />
 
-        {/* OVERLAY THAT HIDES BRAND LOGOS */}
         <div className={`brand-cover ${showOverlay ? "visible" : ""}`}>
           <h1>AirStride</h1>
         </div>
 
-        {/* HEADLINE TEXT */}
         <div className="hero-text">
           <h1 className="title">AirStride</h1>
           <p className="subtitle">Breathing technology built for runners.</p>
@@ -96,7 +94,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FEATURES SECTION */}
+      {/* FEATURES */}
       <section className="info-section">
         <h2 className="section-title">Why Athletes Choose AirStride</h2>
         <div className="info-grid">
