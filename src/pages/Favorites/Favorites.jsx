@@ -11,8 +11,10 @@ const Favorites = () => {
   const { addToCart, cart } = useCartContext();
   const [toastMessage, setToastMessage] = useState("");
 
+  // Check if a product is in the cart
   const isInCart = (id) => cart.some((item) => item.product_id === id);
 
+  // Add product to cart
   const handleAddToCart = (item) => {
     if (!isInCart(item.product_id)) {
       addToCart(item);
@@ -22,12 +24,13 @@ const Favorites = () => {
     }
   };
 
+  // Remove product from favorites
   const handleRemoveFavorite = (id, name) => {
     removeFavorite(id);
     setToastMessage(`${name} removed from favorites ❤️`);
   };
 
-  // Toast auto-hide
+  // Auto-hide toast
   useEffect(() => {
     if (!toastMessage) return;
     const timer = setTimeout(() => setToastMessage(""), 2000);
