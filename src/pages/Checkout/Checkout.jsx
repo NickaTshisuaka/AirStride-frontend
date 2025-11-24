@@ -478,7 +478,7 @@ const Checkout = () => {
   ];
 
   // dynamic progress percent
-  const progressPercent = ((step + 1) / steps.length) * 100;
+  const progressPercent = ((step + 1) / steps.length) * 25;
 
   return (
     <>
