@@ -1,47 +1,63 @@
-import React, { useState, useEffect } from "react";
+// src/pages/Checkout/Checkout.jsx
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import Confetti from "react-confetti";
+import InputMask from "react-input-mask";
 import { toast, ToastContainer } from "react-toastify";
 import emailjs from "@emailjs/browser";
-import {
-  FaUser, FaEnvelope, FaMapMarkerAlt, FaPhone,
-  FaCreditCard, FaCalendarAlt, FaLock, FaCopy
-} from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 import "./Checkout.css";
 
+/*
+  Key changes:
+  - Uses react-input-mask for phone/card/expiry/postal formatting (smooth UX).
+  - Payment flow triggered by explicit action `handlePay()` (no automatic useEffect on step).
+  - isPaymentProcessing ensures one-shot processing.
+  - loadWithExpiry returns robustly; empty cart handled gracefully.
+  - EmailJS validated before sending; errors surfaced to user.
+  - Receipt download revokes objectURL.
+  - Cross-tab sync via localStorage write + event listener.
+  - Dynamic progress calculation based on steps.length.
+*/
+
 const SHIPPING_COST = 85;
 const VAT_RATE = 0.15;
+const EXPIRY_TIME = 2 * 60 * 60 * 1000; // for cached orders/cart
 
-const provinces = [
-  "Eastern Cape", "Free State", "Gauteng", "KwaZulu-Natal",
-  "Limpopo", "Mpumalanga", "North West", "Northern Cape", "Western Cape"
-];
-
-const EXPIRY_TIME = 2 * 60 * 60 * 1000;
-
-const formatZAR = (amount) =>
+const formatZAR = (amount = 0) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(amount);
 
 const saveWithExpiry = (key, value) => {
-  const record = { value, timestamp: new Date().getTime() };
+  const record = { value, timestamp: Date.now() };
   localStorage.setItem(key, JSON.stringify(record));
 };
 
 const loadWithExpiry = (key) => {
-  const record = localStorage.getItem(key);
-  if (!record) return null;
+  const raw = localStorage.getItem(key);
+  if (!raw) return null;
   try {
-    const parsed = JSON.parse(record);
-    if (!parsed.timestamp) return parsed.value;
-    const now = new Date().getTime();
-    if (now - parsed.timestamp > EXPIRY_TIME) {
-      localStorage.removeItem(key);
-      return null;
+    const parsed = JSON.parse(raw);
+    // If object has timestamp (we set it), validate expiry
+    if (parsed && parsed.timestamp) {
+      if (Date.now() - parsed.timestamp > EXPIRY_TIME) {
+        localStorage.removeItem(key);
+        return null;
+      }
+      return parsed.value;
     }
-    return parsed.value;
-  } catch {
+    // Backwards compatibility: stored raw array/object without timestamp
+    return parsed;
+  } catch (err) {
+    // invalid JSON — remove and return null
+    console.warn("loadWithExpiry: invalid JSON for", key, err);
+    localStorage.removeItem(key);
     return null;
   }
+};
+
+// Helper to broadcast cart change across tabs
+const broadcastCartUpdated = () => {
+  // write a timestamp to localStorage so other tabs get `storage` event
+  localStorage.setItem("cartUpdated", Date.now().toString());
 };
 
 const Checkout = () => {
@@ -49,317 +65,494 @@ const Checkout = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showEmailPopup, setShowEmailPopup] = useState(false);
-  const [isPaymentProcessed, setIsPaymentProcessed] = useState(false);
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
 
-  const [orderId] = useState("AS-" + Math.random().toString(36).substring(2, 10).toUpperCase());
+  const [orderId] = useState(
+    "AS-" + Math.random().toString(36).substring(2, 10).toUpperCase()
+  );
+
   const [cart, setCart] = useState([]);
+  const mountedRef = useRef(true);
 
   const [form, setForm] = useState({
-    name: "", email: "", phone: "",
-    address: "", suburb: "", city: "", postalCode: "", province: "",
-    cardNumber: "", expiry: "", cvv: ""
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    suburb: "",
+    city: "",
+    postalCode: "",
+    province: "",
+    cardNumber: "",
+    expiry: "",
+    cvv: "",
   });
 
+  // load cart safely on mount
   useEffect(() => {
-    const savedCart = loadWithExpiry("cart");
-    if (!savedCart || savedCart.length === 0) {
-      toast.info("Your cart is empty.");
-      setCart([]);
+    mountedRef.current = true;
+    const saved = loadWithExpiry("cart");
+    if (!saved || !Array.isArray(saved) || saved.length === 0) {
+      setCart([]); // empty cart
+      toast.info("Your cart is empty. Add items before checking out.");
     } else {
-      setCart(savedCart);
+      // Defensive — ensure each item has quantity and price
+      const cleaned = saved.map((i) => ({
+        quantity: Math.max(1, Number(i.quantity) || 1),
+        price: Number(i.price) || 0,
+        name: i.name || "Item",
+        image: i.image || "",
+        product_id: i.product_id || i._id || null,
+        ...i,
+      }));
+      setCart(cleaned);
     }
+
+    // listen for cart updates from other tabs
+    const onStorage = (e) => {
+      if (e.key === "cartUpdated") {
+        const newest = loadWithExpiry("cart") || [];
+        setCart(
+          Array.isArray(newest)
+            ? newest.map((i) => ({ quantity: Math.max(1, Number(i.quantity) || 1), price: Number(i.price) || 0, name: i.name || "Item", ...i }))
+            : []
+        );
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => {
+      mountedRef.current = false;
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
-  const subtotal = cart.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
-  const vat = subtotal * VAT_RATE;
-  const total = subtotal + SHIPPING_COST + vat;
-  const totalItems = cart.reduce((sum, i) => sum + (i.quantity || 1), 0);
+  // safe memoized totals
+  const subtotal = useMemo(
+    () =>
+      cart.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.quantity) || 1), 0),
+    [cart]
+  );
+  const vat = useMemo(() => subtotal * VAT_RATE, [subtotal]);
+  const total = useMemo(() => subtotal + vat + SHIPPING_COST, [subtotal, vat]);
+  const totalItems = useMemo(
+    () => cart.reduce((s, i) => s + (Number(i.quantity) || 1), 0),
+    [cart]
+  );
 
-  const update = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
+  const update = (key, value) => setForm((p) => ({ ...p, [key]: value }));
 
-  const autoFormatPhone = (v) => v.replace(/\D/g, "").slice(0, 10).replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3");
-  const autoFormatPostal = (v) => v.replace(/\D/g, "").slice(0, 4);
-  const autoFormatCard = (v) => v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
-  const autoFormatExpiry = (v) => {
-    const s = v.replace(/\D/g, "").slice(0, 4);
-    if (s.length <= 2) return s;
-    return s.slice(0, 2) + "/" + s.slice(2);
-  };
-
+  // Provide simple validators
   const isShippingValid = () =>
-    form.name && form.email && form.phone && form.address && form.suburb &&
-    form.city && form.postalCode && form.province;
+    Boolean(
+      form.name?.trim() &&
+        form.email?.trim() &&
+        form.phone?.trim() &&
+        form.address?.trim() &&
+        form.city?.trim() &&
+        form.postalCode?.trim() &&
+        form.province?.trim()
+    );
 
-  const isPaymentValid = () =>
-    form.cardNumber.replace(/\s/g, "").length === 16 && form.expiry.length === 5 && form.cvv.length === 3;
+  const isPaymentValid = () => {
+    const rawCard = (form.cardNumber || "").replace(/\s/g, "");
+    const rawExpiry = (form.expiry || "").replace(/\s/g, "");
+    const rawCvv = (form.cvv || "").replace(/\D/g, "");
+    return rawCard.length === 16 && /^((0[1-9])|(1[0-2]))\/\d{2}$/.test(rawExpiry) && rawCvv.length === 3;
+  };
 
-  useEffect(() => {
-    if (step === 3 && !isPaymentProcessed) {
-      setIsPaymentProcessed(true);
-
-      const timer = setTimeout(() => {
-        setShowConfetti(true);
-        setShowSuccessModal(true);
-
-        const savedOrders = loadWithExpiry("orders") || [];
-        savedOrders.push({
-          id: orderId,
-          date: new Date().toLocaleString(),
-          total,
-          items: cart.map(i => ({
-            name: i.name,
-            price: i.price,
-            quantity: i.quantity,
-            img: i.image || ""
-          })),
-          address: { ...form }
-        });
-        saveWithExpiry("orders", savedOrders);
-
-        localStorage.removeItem("cart");
-        window.dispatchEvent(new Event("cartUpdated"));
-
-        setTimeout(() => setShowConfetti(false), 5000);
-        toast.success("Payment Successful! 🎉");
-      }, 1500);
-
-      return () => clearTimeout(timer);
+  // Payment flow triggered explicitly by user clicking Pay
+  const handlePay = async () => {
+    if (isPaymentProcessing) return; // guard double clicks
+    if (!cart || cart.length === 0) {
+      toast.error("Cart is empty.");
+      return;
     }
-  }, [step, isPaymentProcessed, cart, form, orderId, total]);
-
-  const copyOrderId = () => {
-    navigator.clipboard.writeText(orderId);
-    toast.info("Order ID copied!");
-  };
-
-  const downloadReceipt = () => {
-    const htmlReceipt = `
-      <html>
-        <head>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h2 { color: #333; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-            th { background-color: #f4f4f4; }
-            tfoot td { font-weight: bold; }
-          </style>
-        </head>
-        <body>
-          <h2>Order Receipt</h2>
-          <p><strong>Customer:</strong> ${form.name}</p>
-          <p><strong>Email:</strong> ${form.email}</p>
-          <p><strong>Order ID:</strong> ${orderId}</p>
-          <table>
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${cart.map(i => `
-                <tr>
-                  <td>${i.name}</td>
-                  <td>${i.quantity}</td>
-                  <td>${formatZAR(i.price)}</td>
-                  <td>${formatZAR(i.price * i.quantity)}</td>
-                </tr>`).join('')}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="3">Subtotal</td>
-                <td>${formatZAR(subtotal)}</td>
-              </tr>
-              <tr>
-                <td colspan="3">Shipping</td>
-                <td>${formatZAR(SHIPPING_COST)}</td>
-              </tr>
-              <tr>
-                <td colspan="3">VAT</td>
-                <td>${formatZAR(vat)}</td>
-              </tr>
-              <tr>
-                <td colspan="3">Total Paid</td>
-                <td>${formatZAR(total)}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </body>
-      </html>
-    `;
-
-    const blob = new Blob([htmlReceipt], { type: "text/html" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "receipt.html";
-    link.click();
-    URL.revokeObjectURL(link.href);
-    toast.success("Receipt downloaded!");
-  };
-
-  const sendEmailReceipt = () => {
-    if (!import.meta.env.VITE_EMAILJS_SERVICE_ID ||
-        !import.meta.env.VITE_EMAILJS_TEMPLATE_ID ||
-        !import.meta.env.VITE_EMAILJS_PUBLIC_KEY) {
-      toast.error("Email service is not properly configured.");
+    if (!isShippingValid()) {
+      toast.error("Please complete shipping information.");
+      setStep(0);
+      return;
+    }
+    if (!isPaymentValid()) {
+      toast.error("Please enter valid payment details.");
+      setStep(1);
       return;
     }
 
-    const templateParams = {
-      to_name: form.name,
-      to_email: form.email,
-      order_id: orderId,
-      total_paid: formatZAR(total),
-      items: cart.map(i => `${i.name} x${i.quantity}`).join(", ")
-    };
+    try {
+      setIsPaymentProcessing(true);
+      setStep(3); // show processing UI
 
-    emailjs.send(
-      import.meta.env.VITE_EMAILJS_SERVICE_ID,
-      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-      templateParams,
-      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-    )
-      .then(() => {
-        toast.success(`Receipt sent to ${form.email} ✅`);
-        setShowEmailPopup(true);
-      })
-      .catch((error) => {
-        toast.error(`Email failed: ${error.text || JSON.stringify(error)}`);
-      });
+      // Simulate payment delay — replace with real payment gateway call in production.
+      await new Promise((r) => setTimeout(r, 1200));
+
+      // ONE-TIME: save order only once
+      const savedOrders = loadWithExpiry("orders") || [];
+      const orderData = {
+        id: orderId,
+        date: new Date().toLocaleString(),
+        total,
+        items: cart.map((i) => ({
+          name: i.name,
+          price: Number(i.price) || 0,
+          quantity: Number(i.quantity) || 1,
+          img: i.image || "",
+          product_id: i.product_id || i._id || null,
+        })),
+        shipping: {
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          address: form.address,
+          suburb: form.suburb,
+          city: form.city,
+          postalCode: form.postalCode,
+          province: form.province,
+        },
+      };
+
+      savedOrders.push(orderData);
+      saveWithExpiry("orders", savedOrders);
+
+      // Clear cart once
+      localStorage.removeItem("cart");
+      broadcastCartUpdated(); // notify other tabs
+      setCart([]);
+
+      // show success UI
+      setShowConfetti(true);
+      setShowSuccessModal(true);
+      toast.success("Payment successful! 🎉");
+
+      // stop confetti after short while
+      setTimeout(() => setShowConfetti(false), 4500);
+    } catch (err) {
+      console.error("Payment error:", err);
+      toast.error("Payment failed — please try again.");
+    } finally {
+      // allow further operations (user may re-order) but do not re-run same processing
+      setIsPaymentProcessing(false);
+      setStep(0); // optionally reset or navigate away. We show modal anyway.
+    }
   };
 
+  // Receipt download (revokes object URL)
+  const downloadReceipt = () => {
+    const htmlReceipt = `
+      <html><head><meta charset="utf-8"><title>Receipt ${orderId}</title>
+      <style>body{font-family:Arial,sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px}</style>
+      </head><body>
+      <h2>Order Receipt</h2>
+      <p><strong>Order ID:</strong> ${orderId}</p>
+      <p><strong>Customer:</strong> ${form.name || ""} (${form.email || ""})</p>
+      <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>
+      ${cart
+        .map(
+          (i) =>
+            `<tr><td>${i.name}</td><td>${i.quantity}</td><td>${formatZAR(i.price)}</td><td>${formatZAR(
+              (Number(i.price) || 0) * (Number(i.quantity) || 1)
+            )}</td></tr>`
+        )
+        .join("")}
+      </tbody><tfoot>
+      <tr><td colspan="3">Subtotal</td><td>${formatZAR(subtotal)}</td></tr>
+      <tr><td colspan="3">Shipping</td><td>${formatZAR(SHIPPING_COST)}</td></tr>
+      <tr><td colspan="3">VAT</td><td>${formatZAR(vat)}</td></tr>
+      <tr><td colspan="3">Total</td><td>${formatZAR(total)}</td></tr>
+      </tfoot></table></body></html>
+    `;
+
+    const blob = new Blob([htmlReceipt], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `receipt-${orderId}.html`;
+    // Must be user-initiated: this function is called from a button click in modal
+    link.click();
+    // Release memory
+    URL.revokeObjectURL(url);
+    toast.success("Receipt downloaded");
+  };
+
+  const validateEmailjsConfig = () => {
+    return (
+      import.meta.env.VITE_EMAILJS_SERVICE_ID &&
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID &&
+      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+    );
+  };
+
+  const sendEmailReceipt = async () => {
+    if (!validateEmailjsConfig()) {
+      toast.error("Email service is not configured. Contact admin.");
+      return;
+    }
+    try {
+      const templateParams = {
+        to_name: form.name,
+        to_email: form.email,
+        order_id: orderId,
+        total_paid: formatZAR(total),
+        items: cart.map((i) => `${i.name} x${i.quantity}`).join(", "),
+      };
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        templateParams,
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      );
+      toast.success("Receipt sent via email ✅");
+      setShowEmailPopup(true);
+    } catch (err) {
+      console.error("EmailJS send error:", err);
+      toast.error("Failed to send email. Try again later.");
+    }
+  };
+
+  // Steps array (component-style)
   const steps = [
-    <div className="step-page" key="shipping">
-      <h2>Shipping Information</h2>
-      <label className="field"><FaUser /><input placeholder="Full Name" value={form.name} onChange={e => update("name", e.target.value)} /></label>
-      <label className="field"><FaEnvelope /><input placeholder="Email" value={form.email} onChange={e => update("email", e.target.value)} /></label>
-      <label className="field"><FaPhone /><input placeholder="Phone" value={form.phone} onChange={e => update("phone", autoFormatPhone(e.target.value))} /></label>
-      <label className="field"><FaMapMarkerAlt />
-        <select value={form.province} onChange={e => update("province", e.target.value)}>
-          <option value="">Select Province</option>
-          {provinces.map(p => <option key={p}>{p}</option>)}
-        </select>
-      </label>
-      <label className="field"><FaMapMarkerAlt /><input placeholder="Street Address" value={form.address} onChange={e => update("address", e.target.value)} /></label>
-      <div className="row-3">
-        <input placeholder="Suburb" value={form.suburb} onChange={e => update("suburb", e.target.value)} />
-        <input placeholder="City" value={form.city} onChange={e => update("city", e.target.value)} />
-        <input placeholder="Postal Code" value={form.postalCode} onChange={e => update("postalCode", autoFormatPostal(e.target.value))} />
-      </div>
-      <button className="btn primary" disabled={!isShippingValid()} onClick={() => setStep(1)}>Next</button>
-    </div>,
-    <div className="step-page" key="payment">
-      <h2>Payment Details</h2>
-      <div className="user-summary">
-        <p><strong>{form.name}</strong> – {form.email}</p>
-        <p>{form.address}, {form.city}, {form.postalCode}</p>
-      </div>
-      <label className="field futuristic-card"><FaCreditCard /><input placeholder="Card Number" value={form.cardNumber} onChange={e => update("cardNumber", autoFormatCard(e.target.value))} /></label>
-      <div className="row-2">
-        <label className="field"><FaCalendarAlt /><input placeholder="MM/YY" value={form.expiry} onChange={e => update("expiry", autoFormatExpiry(e.target.value))} /></label>
-        <label className="field"><FaLock /><input placeholder="CVV" value={form.cvv} onChange={e => update("cvv", e.target.value.replace(/\D/g, "").slice(0, 3))} /></label>
-      </div>
-      <div className="step-buttons">
-        <button className="btn ghost" onClick={() => setStep(0)}>Back</button>
-        <button className="btn primary" disabled={!isPaymentValid()} onClick={() => setStep(2)}>Next</button>
-      </div>
-    </div>,
-    <div className="step-page" key="review">
-      <h2>Review & Confirm</h2>
-      <p><strong>{form.name}</strong> – {form.phone}</p>
-      <p>{form.address}, {form.suburb}, {form.city}, {form.postalCode}</p>
-      <p>{form.province}</p>
-      <ul className="review-list">
-        {cart.map((i, x) => (
-          <li key={x}>
-            <span>{i.name} × {i.quantity}</span>
-            <span>{formatZAR(i.price * i.quantity)}</span>
-          </li>
-        ))}
-      </ul>
-      <div className="totals">
-        <p><span>Subtotal</span><span>{formatZAR(subtotal)}</span></p>
-        <p><span>Shipping</span><span>{formatZAR(SHIPPING_COST)}</span></p>
-        <p><span>VAT</span><span>{formatZAR(vat)}</span></p>
-        <p className="total"><strong>Total</strong><strong>{formatZAR(total)}</strong></p>
-      </div>
-      <div className="step-buttons">
-        <button className="btn ghost" onClick={() => setStep(1)}>Back</button>
-        <button className="btn primary" onClick={() => setStep(3)}>Pay {formatZAR(total)}</button>
-      </div>
-    </div>,
-    <div className="step-page center" key="processing">
-      <div className="spinner"></div>
-      <p>Processing your payment...</p>
-    </div>
+    {
+      key: "shipping",
+      title: "Shipping",
+      content: (
+        <div className="step-content">
+          <h2>Shipping Information</h2>
+          <label>
+            Full name
+            <input value={form.name} onChange={(e) => update("name", e.target.value)} />
+          </label>
+
+          <label>
+            Email
+            <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} />
+          </label>
+
+          <label>
+            Phone
+            <InputMask
+              mask="999 999 9999"
+              value={form.phone}
+              onChange={(e) => update("phone", e.target.value)}
+              placeholder="081 234 5678"
+            />
+          </label>
+
+          <label>
+            Province
+            <select value={form.province} onChange={(e) => update("province", e.target.value)}>
+              <option value="">Select Province</option>
+              <option>Eastern Cape</option>
+              <option>Free State</option>
+              <option>Gauteng</option>
+              <option>KwaZulu-Natal</option>
+              <option>Limpopo</option>
+              <option>Mpumalanga</option>
+              <option>North West</option>
+              <option>Northern Cape</option>
+              <option>Western Cape</option>
+            </select>
+          </label>
+
+          <label>
+            Street address
+            <input value={form.address} onChange={(e) => update("address", e.target.value)} />
+          </label>
+
+          <div className="row-3">
+            <input placeholder="Suburb" value={form.suburb} onChange={(e) => update("suburb", e.target.value)} />
+            <input placeholder="City" value={form.city} onChange={(e) => update("city", e.target.value)} />
+            <InputMask
+              mask="9999"
+              placeholder="Postal"
+              value={form.postalCode}
+              onChange={(e) => update("postalCode", e.target.value)}
+            />
+          </div>
+
+          <div className="row-actions">
+            <button className="btn ghost" onClick={() => setStep((s) => Math.max(0, s - 1))}>
+              Cancel
+            </button>
+            <button className="btn primary" disabled={!isShippingValid()} onClick={() => setStep(1)}>
+              Next
+            </button>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "payment",
+      title: "Payment",
+      content: (
+        <div className="step-content">
+          <h2>Payment Details</h2>
+
+          <label>
+            Card number
+            <InputMask
+              mask="9999 9999 9999 9999"
+              value={form.cardNumber}
+              onChange={(e) => update("cardNumber", e.target.value)}
+              placeholder="1234 5678 9012 3456"
+            />
+          </label>
+
+          <div className="row-2">
+            <label>
+              Expiry
+              <InputMask
+                mask="99/99"
+                placeholder="MM/YY"
+                value={form.expiry}
+                onChange={(e) => update("expiry", e.target.value)}
+              />
+            </label>
+
+            <label>
+              CVV
+              <InputMask
+                mask="999"
+                placeholder="CVV"
+                value={form.cvv}
+                onChange={(e) => update("cvv", e.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="row-actions">
+            <button className="btn ghost" onClick={() => setStep(0)}>
+              Back
+            </button>
+            <button className="btn primary" disabled={!isPaymentValid()} onClick={() => setStep(2)}>
+              Review
+            </button>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "review",
+      title: "Review",
+      content: (
+        <div className="step-content">
+          <h2>Review & Confirm</h2>
+          <div className="review-list">
+            {cart.length === 0 ? <p>Your cart is empty.</p> : null}
+            {cart.map((i, idx) => (
+              <div key={idx} className="review-row">
+                <span>{i.name} × {Number(i.quantity) || 1}</span>
+                <span>{formatZAR((Number(i.price) || 0) * (Number(i.quantity) || 1))}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="totals">
+            <div><span>Subtotal</span><span>{formatZAR(subtotal)}</span></div>
+            <div><span>Shipping</span><span>{formatZAR(SHIPPING_COST)}</span></div>
+            <div><span>VAT</span><span>{formatZAR(vat)}</span></div>
+            <div className="total"><strong>Total</strong><strong>{formatZAR(total)}</strong></div>
+          </div>
+
+          <div className="row-actions">
+            <button className="btn ghost" onClick={() => setStep(1)}>Back</button>
+            <button
+              className="btn primary"
+              onClick={handlePay}
+              disabled={isPaymentProcessing || cart.length === 0}
+            >
+              {isPaymentProcessing ? "Processing..." : `Pay ${formatZAR(total)}`}
+            </button>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "processing",
+      title: "Processing",
+      content: (
+        <div className="step-content center">
+          <div className="spinner" />
+          <p>Processing your payment...</p>
+        </div>
+      ),
+    },
   ];
+
+  // dynamic progress percent
+  const progressPercent = ((step + 1) / steps.length) * 100;
 
   return (
     <>
       <ToastContainer position="top-center" autoClose={3000} />
       {showConfetti && <Confetti recycle={false} numberOfPieces={250} />}
+
       {showSuccessModal && (
         <div className="success-modal">
           <div className="success-box">
-            <div className="checkmark">
-              <div className="checkmark-circle" />
-              <div className="checkmark-stem" />
-              <div className="checkmark-kick" />
-            </div>
             <h2>Order Successful 🎉</h2>
-            <p>Thank you, <strong>{form.name}</strong>! Your payment has been processed.</p>
-            <div className="order-id-box">
-              <span>Order ID:</span>
-              <strong>{orderId}</strong>
-              <FaCopy className="copy-icon" onClick={copyOrderId} />
-            </div>
+            <p>Thanks {form.name || "Customer"}! Your order {orderId} is confirmed.</p>
             <div className="summary-mini">
-              <p><span>Total Paid:</span> {formatZAR(total)}</p>
-              <p><span>Items:</span> {totalItems}</p>
+              <p>Total Paid: {formatZAR(total)}</p>
+              <p>Items: {totalItems}</p>
             </div>
             <div className="modal-buttons">
               <button className="btn primary" onClick={downloadReceipt}>Download Receipt</button>
-              <button className="btn orange" onClick={sendEmailReceipt}>Receive Receipt via Email</button>
-              <button className="btn ghost" onClick={() => window.location.href = "/PastPurchases"}>View Past Orders</button>
+              <button className="btn orange" onClick={sendEmailReceipt}>Send Receipt via Email</button>
+              <button className="btn ghost" onClick={() => { setShowSuccessModal(false); }}>Close</button>
             </div>
           </div>
         </div>
       )}
+
       {showEmailPopup && (
         <div className="email-popup">
           <div className="popup-box">
-            <p>Receipt successfully sent to <strong>{form.email}</strong>!</p>
+            <p>Receipt sent to {form.email}</p>
             <button className="btn primary" onClick={() => setShowEmailPopup(false)}>OK</button>
           </div>
         </div>
       )}
+
       <div className="checkout-root">
         <div className="progress-wrap">
-          <div className="progress" style={{ width: `${((step + 1) / steps.length) * 100}%` }} />
+          <div className="progress" style={{ width: `${progressPercent}%` }} />
         </div>
-        <div className="checkout-container">
-          <div className="checkout-left">
-            <div className="steps-wrapper" style={{ transform: `translateX(-${(step / steps.length) * 100}%)` }}>
-              {steps}
-            </div>
-          </div>
-          <aside className="checkout-summary">
-            <div className="summary-card">
-              <h3>Order Summary</h3>
-              {cart.map((item, i) => (
-                <div key={i} className="summary-item">
-                  <span>{item.name} × {item.quantity}</span>
-                  <span>{formatZAR(item.price * item.quantity)}</span>
+
+        <div className="checkout-grid">
+          <div className="left-panel">
+            {/* slide wrapper: translateX based on step (calculated as percentage) */}
+            <div
+              className="steps-wrapper"
+              style={{
+                width: `${steps.length * 100}%`,
+                transform: `translateX(-${(step / steps.length) * 100}%)`,
+                transition: "transform 350ms ease",
+                display: "flex",
+              }}
+            >
+              {steps.map((s) => (
+                <div key={s.key} style={{ width: `${100 / steps.length}%`, padding: 20 }}>
+                  {s.content}
                 </div>
               ))}
-              <hr />
-              <p><span>Subtotal</span><span>{formatZAR(subtotal)}</span></p>
-              <p><span>Shipping</span><span>{formatZAR(SHIPPING_COST)}</span></p>
-              <p><span>VAT</span><span>{formatZAR(vat)}</span></p>
-              <p className="total"><strong>Total</strong><strong>{formatZAR(total)}</strong></p>
+            </div>
+          </div>
+
+          <aside className="right-panel">
+            <div className="summary-card">
+              <h3>Order Summary</h3>
+              {cart.length === 0 ? <p>No items</p> : cart.map((item, i) => (
+                <div className="summary-item" key={i}>
+                  <span>{item.name} × {Number(item.quantity) || 1}</span>
+                  <span>{formatZAR((Number(item.price) || 0) * (Number(item.quantity) || 1))}</span>
+                </div>
+              ))}
+              <hr/>
+              <div className="totals-compact">
+                <div><span>Subtotal</span><span>{formatZAR(subtotal)}</span></div>
+                <div><span>Shipping</span><span>{formatZAR(SHIPPING_COST)}</span></div>
+                <div><span>VAT</span><span>{formatZAR(vat)}</span></div>
+                <div className="total"><strong>Total</strong><strong>{formatZAR(total)}</strong></div>
+              </div>
             </div>
           </aside>
         </div>
