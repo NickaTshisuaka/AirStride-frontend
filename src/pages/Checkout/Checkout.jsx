@@ -20,7 +20,6 @@ const provinces = [
 const formatZAR = (amount) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(amount);
 
-// Expiry utility functions
 const EXPIRY_TIME = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
 
 const saveWithExpiry = (key, value) => {
@@ -37,7 +36,7 @@ const loadWithExpiry = (key) => {
 
   try {
     const parsed = JSON.parse(record);
-    if (!parsed.timestamp) return parsed.value; // fallback if no timestamp
+    if (!parsed.timestamp) return parsed.value;
 
     const now = new Date().getTime();
     if (now - parsed.timestamp > EXPIRY_TIME) {
@@ -67,6 +66,7 @@ const Checkout = () => {
   const subtotal = cart.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
   const vat = subtotal * VAT_RATE;
   const total = subtotal + SHIPPING_COST + vat;
+  const totalItems = cart.reduce((sum, i) => sum + (i.quantity || 1), 0);
 
   const [form, setForm] = useState({
     name: "", email: "", phone: "",
@@ -136,7 +136,7 @@ const Checkout = () => {
 
   // Download receipt
   const downloadReceipt = () => {
-    const receipt = `Order Receipt\n\nCustomer: ${form.name}\nEmail: ${form.email}\nOrder ID: ${orderId}\nTotal: ${formatZAR(total)}`;
+    const receipt = `Order Receipt\n\nCustomer: ${form.name}\nEmail: ${form.email}\nOrder ID: ${orderId}\nTotal: ${formatZAR(total)}\nItems:\n${cart.map(i => `${i.name} x${i.quantity}`).join("\n")}`;
     const blob = new Blob([receipt], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -205,7 +205,6 @@ const Checkout = () => {
     <div className="step-page" key="payment">
       <h2>Payment Details</h2>
 
-      {/* Display user info from previous step */}
       <div className="user-summary">
         <p><strong>{form.name}</strong> – {form.email}</p>
         <p>{form.address}, {form.city}, {form.postalCode}</p>
@@ -280,7 +279,7 @@ const Checkout = () => {
 
             <div className="summary-mini">
               <p><span>Total Paid:</span> {formatZAR(total)}</p>
-              <p><span>Items:</span> {cart.length}</p>
+              <p><span>Items:</span> {totalItems}</p>
             </div>
 
             <div className="modal-buttons">
