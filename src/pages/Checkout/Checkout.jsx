@@ -2,7 +2,6 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import Confetti from "react-confetti";
 import { toast, ToastContainer } from "react-toastify";
-import emailjs from "@emailjs/browser";
 import "react-toastify/dist/ReactToastify.css";
 import "./Checkout.css";
 
@@ -50,6 +49,28 @@ const loadWithExpiry = (key) => {
 const broadcastCartUpdated = () => {
   localStorage.setItem("cartUpdated", Date.now().toString());
 };
+
+// ---------------------------------------------
+// INPUT MASKING HELPERS
+// ---------------------------------------------
+const formatCardNumber = (value) =>
+  value
+    .replace(/\D/g, "")
+    .replace(/(.{4})/g, "$1 ")
+    .trim();
+
+const formatExpiry = (value) =>
+  value
+    .replace(/\D/g, "")
+    .replace(/^([2-9])$/, "0$1") // prepend 0 if first digit is 2-9
+    .replace(/^([01][0-9]{1})([0-9]{0,2})$/, "$1/$2")
+    .slice(0, 5);
+
+const formatPhone = (value) =>
+  value
+    .replace(/\D/g, "")
+    .replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3")
+    .slice(0, 11);
 
 // ---------------------------------------------
 // COMPONENT
@@ -150,54 +171,65 @@ const Checkout = () => {
   );
 
   // ---------------------------------------------
-  // SIMPLE INPUT HANDLER
+  // SIMPLE INPUT HANDLER WITH MASKING
   // ---------------------------------------------
-  const update = (key, value) =>
+  const update = (key, value) => {
+    if (key === "cardNumber") value = formatCardNumber(value);
+    if (key === "expiry") value = formatExpiry(value);
+    if (key === "phone") value = formatPhone(value);
     setForm((prev) => ({ ...prev, [key]: value }));
-
-  // ---------------------------------------------
-  // VALIDATION
-  // ---------------------------------------------
-  const isShippingValid = () =>
-    form.name.trim() &&
-    form.email.trim() &&
-    form.phone.trim() &&
-    form.address.trim() &&
-    form.city.trim() &&
-    form.postalCode.trim() &&
-    form.province.trim();
-
-  const isPaymentValid = () => {
-    const card = form.cardNumber.replace(/\D/g, "");
-    const cvv = form.cvv.replace(/\D/g, "");
-    const expiry = form.expiry.trim();
-
-    return (
-      card.length === 16 &&
-      cvv.length === 3 &&
-      /^((0[1-9])|(1[0-2]))\/\d{2}$/.test(expiry)
-    );
   };
 
   // ---------------------------------------------
-  // PROCESS PAYMENT
+  // VALIDATION WITH DETAILED ERRORS
+  // ---------------------------------------------
+  const validateShipping = () => {
+    const errors = [];
+    if (!form.name.trim()) errors.push("Full Name is required");
+    if (!form.email.trim()) errors.push("Email is required");
+    if (!form.phone.trim()) errors.push("Phone Number is required");
+    if (!form.address.trim()) errors.push("Address is required");
+    if (!form.city.trim()) errors.push("City is required");
+    if (!form.postalCode.trim()) errors.push("Postal Code is required");
+    if (!form.province.trim()) errors.push("Province is required");
+    return errors;
+  };
+
+  const validatePayment = () => {
+    const errors = [];
+    const card = form.cardNumber.replace(/\s/g, "");
+    const cvv = form.cvv.replace(/\D/g, "");
+    const expiry = form.expiry.trim();
+
+    if (card.length !== 16) errors.push("Card Number must be 16 digits");
+    if (!/^((0[1-9])|(1[0-2]))\/\d{2}$/.test(expiry))
+      errors.push("Expiry must be in MM/YY format");
+    if (cvv.length !== 3) errors.push("CVV must be 3 digits");
+    return errors;
+  };
+
+  // ---------------------------------------------
+  // PROCESS PAYMENT WITH ERROR TOASTS
   // ---------------------------------------------
   const handlePay = async () => {
     if (isPaymentProcessing) return;
-
     if (!cart.length) {
       toast.error("Cart is empty.");
       return;
     }
 
-    if (!isShippingValid()) {
-      toast.error("Please complete shipping information.");
+    // Validate shipping
+    const shippingErrors = validateShipping();
+    if (shippingErrors.length) {
+      shippingErrors.forEach((err) => toast.error(err));
       setStep(0);
       return;
     }
 
-    if (!isPaymentValid()) {
-      toast.error("Enter valid payment details.");
+    // Validate payment
+    const paymentErrors = validatePayment();
+    if (paymentErrors.length) {
+      paymentErrors.forEach((err) => toast.error(err));
       setStep(1);
       return;
     }
@@ -294,12 +326,9 @@ const Checkout = () => {
   return (
     <div className="checkout-container">
       {showConfetti && <Confetti />}
-
       <ToastContainer />
-
       <h1>Checkout</h1>
 
-      {/* ------------------ STEP TABS ------------------ */}
       <div className="steps">
         <button className={step === 0 ? "active" : ""} onClick={() => setStep(0)}>
           Shipping
@@ -312,9 +341,7 @@ const Checkout = () => {
         </button>
       </div>
 
-      {/* ------------------ STEP CONTENT ------------------ */}
       <div className="step-content">
-        {/* SHIPPING STEP */}
         {step === 0 && (
           <div className="form-section">
             <input placeholder="Full Name" value={form.name} onChange={(e) => update("name", e.target.value)} />
@@ -330,7 +357,6 @@ const Checkout = () => {
           </div>
         )}
 
-        {/* PAYMENT STEP */}
         {step === 1 && (
           <div className="form-section">
             <input
@@ -356,7 +382,6 @@ const Checkout = () => {
           </div>
         )}
 
-        {/* REVIEW STEP */}
         {step === 2 && (
           <div className="review-section">
             <h2>Order Summary</h2>
@@ -373,18 +398,15 @@ const Checkout = () => {
         )}
       </div>
 
-      {/* ------------------ SUCCESS MODAL ------------------ */}
       {showSuccessModal && (
         <div className="success-modal">
           <h2>🎉 Payment Successful!</h2>
           <p>Your order ID is <strong>{orderId}</strong></p>
-
           <button onClick={downloadReceipt}>Download Receipt</button>
           <button onClick={() => setShowEmailPopup(true)}>Email Receipt</button>
         </div>
       )}
 
-      {/* ------------------ EMAIL POPUP ------------------ */}
       {showEmailPopup && (
         <div className="email-popup">
           <h3>Enter your email</h3>
