@@ -16,7 +16,7 @@ export default function AboutPage() {
       {/* HERO */}
       <header className="hero">
         <video className="hero-video" autoPlay muted loop playsInline>
-          <source src="/videos/video1.mp4" type="video/mp4" />
+          <source src="/videos/vid3.mp4" type="video/mp4" />
         </video>
         <div className="hero-overlay" />
         <motion.div {...fadeUp} className="hero-inner" viewport={{ once: true }}>
