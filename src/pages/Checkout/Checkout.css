@@ -1,436 +1,188 @@
-/* ---------- ROOT ---------- */
-.checkout-root {
-  width: 100%;
-  min-height: 65vh;
-  background: linear-gradient(135deg, #dfeffed5, #cee5fcdb);
-  padding: 2rem;
-}
+/* src/pages/Checkout/Checkout.css */
 
-/* ---------- CONTAINER ---------- */
 .checkout-container {
-  display: flex;
-  gap: 2rem;
-  max-width: 1500px;
-  margin: auto;
-  max-height: 420vh;
-}
-
-/* ---------- PROGRESS BAR ---------- */
-.progress-wrap {
-  width: 100%;
-  height: 6px;
-  background: #ffffff50;
-  border-radius: 6px;
-  margin-bottom: 1.5rem;
-  overflow: hidden;
-}
-
-.progress {
-  height: 100%;
-  background: #ff8b2c;
-  border-radius: 6px;
-  transition: width 0.99s ease;
-}
-
-/* ---------- LEFT PANEL ---------- */
-.checkout-left {
-  flex: 2;
-  width: 100%;
-  position: relative;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 0.5rem;
-  height: 78.5vh;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  overflow: hidden;
-}
-
-.steps-wrapper {
-  display: flex;
-  width: 70%; /* auto-adjusts */
-  transition: transform 3.9s ease; /* smooth slide */
-}
-
-/* ---------- STEP PAGE ---------- */
-.step-page {
-  width: 40%;
-  flex: 0 0 25.2%;
-  padding-right: 0.3rem;
-  box-sizing: border-box;
-}
-
-.step-page.center {
-  display: flex;
-  flex-direction: column;
-  /* align-items: center; */
-  /* justify-content: center; */
-}
-
-.step-buttons {
-  display: flex;
-  justify-content: space-between; 
-   margin-top: 1rem;
-}
-
-/* ---------- FIELDS ---------- */
-.field {
-  display: flex;
-  align-items: center;
-  gap: 0.1rem;
-  background: #f4f8ff;
-  padding: 0.4rem 0.2rem;
-  margin-bottom: 1rem;
-  border-radius: 10px;
-  border: 2px solid transparent;
-  transition: 0.2s;
-}
-
-.field:focus-within {
-  border-color: #ff8b2c;
-  background: #ffffff;
-}
-
-.field input,
-.field select {
-  border: none;
-  background: transparent;
-  width: 100%;
-  outline: none;
-  font-size: 1rem;
-}
-
-/* ROWS */
-.row-3,
-.row-2 {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.row-3 input,
-.row-2 input {
-  flex: 1;
-  padding: 0.9rem;
-  background: #f4f8ff;
-  border: 2px solid transparent;
-  border-radius: 10px;
-  outline: none;
-  transition: 0.2s;
-}
-
-.row-3 input:focus,
-.row-2 input:focus {
-  border-color: #ff8b2c;
-  background: #ffffff;
-}
-
-/* ---------- BUTTONS ---------- */
-.btn {
-  padding: 0.9rem 1.4rem;
-  border-radius: 10px;
-  border: none;
-  font-size: 1rem;
-  width: 95%;
-  cursor: pointer;
-  transition: 0.25s;
-}
-
-.btn.primary {
-  background: #007acc;
-  color: white;
-}
-
-.btn.primary:hover {
-  background: #fe8800;
-    transition: 0.55s;
-
-}
-
-.btn.ghost {
-  background: transparent;
-  border: 2px solid #007acc;
-  color: #007acc;
-}
-
-.btn.ghost:hover {
-  background: #e7f2ff;
-}
-
-/* ---------- RIGHT SUMMARY PANEL ---------- */
-.checkout-summary {
-  flex: 1;
-  position: sticky;
-  top: 2rem;
-}
-
-.summary-card {
-  background: white;
-  border-radius: 16px;
+  max-width: 900px;
+  margin: 2rem auto;
   padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  background: linear-gradient(145deg, #e6f0ff, #ffffff);
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  font-family: 'Arial', sans-serif;
 }
 
-.summary-item {
+h1 {
+  text-align: center;
+  color: #ff6b35;
+  margin-bottom: 2rem;
+}
+
+.steps {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.6rem;
+  margin-bottom: 2rem;
 }
 
-.summary-card hr {
-  margin: 1rem 0;
+.steps button {
+  flex: 1;
+  padding: 0.8rem 1rem;
+  border: none;
+  border-radius: 50px;
+  margin: 0 0.3rem;
+  background: #ffffff;
+  color: #333;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.total {
+.steps button.active {
+  background: #ff6b35;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(255, 107, 53, 0.4);
+}
+
+.step-content {
+  margin-bottom: 2rem;
+}
+
+.form-section input {
+  width: 100%;
+  padding: 0.8rem;
+  margin: 0.5rem 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-section input:focus {
+  border-color: #ff6b35;
+  box-shadow: 0 0 5px rgba(255, 107, 53, 0.4);
+}
+
+.form-section button {
+  display: inline-block;
+  padding: 0.8rem 1.5rem;
   margin-top: 1rem;
-  font-size: 1.1rem;
+  border: none;
+  border-radius: 50px;
+  background: #ff6b35;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-/* ---------- SPINNER ---------- */
-.spinner {
-  width: 55px;
-  height: 55px;
-  border-radius: 50%;
-  border: 5px solid #b0d9ff;
-  border-top-color: #ff8b2c;
-  animation: spin 0.9s linear infinite;
+.form-section button:hover {
+  background: #e65c2b;
+}
+
+.review-section {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.review-section h2 {
+  color: #ff6b35;
   margin-bottom: 1rem;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.steps-wrapper {
-  display: flex;
-  width: 400%; /* 4 steps */
-  transition: transform 0.6s ease; /* 👈 THIS makes slides move slowly + only one step */
-}
-
-.checkout-left {
-  overflow: hidden; /* 👈 prevents instant jump look */
+.pay-btn {
+  background: #ff6b35;
+  color: #fff;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-top: 1rem;
   width: 100%;
-  position: relative;
+  transition: all 0.3s ease;
 }
 
-/* SLIDE ANIMATION */
-.steps-wrapper {
-  display: flex;
-  width: 400%;
-  transition: transform 0.6s ease;
+.pay-btn:hover {
+  background: #e65c2b;
 }
 
-.checkout-left {
-  overflow: hidden;
-}
-
-/* SUCCESS MODAL */
 .success-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.success-box {
-  background: white;
-  padding: 25px;
-  width: 90%;
-  max-width: 400px;
-  border-radius: 15px;
-  text-align: center;
-  animation: pop 0.3s ease;
-}
-
-@keyframes pop {
-  0% { transform: scale(0.7); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.modal-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-/* COLORS */
-.btn.orange {
-  background: #ff8c00;
-  color: white;
-}
-.btn.orange:hover {
-  background: #007acc;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid #ddd;
-  border-top-color: #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  100% { transform: rotate(360deg); }
-}
-
-/* ===========================
-   SUCCESS POPUP + OVERLAY
-=========================== */
-
-/* Dimmed background when popup is open */
-.success-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(4px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 900;
-  opacity: 0;
-  animation: fadeIn 0.25s forwards;
-}
-
-/* Popup container */
-.success-popup {
-  width: 90%;
-  max-width: 420px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: #ffffff;
+  padding: 2rem 3rem;
   border-radius: 20px;
-  padding: 30px 25px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
   text-align: center;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
-  z-index: 999;
-  transform: scale(0.7);
-  animation: popupScale 0.3s forwards;
-  position: relative;
 }
 
-/* Confetti sits above everything */
-#confetti-canvas {
-  position: fixed !important;
-  inset: 0;
-  z-index: 1000;
-  pointer-events: none;
+.success-modal h2 {
+  color: #ff6b35;
+  margin-bottom: 1rem;
 }
 
-/* Success Icon Circle */
-.success-icon {
-  width: 75px;
-  height: 75px;
-  background: #4caf50;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 40px;
-  margin: 0 auto 15px;
-  animation: bounce 0.5s ease-out;
-}
-
-/* Popup Title */
-.success-popup h2 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #0b3855;
-  margin-bottom: 10px;
-}
-
-/* Popup Text */
-.success-popup p {
-  color: #444;
-  font-size: 1rem;
-  margin-bottom: 20px;
-  line-height: 1.4;
-}
-
-/* Action Buttons */
-.success-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.success-btn {
-  flex: 1;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
+.success-modal button {
+  margin: 0.5rem;
+  padding: 0.8rem 1.5rem;
   border: none;
-  transition: 0.25s;
-}
-
-.success-btn.download {
-  background: #007acc;
-  color: white;
-}
-
-.success-btn.download:hover {
-  background: #005a99;
-}
-
-.success-btn.email {
-  background: #f58220;
-  color: white;
-}
-
-.success-btn.email:hover {
-  background: #d66c15;
-}
-
-/* Close Button (small x icon) */
-.close-success {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  font-size: 20px;
+  border-radius: 50px;
+  background: #ff6b35;
+  color: #fff;
+  font-weight: bold;
   cursor: pointer;
-  color: #444;
-  transition: 0.3s;
+  transition: all 0.3s ease;
 }
 
-.close-success:hover {
-  color: #000;
+.success-modal button:hover {
+  background: #e65c2b;
 }
 
-/* ===========================
-   ANIMATIONS
-=========================== */
-
-@keyframes fadeIn {
-  to {
-    opacity: 1;
-  }
+.email-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  width: 320px;
+  text-align: center;
 }
 
-@keyframes popupScale {
-  to {
-    transform: scale(1);
-  }
+.email-popup h3 {
+  color: #ff6b35;
+  margin-bottom: 1rem;
 }
 
-@keyframes bounce {
-  0% {
-    transform: scale(0.4);
-  }
-  60% {
-    transform: scale(1.20);
-  }
-  100% {
-    transform: scale(1);
-  }
+.email-popup input {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.email-popup button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 50px;
+  border: none;
+  background: #ff6b35;
+  color: #fff;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.email-popup button:hover {
+  background: #e65c2b;
+}
+
+/* Confetti z-index fix */
+canvas {
+  z-index: 10000 !important;
 }
