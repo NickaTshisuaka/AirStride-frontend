@@ -44,14 +44,16 @@ const Products = () => {
       try {
         const headers = idToken ? { Authorization: `Bearer ${idToken}` } : {};
 const res = await axios.get(`${BASE_API_URL}/products`, { headers });
-        const prods = res.data.products || [];
+        const prods = Array.isArray(res.data) ? res.data : res.data.products || [];
+
 
         // Map products for frontend use
         const mappedProds = prods.map((p) => ({
-          ...p,
-          product_id: p._id,
-          inventory_count: p.stock ?? 0,
-        }));
+  ...p,
+  product_id: p._id.toString(),  // ALWAYS use Mongo _id
+  inventory_count: p.inventory_count ?? 0,
+}));
+
 
         setProducts(mappedProds);
         setFilteredProducts(mappedProds);
