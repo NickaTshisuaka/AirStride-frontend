@@ -240,21 +240,27 @@ const Checkout = () => {
   // ---------------------------------------------
 // EMAIL RECEIPT
 // ---------------------------------------------
+// ---------------------------------------------
+// EMAIL RECEIPT
+// ---------------------------------------------
 const sendEmailReceipt = () => {
-  // Check if email is filled and valid
+  // Validate that the user entered a proper email
   if (!form.email || !/\S+@\S+\.\S+/.test(form.email)) {
     toast.error("Please enter a valid email address to receive the receipt.");
     return;
   }
 
+  // Prepare template parameters matching your EmailJS template
   const templateParams = {
-    to_name: form.name,
-    to_email: form.email,
+    to_name: form.name || "Customer",
+    email: form.email,          // Must match {{email}} in your EmailJS template
     order_id: orderId,
     total_paid: formatZAR(total),
     items: cart.map((i) => `${i.name} x${i.quantity}`).join(", "),
+    date: new Date().toLocaleString(),
   };
 
+  // Send email
   emailjs
     .send(
       import.meta.env.VITE_EMAILJS_SERVICE_ID,
@@ -269,9 +275,12 @@ const sendEmailReceipt = () => {
     })
     .catch((error) => {
       console.error("EmailJS error:", error);
-      toast.error(`Email failed: ${error.text || JSON.stringify(error)}`);
+      toast.error(
+        `Email failed: ${error.text || "Please check the email address and template variable"}`
+      );
     });
 };
+
 
   // ---------------------------------------------
   // DOWNLOAD RECEIPT
