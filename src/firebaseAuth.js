@@ -15,3 +15,6 @@ export const signInWithGoogle = async () => {
     throw error;
   }
 };
+
+// Add this line to export auth
+export { auth };
