@@ -144,7 +144,7 @@ export default function Home() {
           className="cta-bottom"
           onClick={() => navigate("/about")}
         >
-          Shop the Collection
+          About Us
         </button>
       </section>
     </div>
