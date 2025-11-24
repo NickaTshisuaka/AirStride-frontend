@@ -8,10 +8,10 @@ export default function Home() {
 
   // Local video files (will exist tomorrow)
   const videos = [
-    "/videos/video1.mp4",
-    "/videos/video2.mp4",
-    "/videos/video3.mp4",
-    "/videos/video4.mp4", // slower
+    "/videos/vid1.mp4",
+    "/videos/vid2.mp4",
+    "/videos/vid3.mp4",
+    "/videos/vid4.mp4", // slower
   ];
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);

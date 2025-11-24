@@ -26,7 +26,7 @@ export default function AboutPage() {
         </motion.div>
       </header>
 
-      {/* STORY */}
+      {/* All sections now scroll over the video */}
       <section className="story-section">
         <motion.div className="story-media" {...fadeIn} viewport={{ once: true }}>
           <img src="https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?auto=format&fit=crop&w=950&q=80" alt="Runner breathing during a run" />
@@ -47,18 +47,6 @@ export default function AboutPage() {
           <button className="cta-btn" onClick={() => navigate("/products")}>Explore Products</button>
         </motion.article>
       </section>
-
-      {/* MISSION + VISION */}
-      {/* <section className="mission-vision">
-        <motion.div className="card unified-card" {...fadeUp} viewport={{ once: true }}>
-          <h3>Mission</h3>
-          <p>Design breathing-enhancement technology that improves performance, boosts endurance, and supports healthy living.</p>
-        </motion.div>
-        <motion.div className="card unified-card" {...fadeUp} transition={{ delay: 0.2 }} viewport={{ once: true }}>
-          <h3>Vision</h3>
-          <p>A world where every jogger can breathe freely and perform at their best.</p>
-        </motion.div>
-      </section> */}
 
       {/* VALUES */}
       <section className="values-section">
