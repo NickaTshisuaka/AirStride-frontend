@@ -45,15 +45,15 @@ const FAQ = () => {
     e.preventDefault();
 
     emailjs.send(
-      "YOUR_SERVICE_ID",
-      "YOUR_TEMPLATE_ID",
+      "service_uztg1lh",
+      "template_jjnrawp",
       {
         name: contact.name,
         email: contact.email,
         message: contact.message,
         time: new Date().toLocaleString(),
       },
-      "YOUR_PUBLIC_KEY"
+      "QHlWzILAc5e7iyW4S"
     )
     .then(() => {
       setShowPopup(true);
