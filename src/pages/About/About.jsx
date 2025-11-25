@@ -14,14 +14,12 @@ export default function AboutPage() {
   const videoRef = useRef(null);
   const [ceoModal, setCeoModal] = useState(false);
 
-  // Smooth parallax on scroll
   useEffect(() => {
     const handleScroll = () => {
       if (!heroRef.current || !videoRef.current) return;
       const scrollY = window.scrollY;
       videoRef.current.style.transform = `translateY(${scrollY * 0.3}px)`;
     };
-
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -32,38 +30,32 @@ export default function AboutPage() {
       {/* HERO */}
       <header className="hero" ref={heroRef}>
         <video ref={videoRef} className="hero-video" autoPlay muted loop playsInline>
-          <source src="/videos/vid3.mp4" type="video/mp4" />
+          <source src="/bokke.mp4" type="video/mp4" />
         </video>
         <div className="hero-overlay" />
         <motion.div {...fadeUp} className="hero-inner" viewport={{ once: true }}>
           <h1>About AirStride</h1>
           <p className="subtitle">Helping joggers breathe better, run further, and live healthier.</p>
-          <button className="hero-cta" onClick={() => navigate("/products")}>
-            Explore Products
-          </button>
+          <button className="hero-cta" onClick={() => navigate("/products")}>Explore Products</button>
         </motion.div>
       </header>
 
       {/* STORY */}
       <section className="story-section">
         <motion.div className="story-media" {...fadeIn} viewport={{ once: true }}>
-          <img
-            src="https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?auto=format&fit=crop&w=950&q=80"
-            alt="Runner breathing during a run"
-          />
+          <img src="/selfieGirls.jpeg" alt="AirStride story" />
         </motion.div>
 
         <motion.article className="story-text" {...fadeUp} viewport={{ once: true }}>
           <h2>Our Story</h2>
           <p>
-            AirStride began from a simple observation: many joggers struggle to find efficient,
-            controlled breathing while running. We studied breathing patterns, airflow resistance,
-            and endurance mechanics — then turned those insights into practical, wearable solutions.
+            AirStride began with a simple truth: running is freedom, but only if your body moves in harmony with your breath.
+            We watched countless joggers struggle with endurance not because of strength — but because of breathing. That inspired
+            us to design tools that help people reconnect with their rhythm and unlock the joy of effortless movement.
           </p>
           <p>
-            What started as a small research project evolved into a mission: to create breathing
-            technology that helps athletes and everyday joggers breathe easier, run further, and
-            feel stronger.
+            Today, AirStride continues that mission by blending research, innovation, and heart. Every product we make exists
+            for one purpose: helping you breathe easier, run further, and feel more alive.
           </p>
           <button className="cta-btn" onClick={() => navigate("/products")}>Explore Products</button>
         </motion.article>
@@ -76,7 +68,7 @@ export default function AboutPage() {
           <motion.div {...fadeUp} className="value-card" viewport={{ once: true }}>
             <FaLightbulb className="value-icon" />
             <h4>Innovation</h4>
-            <p>Research-driven design and continuous iteration.</p>
+            <p>Pushing boundaries with research-driven design.</p>
           </motion.div>
           <motion.div {...fadeUp} className="value-card" transition={{ delay: 0.15 }} viewport={{ once: true }}>
             <FaHeartbeat className="value-icon" />
@@ -86,86 +78,104 @@ export default function AboutPage() {
           <motion.div {...fadeUp} className="value-card" transition={{ delay: 0.3 }} viewport={{ once: true }}>
             <FaRunning className="value-icon" />
             <h4>Performance</h4>
-            <p>Empowering runners to go further and feel confident doing it.</p>
+            <p>Empowering runners to go further with confidence.</p>
           </motion.div>
           <motion.div {...fadeUp} className="value-card" transition={{ delay: 0.45 }} viewport={{ once: true }}>
             <FaUsers className="value-icon" />
             <h4>Community</h4>
-            <p>Supporting runners of all levels through education and product access.</p>
+            <p>Supporting every runner — beginners to pros.</p>
           </motion.div>
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section className="potential-section">
-        <h2 className="section-title">Expanding Human Potential</h2>
-        <p className="lead">
-          We build tools that amplify human effort — combining empathy with technology to make every run feel easier.
-        </p>
-
-        <div className="potential-grid">
-          <motion.div className="potential-item" {...fadeIn} viewport={{ once: true }}>
-            <img src="/pic1.jpeg" alt="Research-backed" />
-            <h4>Research-backed</h4>
-            <p>Devices and training aids built on peer-reviewed breathing and endurance science.</p>
-          </motion.div>
-          <motion.div className="potential-item" {...fadeIn} transition={{ delay: 0.15 }} viewport={{ once: true }}>
-            <img src="/group.jpeg" alt="Community-driven" />
-            <h4>Community-driven</h4>
-            <p>Programs and content that help runners practice breathing techniques safely.</p>
-          </motion.div>
-          <motion.div className="potential-item" {...fadeIn} transition={{ delay: 0.3 }} viewport={{ once: true }}>
-            <img src="/pic2.jpeg" alt="Purpose-led" />
-            <h4>Purpose-led</h4>
-            <p>We measure success by real improvements in endurance and comfort.</p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* TEAM */}
+      {/* TEAM SECTION */}
       <section className="team-section">
         <h2 className="section-title">Meet the Team</h2>
         <div className="team-grid">
+
+          {/* 1 - GLORIA */}
           <motion.div className="team-card" {...fadeUp} viewport={{ once: true }}>
-            <div className="team-img-wrap"><img src="/pic3.jpeg" alt="Jordan Miles" /></div>
-            <h4>Jordan Miles</h4>
+            <div className="team-img-wrap"><img src="/gloria.jpeg" alt="Gloria Ngonda" /></div>
+            <h4>Gloria Ngonda</h4>
             <p className="role">Breathing Science Researcher</p>
+            <p className="bio">
+              Gloria is the heartbeat of our research team. With a background in respiratory biomechanics,
+              she transforms raw data into life-changing insights. Her passion lies in helping everyday athletes
+              understand their breath — and use it as a powerful tool for endurance.
+            </p>
           </motion.div>
+
+          {/* 2 - KEREN */}
           <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.12 }} viewport={{ once: true }}>
-            <div className="team-img-wrap"><img src="/pic4.jpeg" alt="Casey Morgan" /></div>
-            <h4>Casey Morgan</h4>
+            <div className="team-img-wrap"><img src="/keren.jpeg" alt="Keren Botombe" /></div>
+            <h4>Keren Botombe</h4>
             <p className="role">Fitness & Endurance Specialist</p>
+            <p className="bio">
+              Keren brings a deeply human touch to training science. She has coached countless runners to
+              push past limits with confidence and calm breathing. Her empathy, strength, and discipline
+              shape many of AirStride’s training principles.
+            </p>
           </motion.div>
+
+          {/* 3 - TEGRA */}
           <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.24 }} viewport={{ once: true }}>
-            <div className="team-img-wrap"><img src="/pic5.jpeg" alt="Sam Taylor" /></div>
-            <h4>Sam Taylor</h4>
+            <div className="team-img-wrap"><img src="/tegra.jpeg" alt="Tegra Mungundi" /></div>
+            <h4>Tegra Mungundi</h4>
             <p className="role">Lead Developer</p>
+            <p className="bio">
+              Tegra is the mind behind the tech magic. With a love for clean design and fast, reliable systems,
+              he ensures AirStride’s digital experience is seamless from start to finish. His work turns ideas
+              into tools people rely on every day.
+            </p>
           </motion.div>
+
+          {/* 4 - TRACY */}
           <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.36 }} viewport={{ once: true }}>
-            <div className="team-img-wrap"><img src="/pic6.jpeg" alt="Alex Reed" /></div>
-            <h4>Alex Reed</h4>
+            <div className="team-img-wrap"><img src="/tracy.jpeg" alt="Tracy Bebel" /></div>
+            <h4>Tracy Bebel</h4>
             <p className="role">Product Designer</p>
+            <p className="bio">
+              Tracy blends creativity with purpose. Every curve, material, and interaction in our products
+              reflects her deep belief that design should feel natural, empowering, and inspiring. She builds
+              products that feel like they belong to you.
+            </p>
           </motion.div>
+
+          {/* 5 - NEW TEAM MEMBER */}
+          <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.48 }} viewport={{ once: true }}>
+            <div className="team-img-wrap"><img src="/team5.jpeg" alt="Samuel Lunda" /></div>
+            <h4>Samuel Lunda</h4>
+            <p className="role">Operations & Logistics Lead</p>
+            <p className="bio">
+              Samuel is the engine that keeps AirStride moving. From manufacturing to delivery,
+              he ensures every product reaches runners with care and precision. His dedication to
+              consistency and quality makes him a quiet hero behind the scenes.
+            </p>
+          </motion.div>
+
         </div>
       </section>
 
-      {/* CEO Section */}
+      {/* CEO VIDEO SECTION */}
       <section className="ceo-section">
         <motion.div className="ceo-inner" {...fadeUp} viewport={{ once: true }}>
-          <img className="ceo-img" src="/pic7.jpeg" alt="Founder - Jamie Parker" />
+          <video className="ceo-video" autoPlay muted loop playsInline>
+            <source src="/jonathan.mp4" type="video/mp4" />
+          </video>
           <div className="ceo-text">
             <h3>A Message From Our Founder</h3>
-            <h4>Jamie Parker</h4>
+            <h4>Jonathan Kabango</h4>
             <p>
-              "Every runner deserves to breathe freely. AirStride isn't just a product — it's a movement toward healthier,
-              stronger, more confident athletes everywhere."
+              "AirStride isn’t just a company — it’s a promise. A promise that every runner deserves the
+              freedom of full, easy breaths. My mission is to help people feel strong, confident, and connected
+              to their own bodies in ways they never thought possible."
             </p>
             <button className="cta-btn" onClick={() => setCeoModal(true)}>Contact the Founder</button>
           </div>
         </motion.div>
       </section>
 
-      {/* CEO Contact Modal */}
+      {/* CEO MODAL */}
       {ceoModal && (
         <div className="ceo-modal">
           <div className="ceo-modal-content">
