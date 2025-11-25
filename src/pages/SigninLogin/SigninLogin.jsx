@@ -336,7 +336,7 @@ const SigninLogin = () => {
 
             {/* ---------------- PHONE LOGIN UI ---------------- */}
             <div className="phone-login-box">
-              <h3>Sign in with Phone</h3>
+              {/* <h3>Sign in with Phone</h3>
 
               <input
                 type="text"
@@ -350,8 +350,8 @@ const SigninLogin = () => {
                 <button className="auth-button" onClick={sendCode} disabled={isLoading}>
                   Send OTP
                 </button>
-              ) : (
-                <>
+              ) : ( */}
+                {/* <>
                   <input
                     type="text"
                     placeholder="Enter OTP"
@@ -364,7 +364,7 @@ const SigninLogin = () => {
                     Verify OTP
                   </button>
                 </>
-              )}
+              )} */}
 
               <div id="recaptcha-container" style={{ marginTop: "10px" }}></div>
             </div>
