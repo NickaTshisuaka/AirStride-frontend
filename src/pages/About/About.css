@@ -278,6 +278,7 @@
 .ceo-section {
   background: linear-gradient(to right, #f8fbff, #eaf3ff);
   padding: 80px 5%;
+  height: 70vh;
 }
 
 .ceo-inner {
@@ -285,14 +286,12 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 40px;
-  height: 30%;
 }
 .ceo-video {
   flex: 1 1 300px;
   border-radius: 20px;
   width: 100%;
   max-width: 400px;
-  height: 30%;
 }
 .ceo-img {
   flex: 1 1 300px;
