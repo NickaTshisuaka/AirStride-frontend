@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../../AuthContext";
@@ -7,6 +8,8 @@ import {
   GithubAuthProvider,
   FacebookAuthProvider,
   TwitterAuthProvider,
+  RecaptchaVerifier,
+  signInWithPhoneNumber
 } from "firebase/auth";
 import { auth } from "../../firebase";
 import "./SigninLogin.css";
@@ -23,22 +26,30 @@ const SigninLogin = () => {
     firstName: "",
     lastName: "",
   });
+
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const { login, signup, currentUser, loading } = useAuth();
   const navigate = useNavigate();
 
+  // ---------------- PHONE LOGIN STATES ----------------
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+
   if (!loading && currentUser) {
     return <Navigate to="/home" replace />;
   }
 
+  // ---------------- NORMAL INPUT HANDLER ----------------
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (error) setError("");
   };
 
+  // ---------------- NORMAL LOGIN / SIGNUP ----------------
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -50,7 +61,12 @@ const SigninLogin = () => {
         return;
       }
     } else {
-      if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
+      if (
+        !formData.email ||
+        !formData.password ||
+        !formData.firstName ||
+        !formData.lastName
+      ) {
         setError("Please fill in all fields");
         return;
       }
@@ -68,9 +84,10 @@ const SigninLogin = () => {
     try {
       if (isLogin) {
         const userCredential = await login(formData.email, formData.password);
-        const displayName = userCredential?.user?.displayName || formData.email.split("@")[0];
+        const displayName =
+          userCredential?.user?.displayName ||
+          formData.email.split("@")[0];
 
-        // Save to localStorage
         localStorage.setItem("email", formData.email);
         localStorage.setItem("firstName", displayName);
 
@@ -79,7 +96,6 @@ const SigninLogin = () => {
       } else {
         await signup(formData.email, formData.password);
 
-        // Save to localStorage
         localStorage.setItem("email", formData.email);
         localStorage.setItem("firstName", formData.firstName);
         localStorage.setItem("lastName", formData.lastName);
@@ -90,28 +106,28 @@ const SigninLogin = () => {
     } catch (err) {
       console.error("Auth Error:", err);
       let msg = "Authentication failed";
-      if (err.code) {
-        switch (err.code) {
-          case "auth/user-not-found":
-          case "auth/invalid-email":
-            msg = "No account found for that email";
-            break;
-          case "auth/wrong-password":
-            msg = "Incorrect password";
-            break;
-          case "auth/email-already-in-use":
-            msg = "Email already in use";
-            break;
-          case "auth/weak-password":
-            msg = "Password is too weak";
-            break;
-          case "auth/too-many-requests":
-            msg = "Too many attempts. Try again later.";
-            break;
-          default:
-            msg = err.message || msg;
-        }
+
+      switch (err.code) {
+        case "auth/user-not-found":
+        case "auth/invalid-email":
+          msg = "No account found for that email";
+          break;
+        case "auth/wrong-password":
+          msg = "Incorrect password";
+          break;
+        case "auth/email-already-in-use":
+          msg = "Email already in use";
+          break;
+        case "auth/weak-password":
+          msg = "Password is too weak";
+          break;
+        case "auth/too-many-requests":
+          msg = "Too many attempts. Try again later.";
+          break;
+        default:
+          msg = err.message;
       }
+
       setError(msg);
     } finally {
       setIsLoading(false);
@@ -130,11 +146,14 @@ const SigninLogin = () => {
     setError("");
   };
 
+  // ---------------- SOCIAL LOGIN ----------------
   const handleSocialLogin = async (provider) => {
     setError("");
     setIsLoading(true);
+
     try {
       let authProvider;
+
       switch (provider) {
         case "Google":
           authProvider = new GoogleAuthProvider();
@@ -149,46 +168,88 @@ const SigninLogin = () => {
           authProvider = new TwitterAuthProvider();
           break;
         default:
-          setError(`${provider} login not implemented yet`);
-          setIsLoading(false);
+          setError("Provider not supported");
           return;
       }
 
       const result = await signInWithPopup(auth, authProvider);
-      if (result.user) {
-        // Save user info to localStorage for AccountSettings
-        localStorage.setItem("email", result.user.email);
-        localStorage.setItem(
-          "firstName",
-          result.user.displayName || result.user.email.split("@")[0]
-        );
-        navigate("/home", { replace: true });
-      }
+
+      localStorage.setItem("email", result.user.email);
+      localStorage.setItem(
+        "firstName",
+        result.user.displayName || result.user.email.split("@")[0]
+      );
+
+      navigate("/home");
     } catch (err) {
-      console.error(`${provider} login error:`, err);
-      let errorMessage = `${provider} login failed`;
-      switch (err.code) {
-        case "auth/popup-closed-by-user":
-          errorMessage = "Login cancelled";
-          break;
-        case "auth/popup-blocked":
-          errorMessage = "Popup was blocked. Please allow popups for this site";
-          break;
-        case "auth/account-exists-with-different-credential":
-          errorMessage = "An account already exists with the same email";
-          break;
-        default:
-          errorMessage = err.message || `${provider} login failed`;
-      }
-      setError(errorMessage);
+      console.error("Social Login Error:", err);
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ---------------- PHONE LOGIN LOGIC ----------------
+  const setupRecaptcha = () => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(
+  "recaptcha-container",
+  {
+    size: "normal",
+    callback: () => console.log("reCAPTCHA solved"),
+  },
+  auth
+);
+
+    }
+  };
+
+  const sendCode = async () => {
+    setError("");
+
+    if (!phoneNumber) {
+      setError("Enter a valid phone number");
+      return;
+    }
+
+    try {
+      setupRecaptcha();
+      const appVerifier = window.recaptchaVerifier;
+
+      const confirmation = await signInWithPhoneNumber(
+        auth,
+        phoneNumber,
+        appVerifier
+      );
+
+      window.confirmationResult = confirmation;
+      setIsOtpSent(true);
+      toast.success("OTP sent successfully!");
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    }
+  };
+
+  const verifyCode = async () => {
+    try {
+      const result = await window.confirmationResult.confirm(otp);
+
+      localStorage.setItem("phone", result.user.phoneNumber);
+      localStorage.setItem("firstName", "Phone User");
+
+      toast.success("Phone login successful!");
+      navigate("/home");
+    } catch (err) {
+      console.error(err);
+      setError("Invalid OTP");
+    }
+  };
+
+  // ---------------- UI BELOW ----------------
   return (
     <>
-      <ToastContainer position="top-center" autoClose={4000} hideProgressBar={false} />
+      <ToastContainer position="top-center" />
 
       <div className="auth-container gradient-bg">
         <div className="auth-wrapper glass-card">
@@ -266,6 +327,42 @@ const SigninLogin = () => {
                 {isLoading ? (isLogin ? "Signing In..." : "Signing Up...") : (isLogin ? "Sign In" : "Sign Up")}
               </button>
             </form>
+
+            {/* ---------------- PHONE LOGIN UI ---------------- */}
+<div className="phone-login-box">
+  <h3>Sign in with Phone</h3>
+
+  <input
+    type="text"
+    placeholder="+27 65 123 4567"
+    value={phoneNumber}
+    onChange={(e) => setPhoneNumber(e.target.value)}
+    className="auth-input"
+  />
+
+  {!isOtpSent ? (
+    <button className="auth-button" onClick={sendCode} disabled={isLoading}>
+      Send OTP
+    </button>
+  ) : (
+    <>
+      <input
+        type="text"
+        placeholder="Enter OTP"
+        value={otp}
+        onChange={(e) => setOtp(e.target.value)}
+        className="auth-input"
+      />
+
+      <button className="auth-button" onClick={verifyCode} disabled={isLoading}>
+        Verify OTP
+      </button>
+    </>
+  )}
+
+  <div id="recaptcha-container" style={{ marginTop: "10px" }}></div>
+</div>
+
 
             <div className="auth-divider"><span>or continue with</span></div>
 
