@@ -172,7 +172,7 @@ a{
 .fav-count {
   position: relative;
   top: -6px;
-  right: -16px;
+  right: -1px;
   background: red;
   color: white;
   font-size: 0.7rem;
