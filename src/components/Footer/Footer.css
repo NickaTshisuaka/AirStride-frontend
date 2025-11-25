@@ -132,14 +132,16 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  background-color: #0f3057;
-  color: #fff;
+  background-color: #ff9900; /* bright orange for contrast */
+  color: #0d1b2a; /* dark text to stand out */
   padding: 15px 20px;
   border-radius: 8px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  z-index: 1000;
+  z-index: 9999; /* ensure it's on top */
   min-width: 250px;
+  font-weight: bold;
 }
+
 
 .popup-close {
   position: absolute;
