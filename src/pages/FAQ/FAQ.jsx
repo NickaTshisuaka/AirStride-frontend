@@ -1,5 +1,6 @@
+// src/pages/FAQ/FAQ.jsx
 import React, { useState } from "react";
-import { Plus, Minus, Lightbulb, SendHorizonal } from "lucide-react";
+import { Plus, Minus, Lightbulb, Send } from "lucide-react";
 import emailjs from "@emailjs/browser";
 import "./FAQ.css";
 
@@ -9,7 +10,7 @@ const initialFaqs = [
   { topic: "Orders", q: "Can I track my order status?", a: "Yes, tracking information is sent to your email 24 hours after shipment." },
   { topic: "Returns", q: "What is your return policy?", a: "We offer 30-day free returns on all unworn items in their original packaging." },
   { topic: "Payments", q: "Do you accept PayPal or installment payments?", a: "We accept all major credit cards and PayPal. Installment options will be added soon." },
-  { topic: "Support", q: "How can I contact customer support?", a: "You can reach us via email at support@airstride.com or use the chat widget on the site." },
+  { topic: "Support", q: "How can I contact customer support?", a: "Reach us via email at support@airstride.com or use the chat widget on the site." },
   { topic: "Products", q: "Are your breathing trainers FDA approved?", a: "Our trainers comply with all relevant health and safety standards." },
 ];
 
@@ -19,22 +20,17 @@ const FAQ = () => {
   const [selectedTopic, setSelectedTopic] = useState("All");
   const [expandAll, setExpandAll] = useState(false);
 
-  // EmailJS form state
-  const [questionForm, setQuestionForm] = useState({
-    name: "",
-    email: "",
-    message: "",
-  });
+  // Contact form states
+  const [contact, setContact] = useState({ name: "", email: "", message: "" });
+  const [showPopup, setShowPopup] = useState(false);
 
-  const [sentMsg, setSentMsg] = useState("");
-
-  const toggleFAQ = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
+  const toggleFAQ = (i) => {
+    setOpenIndex(openIndex === i ? null : i);
   };
 
-  const topics = ["All", ...new Set(initialFaqs.map(faq => faq.topic))];
+  const topics = ["All", ...new Set(initialFaqs.map(f => f.topic))];
 
-  const filteredFaqs = initialFaqs.filter((faq) => {
+  const filteredFaqs = initialFaqs.filter(faq => {
     const matchesTopic = selectedTopic === "All" || faq.topic === selectedTopic;
     const matchesSearch = faq.q.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesTopic && matchesSearch;
@@ -45,52 +41,84 @@ const FAQ = () => {
     setOpenIndex(expandAll ? null : -1);
   };
 
-  const sendQuestion = (e) => {
+  const handleSend = (e) => {
     e.preventDefault();
 
-    emailjs
-      .send(
-        "service_uztg1lh",
-        "template_jjnrawp",
-        {
-          name: questionForm.name,
-          email: questionForm.email,
-          message: questionForm.message,
-          time: new Date().toLocaleString(),
-        },
-        "RIlnlcSIlbll-IpKa"
-      )
-      .then(() => {
-        setSentMsg("Thank you! Your question has been sent. We’ll respond within 2–3 business days.");
-        setQuestionForm({ name: "", email: "", message: "" });
-        setTimeout(() => setSentMsg(""), 3000);
-      })
-      .catch(() => {
-        setSentMsg("Something went wrong. Please try again.");
-      });
+    emailjs.send(
+      "YOUR_SERVICE_ID",
+      "YOUR_TEMPLATE_ID",
+      {
+        name: contact.name,
+        email: contact.email,
+        message: contact.message,
+        time: new Date().toLocaleString(),
+      },
+      "YOUR_PUBLIC_KEY"
+    )
+    .then(() => {
+      setShowPopup(true);
+      setContact({ name: "", email: "", message: "" });
+    })
+    .catch((err) => console.log(err));
   };
 
   return (
     <div className="faq-page">
-
-      {/* MAIN FAQ SECTION */}
       <section className="dynamic-header-bg">
         <div className="header-content-wrapper-exciting">
 
+          {/* LEFT SIDE — Title & Contact Form */}
           <div className="illustration-zone">
             <h1 className="main-faq-title-exciting">
               <Lightbulb className="title-icon" size={60} />
-              <span>Frequently</span> <br /> <span>Asked</span> <span className="highlight-orange">Questions</span>
+              <span>Frequently</span> <br />
+              <span>Asked</span> <span className="highlight-orange">Questions</span>
             </h1>
-            <p className="faq-subtitle-exciting">Your answers are just a click away!</p>
+            <p className="faq-subtitle-exciting">
+              Your answers are just a click away!
+            </p>
+
+            {/* ★ New Contact Form Box */}
+            <div className="faq-contact-box">
+              <h3>Don’t see your question?</h3>
+              <p>Ask it here — we’ll respond within <strong>2–3 business days</strong>.</p>
+
+              <form className="faq-contact-form" onSubmit={handleSend}>
+                <input
+                  type="text"
+                  placeholder="Your Name"
+                  value={contact.name}
+                  onChange={(e) => setContact({ ...contact, name: e.target.value })}
+                  required
+                />
+                <input
+                  type="email"
+                  placeholder="Your Email"
+                  value={contact.email}
+                  onChange={(e) => setContact({ ...contact, email: e.target.value })}
+                  required
+                />
+                <textarea
+                  placeholder="Your Question…"
+                  value={contact.message}
+                  onChange={(e) => setContact({ ...contact, message: e.target.value })}
+                  required
+                />
+
+                <button className="send-btn">
+                  <Send size={18} /> Send Message
+                </button>
+              </form>
+            </div>
           </div>
 
+          {/* RIGHT SIDE — FAQ */}
           <div className="faq-list-container-exciting">
             <div className="faq-controls">
               <div className="faq-tabs">
-                {topics.map((topic, i) => (
+                {topics.map((topic, index) => (
                   <button
-                    key={i}
+                    key={index}
                     className={`faq-tab ${selectedTopic === topic ? "active" : ""}`}
                     onClick={() => setSelectedTopic(topic)}
                   >
@@ -118,19 +146,13 @@ const FAQ = () => {
               {filteredFaqs.map((faq, index) => (
                 <div
                   key={index}
-                  className={`faq-item-design-exciting ${
-                    openIndex === index || openIndex === -1 ? "open" : ""
-                  }`}
+                  className={`faq-item-design-exciting ${openIndex === index || openIndex === -1 ? "open" : ""}`}
                   onClick={() => toggleFAQ(index)}
                 >
                   <div className="faq-question-design-exciting">
                     <span>{faq.q}</span>
                     <span className="faq-icon-exciting">
-                      {openIndex === index || openIndex === -1 ? (
-                        <Minus size={22} />
-                      ) : (
-                        <Plus size={22} />
-                      )}
+                      {openIndex === index || openIndex === -1 ? <Minus size={22} /> : <Plus size={22} />}
                     </span>
                   </div>
 
@@ -141,49 +163,19 @@ const FAQ = () => {
               ))}
             </div>
           </div>
-
         </div>
       </section>
 
-      {/* CONTACT SECTION */}
-      <section className="ask-question-container">
-        <h2 className="ask-title">Don't see your question?</h2>
-        <p className="ask-subtitle">
-          Ask it below and we’ll get back to you within <strong>2–3 business days</strong>.
-        </p>
-
-        <form className="ask-form" onSubmit={sendQuestion}>
-          <input
-            type="text"
-            placeholder="Your Name"
-            required
-            value={questionForm.name}
-            onChange={(e) => setQuestionForm({ ...questionForm, name: e.target.value })}
-          />
-
-          <input
-            type="email"
-            placeholder="Your Email"
-            required
-            value={questionForm.email}
-            onChange={(e) => setQuestionForm({ ...questionForm, email: e.target.value })}
-          />
-
-          <textarea
-            placeholder="Type your question here..."
-            required
-            value={questionForm.message}
-            onChange={(e) => setQuestionForm({ ...questionForm, message: e.target.value })}
-          />
-
-          <button type="submit" className="ask-submit">
-            Send Question <SendHorizonal size={18} />
-          </button>
-        </form>
-
-        {sentMsg && <p className="ask-confirmation">{sentMsg}</p>}
-      </section>
-
+      {/* Popup confirmation */}
+      {showPopup && (
+        <div className="faq-popup-overlay">
+          <div className="faq-popup">
+            <h2>Message Sent 🎉</h2>
+            <p>We’ve received your question and will respond within 2–3 business days.</p>
+            <button onClick={() => setShowPopup(false)}>Okay</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
