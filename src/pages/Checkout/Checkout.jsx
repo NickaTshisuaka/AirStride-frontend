@@ -5,7 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import emailjs from "@emailjs/browser";
 import "react-toastify/dist/ReactToastify.css";
 import "./Checkout.css";
-import { useCartContext } from "../../contexts/CartContext"; // ✅ Import context
+import { useCartContext } from "../../contexts/CartContext";
 
 // ---------------------------------------------
 // SETTINGS
@@ -24,7 +24,6 @@ const saveWithExpiry = (key, value) => {
   localStorage.setItem(key, JSON.stringify(record));
 };
 
-// Input-format helpers
 const formatCardNumber = (value) =>
   value.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim();
 
@@ -42,7 +41,7 @@ const formatPhone = (value) =>
 // COMPONENT
 // ---------------------------------------------
 const Checkout = () => {
-  const { cart, clearCart } = useCartContext(); // ✅ use context
+  const { cart, clearCart } = useCartContext();
   const [step, setStep] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -167,131 +166,116 @@ const Checkout = () => {
   };
 
   // ---------------------------------------------
-  // HANDLE PAYMENT + EMAIL
+  // SAVE ORDER TO LOCALSTORAGE
   // ---------------------------------------------
- const handlePay = async () => {
-  if (isPaymentProcessing) return;
+  const saveOrderToLocalStorage = (cart, total, shippingDetails, orderId) => {
+    const existingOrders = JSON.parse(localStorage.getItem("orders")) || [];
+    const newOrder = {
+      orderId: orderId,
+      date: new Date().toLocaleString(),
+      items: cart,
+      total: total,
+      shipping: shippingDetails,
+      shippingTime: shippingDetails?.shippingTime || "",
+    };
+    localStorage.setItem("orders", JSON.stringify([...existingOrders, newOrder]));
+  };
 
-  if (!cart.length) {
-    toast.error("Cart is empty.");
-    return;
-  }
+  // ---------------------------------------------
+  // HANDLE PAYMENT
+  // ---------------------------------------------
+  const handlePay = async () => {
+    if (isPaymentProcessing) return;
 
-  const shippingErrors = validateShipping();
-  if (shippingErrors.length) {
-    shippingErrors.forEach((err) => toast.error(err));
-    setStep(0);
-    return;
-  }
-
-  const paymentErrors = validatePayment();
-  if (paymentErrors.length) {
-    paymentErrors.forEach((err) => toast.error(err));
-    setStep(1);
-    return;
-  }
-
-  try {
-    setIsPaymentProcessing(true);
-    setStep(3);
-
-    // fake delay
-    await new Promise((res) => setTimeout(res, 1200));
-
-    // Safe localStorage handling
-    let savedOrders = [];
-    try {
-      const rawOrders = localStorage.getItem("orders");
-      savedOrders = rawOrders ? JSON.parse(rawOrders) : [];
-      if (!Array.isArray(savedOrders)) savedOrders = [];
-    } catch (err) {
-      console.warn("Corrupted localStorage orders, resetting...", err);
-      savedOrders = [];
+    if (!cart.length) {
+      toast.error("Cart is empty.");
+      return;
     }
 
-    const orderData = {
-      id: orderId,
-      date: new Date().toLocaleString(),
-      total,
-      items: cart,
-      shipping: { ...form },
-    };
+    const shippingErrors = validateShipping();
+    if (shippingErrors.length) {
+      shippingErrors.forEach((err) => toast.error(err));
+      setStep(0);
+      return;
+    }
 
-    savedOrders.push(orderData);
-    saveWithExpiry("orders", savedOrders);
+    const paymentErrors = validatePayment();
+    if (paymentErrors.length) {
+      paymentErrors.forEach((err) => toast.error(err));
+      setStep(1);
+      return;
+    }
 
-    clearCart(); // ✅ clear cart via context
+    try {
+      setIsPaymentProcessing(true);
+      setStep(3);
 
-    setShowConfetti(true);
-    setShowSuccessModal(true);
-    toast.success("Payment successful! 🎉");
-  } catch (err) {
-    console.error("Payment error:", err);
-    toast.error("Payment failed.");
-  } finally {
-    setIsPaymentProcessing(false);
-  }
-};
+      // fake delay
+      await new Promise((res) => setTimeout(res, 1200));
 
+      // Save order
+      saveOrderToLocalStorage(cart, total, form, orderId);
+
+      clearCart(); // clear cart
+
+      setShowConfetti(true);
+      setShowSuccessModal(true);
+      toast.success("Payment successful! 🎉");
+    } catch (err) {
+      console.error("Payment error:", err);
+      toast.error("Payment failed.");
+    } finally {
+      setIsPaymentProcessing(false);
+    }
+  };
 
   // ---------------------------------------------
   // EMAIL RECEIPT
   // ---------------------------------------------
-  // ---------------------------------------------
-// EMAIL RECEIPT
-// ---------------------------------------------
-// ---------------------------------------------
-// EMAIL RECEIPT
-// ---------------------------------------------
-const sendEmailReceipt = () => {
-  if (!form.email || !/\S+@\S+\.\S+/.test(form.email)) {
-    toast.error("Please enter a valid email before emailing receipt.");
-    return;
-  }
+  const sendEmailReceipt = () => {
+    if (!form.email || !/\S+@\S+\.\S+/.test(form.email)) {
+      toast.error("Please enter a valid email before emailing receipt.");
+      return;
+    }
 
-  // Convert cart items → EmailJS-friendly array
-  const orderItems = cart.map((item) => ({
-    name: item.name,
-    units: item.quantity,
-    price: (item.price * item.quantity).toFixed(2),
-    image_url: item.image,      // IMPORTANT: must exist in your product objects
-  }));
+    const orderItems = cart.map((item) => ({
+      name: item.name,
+      units: item.quantity,
+      price: (item.price * item.quantity).toFixed(2),
+      image_url: item.image,
+    }));
 
-  // FULL cost breakdown for template
-  const cost = {
-    shipping: SHIPPING_COST.toFixed(2),
-    tax: vat.toFixed(2),
-    total: total.toFixed(2),
+    const cost = {
+      shipping: SHIPPING_COST.toFixed(2),
+      tax: vat.toFixed(2),
+      total: total.toFixed(2),
+    };
+
+    const templateParams = {
+      email: form.email,
+      customer_name: form.name,
+      order_id: orderId,
+      orders: orderItems,
+      cost,
+    };
+
+    emailjs
+      .send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        templateParams,
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      )
+      .then(() => {
+        toast.success(`Receipt sent to ${form.email} 🎉`);
+        setShowConfetti(false);
+        setShowEmailPopup(false);
+      })
+      .catch((error) => {
+        console.error("EmailJS error:", error);
+        toast.error("Email failed. Check template variables.");
+      });
   };
-
-  // Data passed to EmailJS must match template {{variables}}
-  const templateParams = {
-    email: form.email,             // matches {{email}}
-    customer_name: form.name,      // matches {{customer_name}}
-    order_id: orderId,             // matches {{order_id}}
-    orders: orderItems,            // matches {{#orders}} ... {{/orders}}
-    cost,                          // matches {{cost.shipping}}, {{cost.tax}}, {{cost.total}}
-  };
-
-  emailjs
-    .send(
-      import.meta.env.VITE_EMAILJS_SERVICE_ID,
-      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-      templateParams,
-      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-    )
-    .then(() => {
-      toast.success(`Receipt sent to ${form.email} 🎉`);
-      setShowConfetti(false);
-      setShowEmailPopup(false);
-    })
-    .catch((error) => {
-      console.error("EmailJS error:", error);
-      toast.error("Email failed. Check template variables.");
-    });
-};
-
-
 
   // ---------------------------------------------
   // DOWNLOAD RECEIPT
@@ -326,7 +310,6 @@ const sendEmailReceipt = () => {
     `;
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
     a.href = url;
     a.download = `Receipt-${orderId}.html`;
@@ -369,7 +352,7 @@ const sendEmailReceipt = () => {
         )}
 
         {step === 1 && (
-          <div className="form-section">
+          <div className="form-section" >
             <input className={inputClass("cardNumber")} placeholder="Card Number (16 digits)" value={form.cardNumber} maxLength={19} onChange={(e) => update("cardNumber", e.target.value)} />
             <input className={inputClass("expiry")} placeholder="Expiry (MM/YY)" value={form.expiry} maxLength={5} onChange={(e) => update("expiry", e.target.value)} />
             <input className={inputClass("cvv")} placeholder="CVV" maxLength={3} value={form.cvv} onChange={(e) => update("cvv", e.target.value)} />
@@ -394,9 +377,38 @@ const sendEmailReceipt = () => {
         <div className="success-modal">
           <h2>🎉 Payment Successful!</h2>
           <p>Your order ID is <strong>{orderId}</strong></p>
-          <button onClick={downloadReceipt}>Download Receipt</button>
-          <button onClick={sendEmailReceipt}>Email Receipt</button>
-          <button onClick={() => { setShowConfetti(false); window.location.href = "/PastPurchases"; }}>View Past Purchases</button>
+
+          <button
+            onClick={() => {
+              downloadReceipt();
+              setShowConfetti(false);
+              setShowSuccessModal(false);
+              window.location.href = "/past-purchases";
+            }}
+          >
+            Download Receipt
+          </button>
+
+          <button
+            onClick={() => {
+              sendEmailReceipt();
+              setShowConfetti(false);
+              setShowSuccessModal(false);
+              window.location.href = "/past-purchases";
+            }}
+          >
+            Email Receipt
+          </button>
+
+          <button
+            onClick={() => {
+              setShowConfetti(false);
+              setShowSuccessModal(false);
+              window.location.href = "/past-purchases";
+            }}
+          >
+            View Past Purchases
+          </button>
         </div>
       )}
 
