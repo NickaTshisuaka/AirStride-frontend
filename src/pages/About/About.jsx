@@ -1,10 +1,9 @@
-// import React, { useEffect, useRef } from "react";
+// src/pages/About/About.jsx
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FaLightbulb, FaHeartbeat, FaRunning, FaUsers } from "react-icons/fa";
+import { FaLightbulb, FaHeartbeat, FaRunning, FaUsers, FaInstagram, FaTwitter, FaLinkedin } from "react-icons/fa";
 import "./About.css";
-import React, { useEffect, useRef, useState } from "react";
-import { FaInstagram, FaTwitter, FaLinkedin } from "react-icons/fa";
 
 const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, transition: { duration: 0.7 } };
 const fadeIn = { initial: { opacity: 0 }, whileInView: { opacity: 1 }, transition: { duration: 0.8 } };
@@ -14,13 +13,12 @@ export default function AboutPage() {
   const heroRef = useRef(null);
   const videoRef = useRef(null);
   const [ceoModal, setCeoModal] = useState(false);
+
   // Smooth parallax on scroll
   useEffect(() => {
     const handleScroll = () => {
       if (!heroRef.current || !videoRef.current) return;
-
       const scrollY = window.scrollY;
-      // Move video slightly slower than scroll
       videoRef.current.style.transform = `translateY(${scrollY * 0.3}px)`;
     };
 
@@ -49,7 +47,10 @@ export default function AboutPage() {
       {/* STORY */}
       <section className="story-section">
         <motion.div className="story-media" {...fadeIn} viewport={{ once: true }}>
-          <img src="https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?auto=format&fit=crop&w=950&q=80" alt="Runner breathing during a run" />
+          <img
+            src="https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?auto=format&fit=crop&w=950&q=80"
+            alt="Runner breathing during a run"
+          />
         </motion.div>
 
         <motion.article className="story-text" {...fadeUp} viewport={{ once: true }}>
@@ -98,7 +99,9 @@ export default function AboutPage() {
       {/* FEATURES */}
       <section className="potential-section">
         <h2 className="section-title">Expanding Human Potential</h2>
-        <p className="lead">We build tools that amplify human effort — combining empathy with technology to make every run feel easier.</p>
+        <p className="lead">
+          We build tools that amplify human effort — combining empathy with technology to make every run feel easier.
+        </p>
 
         <div className="potential-grid">
           <motion.div className="potential-item" {...fadeIn} viewport={{ once: true }}>
@@ -177,6 +180,7 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
+      )}
 
     </main>
   );
