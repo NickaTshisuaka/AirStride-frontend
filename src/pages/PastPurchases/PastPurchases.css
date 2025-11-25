@@ -1,8 +1,9 @@
 .order-summary-page {
   max-width: 900px;
+  height: 90vh;
   margin: 2rem auto;
   padding: 2rem;
-  background: #ffffff;
+  background: #e4f8ffb3;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   color: #1b2a49; /* navy */
