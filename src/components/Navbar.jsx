@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../AuthContext";
-import { useFavoritesContext } from "../../contexts/FavoritesContext";
+import { useFavoritesContext } from "../../src/contexts/FavoritesContext";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./Navbar.css";
 
