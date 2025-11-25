@@ -169,9 +169,21 @@ const Checkout = () => {
   // SAVE ORDER TO LOCALSTORAGE
   // ---------------------------------------------
   const saveOrderToLocalStorage = (order) => {
-    const existingOrders = JSON.parse(localStorage.getItem("orders")) || [];
-    localStorage.setItem("orders", JSON.stringify([...existingOrders, order]));
-  };
+  let existingOrders = [];
+  try {
+    const data = localStorage.getItem("orders");
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) existingOrders = parsed;
+    }
+  } catch (err) {
+    console.warn("Failed to parse localStorage orders:", err);
+    existingOrders = [];
+  }
+
+  localStorage.setItem("orders", JSON.stringify([...existingOrders, order]));
+};
+
 
   // ---------------------------------------------
   // HANDLE PAYMENT
