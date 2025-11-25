@@ -106,17 +106,17 @@ const FindStore = () => {
         </div>
 
         {/* Info Box */}
-        {/* <div className="info-box">
+        <div className="info-box">
           <h3>
             <Navigation className="info-icon" />
             How Directions Work
           </h3>
           <p>
-            When you click "Get Directions", we’ll ask for your location permission. Once granted, 
-            Google Maps will open in a new tab showing the route from your current location to our store. 
-            You can then choose your preferred mode of transport (driving, cycling, or walking) directly on Google Maps.
+            When you click "Directions" from the block on the top left corner of the map, 
+          Google Maps will open in a new tab . You will then need to insert your starting location manually.
+            You can then choose your preferred mode of transport (driving, cycling, or walking) directly on Google Maps and you will then be directed to our store.
           </p>
-        </div> */}
+        </div>
 
         {/* Get Directions Section */}
         {/* <div className="directions-section">
