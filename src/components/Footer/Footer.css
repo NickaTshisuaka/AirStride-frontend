@@ -130,8 +130,8 @@
 }
 .newsletter-popup {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 26%;
+  right: 40%;
   background-color: #ff9900; /* bright orange for contrast */
   color: #0d1b2a; /* dark text to stand out */
   padding: 15px 20px;
@@ -140,6 +140,7 @@
   z-index: 9999; /* ensure it's on top */
   min-width: 250px;
   font-weight: bold;
+  text-align: center;
 }
 
 
