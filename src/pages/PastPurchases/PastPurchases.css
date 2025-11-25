@@ -78,3 +78,7 @@
 .back-to-shop-btn:hover {
   background: #ff6b35;
 }
+
+.single-order-block {
+  margin-bottom: 2rem;
+}
