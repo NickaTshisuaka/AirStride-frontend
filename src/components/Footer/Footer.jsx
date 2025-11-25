@@ -10,24 +10,35 @@ export default function Footer() {
   const [modal, setModal] = useState({ show: false, title: "", content: null });
 
   const handleSubscribe = (e) => {
-  e.preventDefault(); // ✅ stop any default submission/reload
+    e.preventDefault(); 
+    console.log("Subscribe button clicked!");
+    console.log("Current email:", email);
+    console.log("Subscribed emails before:", subscribedEmails);
 
-  if (!email) {
-    setPopup({ show: true, message: "Please enter a valid email." });
-    return;
-  }
+    if (!email) {
+      console.log("No email entered, showing popup");
+      setPopup({ show: true, message: "Please enter a valid email." });
+      return;
+    }
 
-  if (subscribedEmails.includes(email)) {
-    setPopup({ show: true, message: `${email} is already part of our team!` });
-    return;
-  }
+    if (subscribedEmails.includes(email)) {
+      console.log("Email already subscribed:", email);
+      setPopup({ show: true, message: `${email} is already part of our team!` });
+      return;
+    }
 
-  setSubscribedEmails([...subscribedEmails, email]);
-  setPopup({ show: true, message: `You have successfully registered ${email} to the AirStride newsletter!` });
-  setEmail("");
+    const newSubscribed = [...subscribedEmails, email];
+    console.log("Adding email to subscribed list:", email);
+    setSubscribedEmails(newSubscribed);
+    setPopup({ show: true, message: `You have successfully registered ${email} to the AirStride newsletter!` });
+    setEmail("");
+    console.log("Email input cleared, subscribedEmails now:", newSubscribed);
 
-  setTimeout(() => setPopup({ show: false, message: "" }), 3000);
-};
+    setTimeout(() => {
+      console.log("Hiding popup after 3s");
+      setPopup({ show: false, message: "" });
+    }, 3000);
+  };
 
   const openModal = (type) => {
     if (type === "terms") {
@@ -89,7 +100,11 @@ export default function Footer() {
       {/* Newsletter popup */}
       {popup.show && (
         <div className="newsletter-popup">
-          <span className="popup-close" onClick={() => setPopup({ show: false, message: "" })}>
+          {console.log("Popup rendered with message:", popup.message)}
+          <span className="popup-close" onClick={() => {
+            console.log("Popup manually closed");
+            setPopup({ show: false, message: "" });
+          }}>
             &times;
           </span>
           <p>{popup.message}</p>
@@ -145,10 +160,12 @@ export default function Footer() {
               type="email"
               placeholder="Enter your email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                console.log("Input changed:", e.target.value);
+                setEmail(e.target.value);
+              }}
             />
             <button type="button" onClick={handleSubscribe}>Subscribe</button>
-
           </div>
         </div>
       </div>
