@@ -9,24 +9,25 @@ export default function Footer() {
   const [popup, setPopup] = useState({ show: false, message: "" });
   const [modal, setModal] = useState({ show: false, title: "", content: null });
 
-  const handleSubscribe = () => {
-    if (!email) {
-      setPopup({ show: true, message: "Please enter a valid email." });
-      return;
-    }
+  const handleSubscribe = (e) => {
+  e.preventDefault(); // ✅ stop any default submission/reload
 
-    if (subscribedEmails.includes(email)) {
-      setPopup({ show: true, message: `${email} is already part of our team!` });
-      return;
-    }
+  if (!email) {
+    setPopup({ show: true, message: "Please enter a valid email." });
+    return;
+  }
 
-    setSubscribedEmails([...subscribedEmails, email]);
-    setPopup({ show: true, message: `You have successfully registered ${email} to the AirStride newsletter!` });
-    setEmail("");
+  if (subscribedEmails.includes(email)) {
+    setPopup({ show: true, message: `${email} is already part of our team!` });
+    return;
+  }
 
-    // auto-hide popup after 3 seconds
-    setTimeout(() => setPopup({ show: false, message: "" }), 3000);
-  };
+  setSubscribedEmails([...subscribedEmails, email]);
+  setPopup({ show: true, message: `You have successfully registered ${email} to the AirStride newsletter!` });
+  setEmail("");
+
+  setTimeout(() => setPopup({ show: false, message: "" }), 3000);
+};
 
   const openModal = (type) => {
     if (type === "terms") {
@@ -147,6 +148,7 @@ export default function Footer() {
               onChange={(e) => setEmail(e.target.value)}
             />
             <button type="button" onClick={handleSubscribe}>Subscribe</button>
+
           </div>
         </div>
       </div>
