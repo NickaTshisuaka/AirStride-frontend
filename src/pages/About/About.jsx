@@ -143,13 +143,13 @@ export default function AboutPage() {
 
           {/* 5 - NEW TEAM MEMBER */}
           <motion.div className="team-card" {...fadeUp} transition={{ delay: 0.48 }} viewport={{ once: true }}>
-            <div className="team-img-wrap"><img src="/team5.jpeg" alt="Samuel Lunda" /></div>
-            <h4>Samuel Lunda</h4>
+            <div className="team-img-wrap"><img src="/cynthia.png" alt="Cynthia Bebel" /></div>
+            <h4>Cynthia Bebel</h4>
             <p className="role">Operations & Logistics Lead</p>
             <p className="bio">
-              Samuel is the engine that keeps AirStride moving. From manufacturing to delivery,
-              he ensures every product reaches runners with care and precision. His dedication to
-              consistency and quality makes him a quiet hero behind the scenes.
+              Cynthia is the engine that keeps AirStride moving. From manufacturing to delivery,
+              she ensures every product reaches runners with care and precision. Her dedication to
+              consistency and quality makes her a quiet hero behind the scenes.
             </p>
           </motion.div>
 
@@ -180,9 +180,9 @@ export default function AboutPage() {
         <div className="ceo-modal">
           <div className="ceo-modal-content">
             <span className="modal-close" onClick={() => setCeoModal(false)}>&times;</span>
-            <h2>Contact Jamie Parker</h2>
+            <h2>Contact Jonanthan Kabango</h2>
             <p><strong>Phone:</strong> +27 71 123 4567</p>
-            <p><strong>Email:</strong> jamie.parker@airstride.com</p>
+            <p><strong>Email:</strong> jonathan.kabango@airstride.com</p>
             <div className="ceo-social-icons">
               <a href="https://instagram.com" target="_blank" rel="noreferrer"><FaInstagram /></a>
               <a href="https://twitter.com" target="_blank" rel="noreferrer"><FaTwitter /></a>

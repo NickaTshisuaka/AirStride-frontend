@@ -82,7 +82,7 @@
 
 .hero-cta:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(255, 122, 0, 0.4);
+  box-shadow: 0 8px 20px rgba(128, 163, 229, 0.73);
 }
 
 /* STORY */
@@ -286,7 +286,13 @@
   align-items: center;
   gap: 40px;
 }
-
+.ceo-video {
+  flex: 1 1 300px;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  height: 50%;
+}
 .ceo-img {
   flex: 1 1 300px;
   border-radius: 20px;
