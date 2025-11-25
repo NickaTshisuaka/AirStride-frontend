@@ -47,8 +47,8 @@ const Checkout = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showEmailPopup, setShowEmailPopup] = useState(false);
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState(null);
 
-  const mountedRef = useRef(true);
   const [orderId] = useState(
     "AS-" + Math.random().toString(36).substring(2, 10).toUpperCase()
   );
@@ -168,17 +168,9 @@ const Checkout = () => {
   // ---------------------------------------------
   // SAVE ORDER TO LOCALSTORAGE
   // ---------------------------------------------
-  const saveOrderToLocalStorage = (cart, total, shippingDetails, orderId) => {
+  const saveOrderToLocalStorage = (order) => {
     const existingOrders = JSON.parse(localStorage.getItem("orders")) || [];
-    const newOrder = {
-      orderId: orderId,
-      date: new Date().toLocaleString(),
-      items: cart,
-      total: total,
-      shipping: shippingDetails,
-      shippingTime: shippingDetails?.shippingTime || "",
-    };
-    localStorage.setItem("orders", JSON.stringify([...existingOrders, newOrder]));
+    localStorage.setItem("orders", JSON.stringify([...existingOrders, order]));
   };
 
   // ---------------------------------------------
@@ -210,16 +202,23 @@ const Checkout = () => {
       setIsPaymentProcessing(true);
       setStep(3);
 
-      // fake delay
-      await new Promise((res) => setTimeout(res, 1200));
+      await new Promise((res) => setTimeout(res, 1200)); // fake delay
 
-      // Save order
-      saveOrderToLocalStorage(cart, total, form, orderId);
+      const orderData = {
+        orderId,
+        date: new Date().toLocaleString(),
+        total,
+        items: cart,
+        shipping: { ...form },
+      };
 
-      clearCart(); // clear cart
+      saveOrderToLocalStorage(orderData);
+      setCompletedOrder(orderData); // important ✅
 
+      clearCart(); // clear cart after saving order
       setShowConfetti(true);
       setShowSuccessModal(true);
+
       toast.success("Payment successful! 🎉");
     } catch (err) {
       console.error("Payment error:", err);
@@ -233,12 +232,13 @@ const Checkout = () => {
   // EMAIL RECEIPT
   // ---------------------------------------------
   const sendEmailReceipt = () => {
+    if (!completedOrder) return;
     if (!form.email || !/\S+@\S+\.\S+/.test(form.email)) {
       toast.error("Please enter a valid email before emailing receipt.");
       return;
     }
 
-    const orderItems = cart.map((item) => ({
+    const orderItems = completedOrder.items.map((item) => ({
       name: item.name,
       units: item.quantity,
       price: (item.price * item.quantity).toFixed(2),
@@ -254,7 +254,7 @@ const Checkout = () => {
     const templateParams = {
       email: form.email,
       customer_name: form.name,
-      order_id: orderId,
+      order_id: completedOrder.orderId,
       orders: orderItems,
       cost,
     };
@@ -281,17 +281,19 @@ const Checkout = () => {
   // DOWNLOAD RECEIPT
   // ---------------------------------------------
   const downloadReceipt = () => {
+    if (!completedOrder) return;
+
     const html = `
       <html>
-      <head><meta charset="utf-8" /><title>Receipt ${orderId}</title></head>
+      <head><meta charset="utf-8" /><title>Receipt ${completedOrder.orderId}</title></head>
       <body style="font-family: Arial; padding: 20px;">
         <h2>Order Receipt</h2>
-        <p><strong>Order ID:</strong> ${orderId}</p>
+        <p><strong>Order ID:</strong> ${completedOrder.orderId}</p>
         <p><strong>Customer:</strong> ${form.name} (${form.email})</p>
         <table border="1" cellpadding="8" cellspacing="0" width="100%">
           <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
           <tbody>
-            ${cart
+            ${completedOrder.items
               .map(
                 (i) => `
               <tr>
@@ -304,15 +306,16 @@ const Checkout = () => {
               .join("")}
           </tbody>
         </table>
-        <h3>Grand Total: ${formatZAR(total)}</h3>
+        <h3>Grand Total: ${formatZAR(completedOrder.total)}</h3>
       </body>
       </html>
     `;
+
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Receipt-${orderId}.html`;
+    a.download = `Receipt-${completedOrder.orderId}.html`;
     a.click();
     URL.revokeObjectURL(url);
 
@@ -373,10 +376,10 @@ const Checkout = () => {
         )}
       </div>
 
-      {showSuccessModal && (
+      {showSuccessModal && completedOrder && (
         <div className="success-modal">
           <h2>🎉 Payment Successful!</h2>
-          <p>Your order ID is <strong>{orderId}</strong></p>
+          <p>Your order ID is <strong>{completedOrder.orderId}</strong></p>
 
           <button
             onClick={() => {
