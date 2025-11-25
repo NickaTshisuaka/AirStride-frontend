@@ -146,7 +146,7 @@ export default function Footer() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <button onClick={handleSubscribe}>Subscribe</button>
+            <button type="button" onClick={handleSubscribe}>Subscribe</button>
           </div>
         </div>
       </div>
