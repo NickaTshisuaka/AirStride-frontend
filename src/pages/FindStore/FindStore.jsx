@@ -106,7 +106,7 @@ const FindStore = () => {
         </div>
 
         {/* Info Box */}
-        <div className="info-box">
+        {/* <div className="info-box">
           <h3>
             <Navigation className="info-icon" />
             How Directions Work
@@ -116,10 +116,10 @@ const FindStore = () => {
             Google Maps will open in a new tab showing the route from your current location to our store. 
             You can then choose your preferred mode of transport (driving, cycling, or walking) directly on Google Maps.
           </p>
-        </div>
+        </div> */}
 
         {/* Get Directions Section */}
-        <div className="directions-section">
+        {/* <div className="directions-section">
           <button 
             onClick={handleGetDirections} 
             className="btn-directions"
@@ -143,7 +143,7 @@ const FindStore = () => {
               <p>✓ User's location successfully retrieved!</p>
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Map Section */}
         <div className="map-section">
