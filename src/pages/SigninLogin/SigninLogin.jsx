@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../../AuthContext";
@@ -191,58 +190,65 @@ const SigninLogin = () => {
 
   // ---------------- PHONE LOGIN LOGIC ----------------
   const setupRecaptcha = () => {
-    if (!window.recaptchaVerifier) {
+    if (!window.recaptchaVerifier && auth) {
+      const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
       window.recaptchaVerifier = new RecaptchaVerifier(
-  "recaptcha-container",
-  {
-    size: "normal",
-    callback: () => console.log("reCAPTCHA solved"),
-  },
-  auth
-);
-
+        "recaptcha-container",
+        {
+          size: "normal",
+          callback: () => console.log("reCAPTCHA solved"),
+        },
+        auth
+      );
+      // ONLY disable app verification for local testing
+      if (isLocalhost) {
+        window.recaptchaVerifier.appVerificationDisabledForTesting = true;
+        console.log("Recaptcha testing mode enabled (localhost only)");
+      }
     }
   };
 
   const sendCode = async () => {
     setError("");
-
     if (!phoneNumber) {
       setError("Enter a valid phone number");
       return;
     }
-
     try {
       setupRecaptcha();
       const appVerifier = window.recaptchaVerifier;
-
-      const confirmation = await signInWithPhoneNumber(
-        auth,
-        phoneNumber,
-        appVerifier
-      );
-
+      const confirmation = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
       window.confirmationResult = confirmation;
       setIsOtpSent(true);
       toast.success("OTP sent successfully!");
     } catch (err) {
-      console.error(err);
-      setError(err.message);
+      console.error("Phone login error:", err);
+      // Friendly error messages for production
+      if (err.code === "auth/invalid-phone-number") {
+        setError("Invalid phone number format");
+      } else if (err.code === "auth/quota-exceeded") {
+        setError("Too many requests. Try again later.");
+      } else {
+        setError("Failed to send OTP. Please try again.");
+      }
     }
   };
 
   const verifyCode = async () => {
+    setError("");
+    if (!otp) {
+      setError("Enter the OTP code");
+      return;
+    }
     try {
       const result = await window.confirmationResult.confirm(otp);
-
       localStorage.setItem("phone", result.user.phoneNumber);
       localStorage.setItem("firstName", "Phone User");
-
       toast.success("Phone login successful!");
       navigate("/home");
     } catch (err) {
-      console.error(err);
-      setError("Invalid OTP");
+      console.error("OTP verification error:", err);
+      setError("Invalid OTP. Please try again.");
     }
   };
 
@@ -329,40 +335,39 @@ const SigninLogin = () => {
             </form>
 
             {/* ---------------- PHONE LOGIN UI ---------------- */}
-<div className="phone-login-box">
-  <h3>Sign in with Phone</h3>
+            <div className="phone-login-box">
+              <h3>Sign in with Phone</h3>
 
-  <input
-    type="text"
-    placeholder="+27 65 123 4567"
-    value={phoneNumber}
-    onChange={(e) => setPhoneNumber(e.target.value)}
-    className="auth-input"
-  />
+              <input
+                type="text"
+                placeholder="+27 65 123 4567"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="auth-input"
+              />
 
-  {!isOtpSent ? (
-    <button className="auth-button" onClick={sendCode} disabled={isLoading}>
-      Send OTP
-    </button>
-  ) : (
-    <>
-      <input
-        type="text"
-        placeholder="Enter OTP"
-        value={otp}
-        onChange={(e) => setOtp(e.target.value)}
-        className="auth-input"
-      />
+              {!isOtpSent ? (
+                <button className="auth-button" onClick={sendCode} disabled={isLoading}>
+                  Send OTP
+                </button>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Enter OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="auth-input"
+                  />
 
-      <button className="auth-button" onClick={verifyCode} disabled={isLoading}>
-        Verify OTP
-      </button>
-    </>
-  )}
+                  <button className="auth-button" onClick={verifyCode} disabled={isLoading}>
+                    Verify OTP
+                  </button>
+                </>
+              )}
 
-  <div id="recaptcha-container" style={{ marginTop: "10px" }}></div>
-</div>
-
+              <div id="recaptcha-container" style={{ marginTop: "10px" }}></div>
+            </div>
 
             <div className="auth-divider"><span>or continue with</span></div>
 

@@ -76,7 +76,7 @@ const Navbar = () => {
         <nav className="nav-links">
           <Link to="/home">Home</Link>
           <Link to="/products">Products</Link>
-          <Link to="/cart">Cart</Link>
+          {/* <Link to="/cart">Cart</Link> */}
           <Link to="/past-purchases">Past Purchases</Link>
           <Link to="/FAQ">FAQs</Link>
           <Link to="/About">About Us</Link>
