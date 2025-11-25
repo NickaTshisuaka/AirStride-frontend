@@ -285,6 +285,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 40px;
+  height: 30%;
 }
 .ceo-video {
   flex: 1 1 300px;
