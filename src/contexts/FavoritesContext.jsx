@@ -5,8 +5,7 @@ import { createContext, useContext, useReducer, useEffect } from "react";
 const FavoritesContext = createContext();
 
 // Initial state from localStorage
-const initialState =
-  JSON.parse(localStorage.getItem("favorites")) || [];
+const initialState = JSON.parse(localStorage.getItem("favorites")) || [];
 
 // Reducer function
 function favReducer(state, action) {
@@ -28,9 +27,12 @@ function favReducer(state, action) {
 export function FavoritesProvider({ children }) {
   const [favorites, dispatch] = useReducer(favReducer, initialState);
 
-  // Persist favorites to localStorage whenever they change
+  // Persist favorites to localStorage and dispatch event whenever they change
   useEffect(() => {
     localStorage.setItem("favorites", JSON.stringify(favorites));
+
+    // Dispatch custom event so Navbar updates badge automatically
+    window.dispatchEvent(new Event("favoritesUpdated"));
   }, [favorites]);
 
   // Action helpers

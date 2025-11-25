@@ -1,8 +1,10 @@
-import React, { useEffect, useRef } from "react";
+// import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { FaLightbulb, FaHeartbeat, FaRunning, FaUsers } from "react-icons/fa";
 import "./About.css";
+import React, { useEffect, useRef, useState } from "react";
+import { FaInstagram, FaTwitter, FaLinkedin } from "react-icons/fa";
 
 const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, transition: { duration: 0.7 } };
 const fadeIn = { initial: { opacity: 0 }, whileInView: { opacity: 1 }, transition: { duration: 0.8 } };
@@ -11,7 +13,7 @@ export default function AboutPage() {
   const navigate = useNavigate();
   const heroRef = useRef(null);
   const videoRef = useRef(null);
-
+  const [ceoModal, setCeoModal] = useState(false);
   // Smooth parallax on scroll
   useEffect(() => {
     const handleScroll = () => {
@@ -144,7 +146,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* CEO */}
+      {/* CEO Section */}
       <section className="ceo-section">
         <motion.div className="ceo-inner" {...fadeUp} viewport={{ once: true }}>
           <img className="ceo-img" src="/pic7.jpeg" alt="Founder - Jamie Parker" />
@@ -155,10 +157,26 @@ export default function AboutPage() {
               "Every runner deserves to breathe freely. AirStride isn't just a product — it's a movement toward healthier,
               stronger, more confident athletes everywhere."
             </p>
-            <button className="cta-btn" onClick={() => navigate("/faq")}>Contact the Founder</button>
+            <button className="cta-btn" onClick={() => setCeoModal(true)}>Contact the Founder</button>
           </div>
         </motion.div>
       </section>
+
+      {/* CEO Contact Modal */}
+      {ceoModal && (
+        <div className="ceo-modal">
+          <div className="ceo-modal-content">
+            <span className="modal-close" onClick={() => setCeoModal(false)}>&times;</span>
+            <h2>Contact Jamie Parker</h2>
+            <p><strong>Phone:</strong> +27 71 123 4567</p>
+            <p><strong>Email:</strong> jamie.parker@airstride.com</p>
+            <div className="ceo-social-icons">
+              <a href="https://instagram.com" target="_blank" rel="noreferrer"><FaInstagram /></a>
+              <a href="https://twitter.com" target="_blank" rel="noreferrer"><FaTwitter /></a>
+              <a href="https://linkedin.com" target="_blank" rel="noreferrer"><FaLinkedin /></a>
+            </div>
+          </div>
+        </div>
 
     </main>
   );
